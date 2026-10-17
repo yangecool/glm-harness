@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/base/README.md
+/:
+  en: 6d7975e5c22c39bc
+  zh: d6f44412d70afbb4
+/glm-harness-gh-base:
+  en: b983ac50df88c670
+  zh: d3d23afaf4fd36e0
+/glm-harness-gh-base/summary:
+  en: daf64f98ac5d0aa4
+  zh: 01f5a504f4600510
+/glm-harness-gh-base/table-of-contents:
+  en: 5db0ae01d50cb0e4
+  zh: da127c656e81b685
+/glm-harness-gh-base/use-this-package:
+  en: 1bb435a6e2e2d434
+  zh: 17c160141dee01ed
+/glm-harness-gh-base/use-this-package/what-you-get:
+  en: 813904a2683c9182
+  zh: 283c1a5923cdc7bb
+/glm-harness-gh-base/use-this-package/changing-the-defaults:
+  en: 1f49a84ecb1b0692
+  zh: 948c7d81d7cf46fb
+/glm-harness-gh-base/understand-the-implementation:
+  en: ee4615a04fa6503d
+  zh: ee2c5fb2204a43cf
+/glm-harness-gh-base/understand-the-implementation/composition-mechanics:
+  en: 576d9f8daf80d836
+  zh: 04d1d73de87fa93f
+/glm-harness-gh-base/understand-the-implementation/source-map:
+  en: 4f122ef29510d038
+  zh: 19ee01c759bca8f5
+/glm-harness-gh-base/further-exploration:
+  en: 720a1a09e7b21af4
+  zh: 1a65d82f387ecb5c
+/glm-harness-gh-base/known-limitations-and-deferred-work:
+  en: b93591a54a57a53c
+  zh: 98de04322d154631

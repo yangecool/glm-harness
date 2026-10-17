@@ -1,0 +1,43 @@
+{
+  "note": "GLM Harness 交付进度台账。按 GH/E/F/X/R/MEM ID 关联主计划;由实施者维护,规划台账生成脚本(refresh-planning-inventory)不触碰本文件。",
+  "repository": {
+    "path": "glm-harness/runtime",
+    "branch": "gh/bootstrap",
+    "baseTag": "dsh-v0.2.1-rc.1",
+    "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
+  },
+  "updatedAt": "2026-10-17",
+  "tasks": [
+    {
+      "id": "GH-001",
+      "title": "派生仓库与最小产品组合",
+      "planRefs": ["E00.1", "E01.1", "E12.2"],
+      "owner": "基础架构",
+      "status": "complete",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "packages/glm/base (@glm-harness/gh-base):dsh 公共基础设施显式闭包,排除 10 个上游模型/账号/遥测包",
+        "scripts/gh-init-profiles.ts:gh-web / gh-headless profile 初始化到 GH 自有 home",
+        "scripts/check-gh-closure.ts:依赖闭包 + 组合树双向 banned 门禁",
+        "check-workspace-constraints.ts:packages/glm/* ↔ @glm-harness/* 产品组规则(private、结构同标)",
+        "apps/cli 安装依赖 + host 构建面引用"
+      ],
+      "verification": {
+        "runIds": ["gh001-20261017-171001"],
+        "gatesPassed": ["constraints", "typecheck", "build", "verify-translation-pairing", "check-gh-closure"],
+        "bootEvidence": "gh-web 无 Key HTTP 200;gh-headless 显式 NO_ADAPTER(provider glm),无上游回退"
+      },
+      "deviations": [
+        "agent-default-model 指向未注册的 glm provider(GH-003 落地前显式失败)",
+        "web_search 无 provider(web_fetch 可用);遥测闭包为空(E09 再建)"
+      ],
+      "next": "GH-002 资源基线;GH-003 GLM adapter 接 ctx.llm"
+    }
+  ],
+  "blocked": [
+    {
+      "id": "D01",
+      "summary": "GLM/BigModel/Z.AI 真实服务凭据与端点未接入;模型/账号功能保持未完成状态"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "runId": "gh001-20261017-171001",
+  "task": "GH-001",
+  "date": "2026-10-17",
+  "gh": {
+    "branch": "gh/bootstrap",
+    "baseTag": "dsh-v0.2.1-rc.1",
+    "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011",
+    "worktree": "glm-harness/runtime",
+    "commit": "(this run precedes the first commit; see git log for the commit carrying this directory)"
+  },
+  "referenceBaselines": {
+    "zcode": "aac4755666d09fdcd70272fcf063c077a639015f (v3.15.1, read-only)",
+    "dsh": "1600d8a1e140dcde43a1a0941940a0480712c011 (dsh-v0.2.1-rc.1, read-only)",
+    "gsh": "39b6ce702169108efc001fe36a75c147d7952e4b (dirty working tree, untouched)",
+    "grokBuild": "07e35a3dfeed2f200d319ef6c893b5ea286d9a51 (read-only)"
+  },
+  "environment": {
+    "os": "Ubuntu 24.04, linux x64",
+    "node": "v22.23.2",
+    "pnpm": "11.28.5 (corepack, repository packageManager pin)",
+    "machine": "yangecool-NUC15CRHU5"
+  },
+  "commands": [
+    { "cmd": "corepack pnpm install --no-frozen-lockfile", "exit": 0, "note": "lockfile updated for the new @glm-harness/gh-base workspace package" },
+    { "cmd": "corepack pnpm run constraints", "exit": 0 },
+    { "cmd": "corepack pnpm exec tsx scripts/check-gh-closure.ts", "exit": 0 },
+    { "cmd": "corepack pnpm run typecheck", "exit": 0, "note": "host aggregate failed once on a strict-index error in scripts/gh-init-profiles.ts, fixed, host face re-run clean; client face passed unchanged" },
+    { "cmd": "corepack pnpm run build", "exit": 0 },
+    { "cmd": "corepack pnpm run verify-translation-pairing", "exit": 0, "note": "1011 pairs consistent" },
+    { "cmd": "corepack pnpm exec tsx scripts/gh-init-profiles.ts --home <fixture>", "exit": 0 },
+    { "cmd": "DSH_HOME=<fixture> node --import tsx/esm apps/cli/src/bin.ts --profile gh-web", "exit": "0 (server; killed after probe)", "note": "HTTP 200 on the token-authenticated workbench page" },
+    { "cmd": "DSH_HOME=<fixture> node --import tsx/esm apps/cli/src/bin.ts --profile gh-headless \"say hi\"", "exit": 1, "note": "expected explicit failure: NO_ADAPTER: no adapter registered for provider \"glm\"" }
+  ],
+  "dataRoot": "temporary fixture home under /tmp (mktemp), separate from the user's ~/.dsh; profile manifests written by scripts/gh-init-profiles.ts",
+  "keysUsed": "none"
+}

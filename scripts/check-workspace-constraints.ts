@@ -57,6 +57,13 @@ const publicationSourceAllowlist: Readonly<Record<string, readonly string[]>> = 
 const publishedRepositoryUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
 /** Packages that participate in the experimental policy. */
 const experimentalPackageDirectory = /^packages\/experimental\/[^/]+$/
+/**
+ * The GLM Harness product group: unpublished composition packages derived from
+ * this repository. They follow the dsh structural package rules but are not
+ * release members of the upstream release family — the GH product publishes
+ * under its own identity later, so for now they must stay `private: true`.
+ */
+const ghProductGroupDirectory = /^packages\/glm\/[^/]+$/
 /** Private reference tool run from the repository; it publishes no files. */
 const pluginMarketGeneratorDirectory = 'apps/plugin-market-generator'
 /**
@@ -64,7 +71,7 @@ const pluginMarketGeneratorDirectory = 'apps/plugin-market-generator'
  * market generator is a private repository tool, not a published application.
  */
 const standardReleaseMemberDirectory = new RegExp(
-  `^(?:packages/(?!experimental/)[^/]+/[^/]+|apps/(?!desktop(?:-host)?$|${pluginMarketGeneratorDirectory.slice('apps/'.length)}$)[^/]+|vendor/[^/]+)$`,
+  `^(?:packages/(?!experimental/|glm/)[^/]+/[^/]+|apps/(?!desktop(?:-host)?$|${pluginMarketGeneratorDirectory.slice('apps/'.length)}$)[^/]+|vendor/[^/]+)$`,
   'u',
 )
 /** Installable application assembled by electron-builder rather than published to npm. */
@@ -479,6 +486,21 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
     errors.push(`${label}: package.json must set "private": true`)
   }
 
+  // The GH product group keeps the upstream release-family rules off its
+  // packages but owns its own boundary: the group directory and the
+  // @glm-harness scope must stay in bijection, and the packages stay private
+  // until the GH product publishes under its own identity.
+  if (ghProductGroupDirectory.test(dir)) {
+    if (manifest.name === undefined || !manifest.name.startsWith('@glm-harness/')) {
+      errors.push(`${label}: GH product package must be named under the @glm-harness scope`)
+    }
+    if (manifest.private !== true) {
+      errors.push(`${label}: GH product package must set "private": true until the GH product publishes under its own identity`)
+    }
+  } else if (manifest.name?.startsWith('@glm-harness/')) {
+    errors.push(`${label}: @glm-harness packages live only under packages/glm/, found at ${dir}`)
+  }
+
   if (manifest.name && vendoredPackages.has(manifest.name)) {
     return errors
   }
@@ -510,7 +532,11 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
     }
   }
 
-  if (dir.startsWith('packages/') && manifest.name?.startsWith('@deepseek-ai/dsh-')) {
+  // GH product packages follow the same structural shape as dsh packages:
+  // one peer+dev cordis pair, module entry, and the computed payload files.
+  const structuralDshPackage = (dir.startsWith('packages/') && manifest.name?.startsWith('@deepseek-ai/dsh-'))
+    || ghProductGroupDirectory.test(dir)
+  if (structuralDshPackage) {
     const peer = manifest.peerDependencies?.['@deepseek-ai/cordis']
     const dev = manifest.devDependencies?.['@deepseek-ai/cordis']
 

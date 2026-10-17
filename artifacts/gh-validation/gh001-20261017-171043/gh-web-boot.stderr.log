@@ -1,0 +1,2 @@
+dsh: warning: 1 entry did not activate
+account-controller (@deepseek-ai/dsh-api-account-controller): pending (waiting for service: deepseekAccount)

@@ -1,0 +1,54 @@
+{
+  "task": "GH-001 派生仓库与最小产品组合",
+  "cases": [
+    {
+      "id": "GH-001-A1",
+      "claim": "新 profile 用无 Key fixture 启动",
+      "result": "pass",
+      "evidence": [
+        "gh-web-boot.stdout.log: server printed its authenticated URL; curl with the token returned HTTP 200 (37,003 bytes workbench page, gh-web-index.html)",
+        "gh-web-boot.stderr.log: exactly one optional entry pending (account-controller waiting for deepseekAccount) — the excluded upstream account service — with everything else active",
+        "gh-headless-nokey.stdout.log: full boot through task admission, explicit model failure NO_ADAPTER for provider \"glm\"; no upstream fallback"
+      ]
+    },
+    {
+      "id": "GH-001-A2",
+      "claim": "真实配置/数据根与现有 DSH 分离",
+      "result": "pass",
+      "evidence": "DSH_HOME pointed at a throwaway fixture directory; the user's ~/.dsh (profiles/, storages/) existed before and was not read or written; profile manifests are initialized into the GH home by scripts/gh-init-profiles.ts"
+    },
+    {
+      "id": "GH-001-A3",
+      "claim": "输出 import/依赖/激活树",
+      "result": "pass",
+      "evidence": [
+        "gh-web-dump-config.yml (178 composed rows) and gh-headless-dump-config.yml produced via --dump-config through the same loader path as boot",
+        "scripts/check-gh-closure.ts output: @glm-harness dependency closure and both composed profiles free of banned upstream packages, both bundle layers loaded"
+      ]
+    },
+    {
+      "id": "GH-001-A4",
+      "claim": "GH 制品不包含 pi-ai 实现闭包",
+      "result": "pass",
+      "evidence": "GH_BANNED_UPSTREAM_PACKAGES (10 packages incl. @deepseek-ai/dsh-llm-pi-ai) absent from: (a) the transitive workspace dependency closure of every @glm-harness package, (b) the composed gh-web/gh-headless entry trees, (c) grep over both dump-config artifacts; enforced permanently by scripts/check-gh-closure.ts"
+    },
+    {
+      "id": "GH-001-A5",
+      "claim": "GH 模型/账号和旧产品服务无隐式默认回退",
+      "result": "pass",
+      "evidence": "agent-default-model row names provider \"glm\" (unregistered today); gh-headless no-key run failed explicitly with NO_ADAPTER instead of contacting any upstream endpoint; web search ships providerless (web row pins fetchProvider only)"
+    },
+    {
+      "id": "GH-001-G1",
+      "claim": "workspace 约束与产品组规则",
+      "result": "pass",
+      "evidence": "pnpm run constraints exit 0 with the new packages/glm group scoped out of upstream release-membership and into its own @glm-harness bijection + private rule set"
+    },
+    {
+      "id": "GH-001-N1",
+      "claim": "本票不涉及真实模型请求",
+      "result": "not-run",
+      "evidence": "by definition of GH-001 (交接要求); no GLM credentials were configured or used"
+    }
+  ]
+}
