@@ -2,33 +2,36 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write README.md
-/deepseek-harness:
-  en: f68c4f080ce55ff2
-  zh: 88a76d7f7f0b260e
-/deepseek-harness/developer-preview:
-  en: 4ef4d8a71ac143f0
-  zh: 1bfc3149ba8e5543
-/deepseek-harness/run:
-  en: 4e0248e4c6474fc6
-  zh: eb2fb8d78c7d6bc0
-/deepseek-harness/run/run-from-npm:
-  en: e22005cd42e6cbad
-  zh: 0f536f4208df1d60
-/deepseek-harness/run/run-from-source:
-  en: 819e3f7c144d0d64
-  zh: de815f040975dba7
-/deepseek-harness/community-and-support:
-  en: 20acf6451fdc869b
-  zh: d06246dd019ecef7
-/deepseek-harness/contributing:
-  en: cabc2d3e9f8898bd
-  zh: 83b6d238bae29ce3
-/deepseek-harness/development:
-  en: 803ca2b11b497bed
-  zh: 8b4071eb0e7783ef
-/deepseek-harness/citation:
-  en: 6704e9e5a8d49a91
-  zh: 85c9cdd8d56f8e9d
-/deepseek-harness/license:
-  en: 926995344fc1c72b
-  zh: c92fab5abf85932f
+/glm-harness:
+  en: b32ed34e5e75cb6b
+  zh: 7675d1642fd331cc
+/glm-harness/branches-and-upstream:
+  en: 53cead6edda7a81f
+  zh: 51194ee0ccfda6fc
+/glm-harness/status:
+  en: ba7868049e12f1cb
+  zh: d4d049f8a6f3d01a
+/glm-harness/run-from-source:
+  en: 126b42ee5b700054
+  zh: 5049d3b8a0844dc2
+/glm-harness/run-from-source/requirements:
+  en: dc9a274532d96b4a
+  zh: fc1a0bca40f8c8da
+/glm-harness/run-from-source/build-and-initialize-profiles:
+  en: e6ef052dbb073245
+  zh: 47bd073afce01535
+/glm-harness/run-from-source/launch:
+  en: afa5d58d0529e0f8
+  zh: 28280cdaf5077638
+/glm-harness/run-from-source/configure-a-model:
+  en: de82dcdab0cc2913
+  zh: fb4117e176c23bd1
+/glm-harness/repository-layout:
+  en: 886fa7438943baae
+  zh: 724c42909ad9e8d1
+/glm-harness/development:
+  en: f418a45520550c27
+  zh: a8fdd33eacfcbbf9
+/glm-harness/license:
+  en: 8f4728cace0f4d12
+  zh: 54929246c9eb60e9

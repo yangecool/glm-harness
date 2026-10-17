@@ -2,7 +2,7 @@
   "note": "GLM Harness 交付进度台账。按 GH/E/F/X/R/MEM ID 关联主计划;由实施者维护,规划台账生成脚本(refresh-planning-inventory)不触碰本文件。",
   "repository": {
     "path": "glm-harness/runtime",
-    "branch": "gh/bootstrap",
+    "branch": "main",
     "baseTag": "dsh-v0.2.1-rc.1",
     "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
   },

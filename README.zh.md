@@ -1,96 +1,117 @@
-# DeepSeek Harness
+# GLM Harness
 
 [English](README.md) | 中文
 
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
+GLM Harness（`glmh`）是一个面向 GLM 大模型的编码 agent harness，提供桌面、Web 与无界面（headless）三种形态。它复用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）的插件运行时——Cordis、启动器、agent 循环与客户端平台——并以 `@glm-harness/*` 插件 bundle 交付所有 GLM 专有产品行为，而不是另起分支改写。
 
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
+具体来说：
 
-文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+- GLM 模型路由是自实现的 OpenAI 兼容 chat-completions 协议栈（`@glm-harness/gh-model-glm`，默认端点 `https://open.bigmodel.cn/api/paas/v4`），不复用任何上游模型插件；
+- 产品 profile（`gh-web`、`gh-headless` 以及保留名 `desktop`）一律从 `@glm-harness/gh-base` 起组合，而非 `@deepseek-ai/dsh-base`；
+- 保留名 desktop profile 由 GH overlay 认领，同时关闭该保留名原本会启用的上游遥测行；
+- GLM 品牌识别——色阶、标志、字标与产品文案——由品牌 bundle 经插件槽位系统注入，另有少量就地身份修改（文档标题、favicon 与渲染层资产、桌面文案）；
+- Electron 主进程、启动器与共享 agent 循环中不含任何 GLM 业务逻辑。
 
-## 开发者预览
+<a id="branches-and-upstream"></a>
 
-DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+## 分支与上游
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+| 分支 | 内容 |
+| --- | --- |
+| `main` | GLM Harness 的提交历史：一份压缩为单个提交的 DSH 基线快照，加上 GLM Harness 的各张卡。不包含上游的提交序列。 |
+| `upstream` | 本仓库所基于的 DeepSeek Harness 基线，提交号 `1600d8a1`，保留完整上游历史。只读参考。 |
 
-<a id="run"></a>
+`origin` 指向 `deepseek-ai/deepseek-harness`，只拉取，永不推送。
 
-## 运行
+<a id="status"></a>
 
-### 通过 `npm` 运行
+## 状态
 
-安装 `Node.js`，然后运行：
+自举阶段。已交付（每张卡的证据都记录在 `artifacts/gh-validation/` 下）：
 
-```sh
-npx @deepseek-ai/dsh web
-```
+- 运行时派生与显式无 DeepSeek 依赖的 base bundle（GH-001）；
+- 可复用夹具的资源基线（GH-002）；
+- 原生 GLM 提供商路由（GH-003）；
+- 保留 GH 组合之上的桌面最小工作流（GH-004）；
+- GLM Harness 全套品牌与界面重设计（GH-BRAND）。
 
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
+实时台账——包括受阻项与如实记录的未达标预算——见 [docs/glm/delivery-status.json](docs/glm/delivery-status.json)。后续工作包括远端制品与 SSH 自举（GH-005）以及 supervisor、连接等卡。
+
+对真实 GLM API 的验证仍在等待凭据，在台账中保持未决；目前的每一条工作流结论都由证据运行中记录的脚本化 mock 端点支撑。
 
 <a id="run-from-source"></a>
 
-### 从源码运行
+## 从源码运行
 
-如需从仓库源码运行：
+### 环境要求
+
+- Node.js `^22.19.0 || >=24.0.0`
+- pnpm
+- 启动桌面 shell 时需要显示器
+
+### 构建并初始化 profile
 
 ```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
 pnpm install
 pnpm run build
-pnpm dsh web
+pnpm tsx scripts/gh-init-profiles.ts
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+最后一条命令把 GH 产品 profile 写入 `~/.glmh`（可用 `--home <dir>` 覆盖）。重复执行不会改动已初始化的 profile。
 
-## 社区与支持
+### 启动
 
-- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群！扫描下方二维码填写入群问卷，小助手会定期发送入群邀请。
+```sh
+# Web UI at http://127.0.0.1:3080 by default
+DSH_HOME=~/.glmh node apps/cli/lib/bin.js gh-web
 
-<table>
-  <thead>
-    <tr>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
+# Electron shell over the reserved desktop profile
+DSH_HOME=~/.glmh pnpm start:desktop
 
-## 参与贡献
+# Headless agent loop, no UI
+DSH_HOME=~/.glmh node apps/cli/lib/bin.js gh-headless
+```
 
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
+这三个 profile 名与任何 DSH profile 的启动方式完全一致，因为它们就是普通 profile：启动器加载某个 home 下 `profiles/<name>` 提供的内容。`desktop` profile 为 Electron shell 保留，终端启动器会拒绝以它启动。
+
+### 配置模型
+
+在 Web UI 的 Settings → Models 中为 GLM 路由存入凭据（默认端点 `https://open.bigmodel.cn/api/paas/v4`）。请求走 GH 自实现的传输层，不涉及其他模型插件。
+
+<a id="repository-layout"></a>
+
+## 仓库结构
+
+| 路径 | 职责 |
+| --- | --- |
+| `packages/glm/base` | `@glm-harness/gh-base`——所有 profile 的起点 base bundle |
+| `packages/glm/model-glm` | `@glm-harness/gh-model-glm`——GLM chat-completions 协议栈（transport、SSE、translate） |
+| `packages/glm/brand` | `@glm-harness/gh-brand`——品牌识别、主题色阶与槽位占用者 |
+| `packages/glm/desktop` | `@glm-harness/gh-desktop`——保留 profile overlay，关闭上游遥测 |
+| `scripts/gh-init-profiles.ts` | 写入启动器在运行时发现的 profile 组合 |
+| `scripts/check-gh-closure.ts` | 门禁：GLM 闭包必须不含上游模型、账号与遥测包 |
+| `docs/glm/delivery-status.json` | 交付台账 |
+| `artifacts/gh-validation/` | 已记录的验证运行（配置、用例、日志、截图） |
+| `apps/`、`packages/`、`vendor/` | 上游 DSH 运行时，按导入原样保留 |
+
+<a id="development"></a>
 
 ## 开发
 
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
-
-`pnpm run dev:web` 会在一个终端里完成构建、启动，并在源码修改时重建 client bundle；`make help` 列出 Web 与 Desktop 对应的 Make target。完整表格见开发指南的「应用命令」一节。
-
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
-
-## 引用
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
+```sh
+pnpm run typecheck
+pnpm run lint
+pnpm run build
+pnpm run test
+pnpm tsx scripts/check-gh-closure.ts
+pnpm run constraints
+pnpm run verify-translation-pairing
 ```
+
+`check-gh-closure` 会组合每一个 GH profile，一旦 `@glm-harness` 依赖闭包或组合后的 profile 出现上游模型、账号或遥测包即失败。在让 agent 操作真实工作区之前，请先阅读[安全说明](SAFETY.zh.md)。
+
+<a id="license"></a>
 
 ## 许可证
 
-[MIT](LICENSE)
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+MIT，继承自 DeepSeek Harness；第三方声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。GLM Harness 是独立的衍生项目，与 DeepSeek AI 及 GLM 模型厂商无隶属关系。

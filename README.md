@@ -1,77 +1,117 @@
-# DeepSeek Harness
+# GLM Harness
 
 English | [中文](README.zh.md)
 
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
+GLM Harness (`glmh`) is a GLM-native coding agent harness with desktop, web, and headless surfaces. It reuses the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) plugin runtime — Cordis, the launcher, the agent loop, and the client platform — and delivers every GLM-specific product behavior as `@glm-harness/*` plugin bundles instead of forks.
 
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
+Concretely:
 
-Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+- the GLM model route is a self-written OpenAI-compatible chat-completions stack (`@glm-harness/gh-model-glm`, default endpoint `https://open.bigmodel.cn/api/paas/v4`), not a reuse of any upstream model plugin;
+- the product profiles (`gh-web`, `gh-headless`, and the reserved `desktop` profile) start from `@glm-harness/gh-base` instead of `@deepseek-ai/dsh-base`;
+- the reserved desktop profile is claimed by a GH overlay that also disables the upstream telemetry rows the reserved name would otherwise enable;
+- the GLM identity — color ramp, marks, wordmark, and product copy — is carried by the brand bundle through the plugin slot system, with a small set of in-place identity edits (document title, favicon and renderer assets, desktop copy);
+- no GLM business logic lives in the Electron main process, the launcher, or the shared agent loop.
 
-## Developer preview
+<a id="branches-and-upstream"></a>
 
-DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
+## Branches and upstream
 
-Review the [safety notice](SAFETY.md) before running the project.
+| Branch | Contents |
+| --- | --- |
+| `main` | GLM Harness history: one squashed snapshot of the DSH baseline plus the GLM Harness commits. It does not carry the upstream commit sequence. |
+| `upstream` | The DeepSeek Harness baseline this repository builds on, at commit `1600d8a1`, with the full upstream history. Read-only reference. |
 
-## Run
+`origin` points to `deepseek-ai/deepseek-harness` and is fetched, never pushed to.
 
-### Run from `npm`
+<a id="status"></a>
 
-Install `Node.js`, then run:
+## Status
+
+Bootstrap phase. Delivered so far, each with recorded evidence under `artifacts/gh-validation/`:
+
+- runtime derivation with an explicit DeepSeek-free base bundle (GH-001);
+- resource baseline with repeatable fixtures (GH-002);
+- the native GLM provider route (GH-003);
+- the desktop minimal workflow over the reserved GH composition (GH-004);
+- the full GLM Harness brand and interface redesign (GH-BRAND).
+
+The live ledger — including blocked items and honestly recorded not-met budgets — is [docs/glm/delivery-status.json](docs/glm/delivery-status.json). Upcoming work includes remote artifacts with SSH bootstrap (GH-005) and the supervisor and connection cards.
+
+Validation against the real GLM API is pending credentials and stays open in the ledger; every workflow claim so far is backed by a scripted mock endpoint recorded in the evidence runs.
+
+<a id="run-from-source"></a>
+
+## Run from source
+
+### Requirements
+
+- Node.js `^22.19.0 || >=24.0.0`
+- pnpm
+- A display, when launching the desktop shell
+
+### Build and initialize profiles
 
 ```sh
-npx @deepseek-ai/dsh web
-```
-
-The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
-
-### Run from source
-
-To run from a repository checkout:
-
-```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
 pnpm install
 pnpm run build
-pnpm dsh web
+pnpm tsx scripts/gh-init-profiles.ts
 ```
 
-`pnpm run build` prepares the repository artifacts. `pnpm dsh web` uses those built artifacts without rebuilding.
+The last command writes the GH product profiles into `~/.glmh` (override with `--home <dir>`). Re-running never touches an already-initialized profile.
 
-## Community and support
+### Launch
 
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
-- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/4MrtZUhpxg">DeepSeek Harness Discord community</a>.
+```sh
+# Web UI at http://127.0.0.1:3080 by default
+DSH_HOME=~/.glmh node apps/cli/lib/bin.js gh-web
 
-## Contributing
+# Electron shell over the reserved desktop profile
+DSH_HOME=~/.glmh pnpm start:desktop
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+# Headless agent loop, no UI
+DSH_HOME=~/.glmh node apps/cli/lib/bin.js gh-headless
+```
+
+The three profile names are booted exactly like any DSH profile, because they are ordinary profiles: the launcher loads whatever a home's `profiles/<name>` provides. The `desktop` profile is reserved for the Electron shell and refused by the terminal launcher.
+
+### Configure a model
+
+Open Settings → Models in the Web UI and store a credential for the GLM route (default endpoint `https://open.bigmodel.cn/api/paas/v4`). Requests go through the GH-written transport; no other model plugin is involved.
+
+<a id="repository-layout"></a>
+
+## Repository layout
+
+| Path | Role |
+| --- | --- |
+| `packages/glm/base` | `@glm-harness/gh-base` — the GH base bundle every profile starts from |
+| `packages/glm/model-glm` | `@glm-harness/gh-model-glm` — GLM chat-completions wire stack (transport, SSE, translate) |
+| `packages/glm/brand` | `@glm-harness/gh-brand` — identity, theme ramp, and slot occupants |
+| `packages/glm/desktop` | `@glm-harness/gh-desktop` — reserved-profile overlay, disables upstream telemetry |
+| `scripts/gh-init-profiles.ts` | Writes the profile compositions the launcher discovers at runtime |
+| `scripts/check-gh-closure.ts` | Gate: GLM closures must stay free of upstream model, account, and telemetry packages |
+| `docs/glm/delivery-status.json` | Delivery ledger |
+| `artifacts/gh-validation/` | Recorded validation runs (config, cases, logs, screenshots) |
+| `apps/`, `packages/`, `vendor/` | Upstream DSH runtime, kept as imported |
+
+<a id="development"></a>
 
 ## Development
 
-Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
-
-`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
-
-For agents, follow [AGENTS.md](AGENTS.md).
-
-## Citation
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
+```sh
+pnpm run typecheck
+pnpm run lint
+pnpm run build
+pnpm run test
+pnpm tsx scripts/check-gh-closure.ts
+pnpm run constraints
+pnpm run verify-translation-pairing
 ```
+
+`check-gh-closure` composes every GH profile and fails if the `@glm-harness` dependency closure or the composed profile names an upstream model, account, or telemetry package. Review [SAFETY.md](SAFETY.md) before running an agent against real workspaces.
+
+<a id="license"></a>
 
 ## License
 
-[MIT](LICENSE)
-
-Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT, inherited from DeepSeek Harness; third-party notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). GLM Harness is an independent derivative and is not affiliated with DeepSeek AI or the GLM model vendor.
