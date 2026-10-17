@@ -1,0 +1,76 @@
+{
+  "runId": "gh003-20261017-184634",
+  "note": "GH-003 acceptance items; real-service cases stay blocked on D01 and are recorded as such, not skipped silently.",
+  "cases": [
+    {
+      "id": "E02.1/request-serializer",
+      "status": "pass",
+      "expected": "GH 自写请求序列化:角色映射、系统提示折叠、推理不回传、工具声明、thinking 二态、可选参数",
+      "actual": "serialize 单测覆盖全部映射;mock 线上验证真实 agent-loop 请求(system+user、19 个工具、max_tokens 默认值物化)",
+      "evidence": ["tests.log", "mock-wire-redacted.log"]
+    },
+    {
+      "id": "E02.1/sse-parser",
+      "status": "pass",
+      "expected": "GH 自写 SSE 解析:分块边界安全、CRLF、心跳注释、撕裂尾帧丢弃",
+      "actual": "parseSseFrames 单测逐项通过;full-loop 中 [DONE] 终止语义工作",
+      "evidence": ["tests.log"]
+    },
+    {
+      "id": "E02.2/reasoning-tool-order",
+      "status": "pass",
+      "expected": "reasoning 与 text/tool 输出块按首见顺序合成;工具分片按线序号组装",
+      "actual": "translate 单测:推理+文本双块顺序、三片工具参数组装、空参数映射 {}",
+      "evidence": ["tests.log"]
+    },
+    {
+      "id": "E02.2/usage-and-terminal",
+      "status": "pass",
+      "expected": "真实 usage/cache 计数拆分互斥;终态映射 stop/tool_calls/length;max-tokens 保留截断参数",
+      "actual": "cached_tokens 记入 cacheReadTokens 并从 inputTokens 扣除;reasoning_tokens 单列;length 保留截断工具参数;content_filter 显式失败",
+      "evidence": ["tests.log"]
+    },
+    {
+      "id": "E02.2/failure-paths",
+      "status": "pass",
+      "expected": "续轮/切模型失败路径显式分类;无 Key 显式失败",
+      "actual": "HTTP 矩阵(401/429+retry-after/4xx quota/context/5xx/未知状态)、带内 error 帧、STREAM_CLOSED/EMPTY_RESPONSE/MALFORMED_RESPONSE;gh-headless 无 Key → MISSING_CREDENTIAL(exit 1)",
+      "evidence": ["tests.log", "headless-nokey.stderr"]
+    },
+    {
+      "id": "E02.2/frozen-request",
+      "status": "pass",
+      "expected": "冻结请求与 Session 记录一致;适配器不改写历史",
+      "actual": "deepFreeze(options) 全链路通过;序列化只构建新线对象(runtime 的 frozen 契约由适配器测试直接验证)",
+      "evidence": ["tests.log"]
+    },
+    {
+      "id": "E02.2/no-pi-ai",
+      "status": "pass",
+      "expected": "无 pi-ai import/转发",
+      "actual": "check-gh-closure 依赖闭包 + 组合树双向禁用扫描通过;model-glm 依赖仅为 dsh-llm/dsh-timeout/dsh-brand + cordis/credentials/launch-environment/schemastery 基础设施",
+      "evidence": ["gh-closure.log"]
+    },
+    {
+      "id": "E02.2/keyless-product-loop",
+      "status": "pass",
+      "expected": "无 Key 场景下完整产品闭环(agent-loop → ctx.llm → adapter → HTTP → SSE → chunks → assistant 消息)",
+      "actual": "本地 GLM 线协议 mock:gh-headless 任务与 session-title 辅助调用均经适配器完成,stdout 输出 好,exit 0",
+      "evidence": ["headless-mock-loop.stdout", "mock-wire-redacted.log"]
+    },
+    {
+      "id": "E02/real-service",
+      "status": "blocked",
+      "expected": "受控 GLM 真实请求验证 endpoint/access/model 协议表",
+      "actual": "D01:无 GLM/BigModel/Z.AI 真实凭据;目录数字(上下文窗口等)为公开文档声明值,未实测",
+      "evidence": ["docs/glm/delivery-status.json#/blocked"]
+    },
+    {
+      "id": "E02/protocol-table",
+      "status": "pass",
+      "expected": "支持的 endpoint/access/model 协议表交接",
+      "actual": "packages/glm/model-glm/README.md:端点(默认 BigModel、GLM_BASE_URL 覆盖、Z.AI 路径)、Bearer 鉴权、三模型目录、thinking 二态映射、usage 拆分口径",
+      "evidence": ["../../packages/glm/model-glm/README.md"]
+    }
+  ]
+}

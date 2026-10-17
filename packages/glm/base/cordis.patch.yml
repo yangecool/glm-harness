@@ -50,6 +50,12 @@
     - id: llm
       name: '@deepseek-ai/dsh-llm'
 
+    # The GLM provider route: GH-written chat-completions request/SSE stack.
+    # No key is configured here; without GLM_API_KEY the model call fails
+    # explicitly with MISSING_CREDENTIAL, never an upstream fallback.
+    - id: model-glm
+      name: '@glm-harness/gh-model-glm'
+
     - id: session
       name: '@deepseek-ai/dsh-session'
 
@@ -97,10 +103,10 @@
 
     # The transport-independent default for Agents created by entry points.
     # Settings may supply a saved selection; consumers read it at creation
-    # time. The route names the GH provider id that @glm-harness model routing
-    # will register; until that layer lands, creating an agent resolves to an
-    # unregistered provider and fails explicitly. It deliberately does not
-    # name an upstream provider: GH has no implicit model fallback.
+    # time. The route names the GH provider id registered by the model-glm
+    # row; without a stored GLM_API_KEY the model call fails explicitly with
+    # MISSING_CREDENTIAL. It deliberately does not name an upstream provider:
+    # GH has no implicit model fallback.
     - id: agent-default-model
       name: '@deepseek-ai/dsh-agent-default-model'
       config:

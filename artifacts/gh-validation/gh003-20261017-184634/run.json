@@ -1,0 +1,47 @@
+{
+  "runId": "gh003-20261017-184634",
+  "task": "GH-003",
+  "planRefs": ["E02.1", "E02.2"],
+  "date": "2026-10-17",
+  "commands": [
+    {
+      "step": "unit+adapter tests",
+      "command": "pnpm exec vitest run --config vitest.config.ts packages/glm/model-glm/tests",
+      "exitCode": 0,
+      "note": "33 tests: SSE framing (chunk splits, CRLF, heartbeats, torn tail), translation (ordering, tool assembly, disjoint usage, failure taxonomy), serialization (system folding, reasoning discard, thinking switch, tools), transport classification matrix, adapter wire shape/headers/frozen options/abort"
+    },
+    { "step": "closure gate", "command": "corepack pnpm exec tsx scripts/check-gh-closure.ts", "exitCode": 0 },
+    { "step": "composed profile", "command": "DSH_HOME=<tmp> node apps/cli/lib/bin.js --profile gh-web --dump-config", "exitCode": 0, "note": "179 rows; model-glm row present in the gh-web tree" },
+    { "step": "no-key headless", "command": "DSH_HOME=<tmp> node apps/cli/lib/bin.js --profile gh-headless \"回复一个字\"", "exitCode": 1, "note": "MISSING_CREDENTIAL for provider route glm; the NO_ADAPTER phase is gone" },
+    {
+      "step": "keyless full product loop",
+      "command": "GLM_BASE_URL=http://127.0.0.1:<mock-port> GLM_API_KEY=test-key-gh003 DSH_HOME=<tmp> node apps/cli/lib/bin.js --profile gh-headless \"回复一个字\"",
+      "exitCode": 0,
+      "note": "local GLM-wire mock; adapter answered both the agent turn and the session-title auxiliary call; stdout 好"
+    }
+  ],
+  "revisions": {
+    "gh": { "branch": "gh/bootstrap", "sha": "(this commit)" },
+    "dshBase": { "tag": "dsh-v0.2.1-rc.1", "sha": "1600d8a1e140dcde43a1a0941940a0480712c011" }
+  },
+  "environment": {
+    "os": "Ubuntu 24.04.4 LTS",
+    "kernel": "Linux 7.0.0-38-generic",
+    "arch": "x64",
+    "node": "v22.23.2",
+    "pnpm": "11.28.5"
+  },
+  "package": {
+    "name": "@glm-harness/gh-model-glm",
+    "provider": "glm",
+    "protocol": "OpenAI-compatible chat-completions v4 (BigModel/Z.AI); request serializer and SSE parser written in this package",
+    "config": {
+      "baseURL": "https://open.bigmodel.cn/api/paas/v4 (env GLM_BASE_URL)",
+      "apiKeyEnv": "GLM_API_KEY",
+      "streamIdleTimeoutMs": 120000
+    },
+    "catalog": ["glm-4.6", "glm-4.5-air", "glm-4.5-flash"],
+    "importsFromUpstreamModelBusiness": "none (banned-package gate green)"
+  },
+  "gatesPassed": ["constraints", "typecheck", "lint:contracts-ready", "verify-translation-pairing", "check-gh-closure", "build", "model-glm tests"]
+}

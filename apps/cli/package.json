@@ -106,7 +106,8 @@
     "@deepseek-ai/dsh-experimental-session-search": "workspace:*",
     "@deepseek-ai/dsh-experimental-tool-worktree": "workspace:*",
     "@deepseek-ai/dsh-experimental-plugin-market-bundle": "workspace:*",
-    "@glm-harness/gh-base": "workspace:*"
+    "@glm-harness/gh-base": "workspace:*",
+    "@glm-harness/gh-model-glm": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-skill-badge": "workspace:*",

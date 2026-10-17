@@ -57,6 +57,30 @@
         "第一次 adopt 因语料合成 cwd 与运行 cwd 不符被 headless 拒绝;已改为按 set 重写采用会话头部帧(正文逐字节共享)"
       ],
       "next": "GH-003 原生模型路由与 GLM 文本/工具闭环"
+    },
+    {
+      "id": "GH-003",
+      "title": "原生模型路由与 GLM 文本/工具闭环",
+      "planRefs": ["E02.1", "E02.2"],
+      "owner": "模型",
+      "status": "complete",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "packages/glm/model-glm (@glm-harness/gh-model-glm):glm 路由的请求序列化/自写 SSE 解析/流转译/LlmAdapter 绑定,BigModel-Z.AI v4 chat-completions 协议",
+        "无 Key 测试 33 项:协议纯函数层 + 适配器对回环端点(线形状、冻结请求、失败矩阵、abort、能力应答)",
+        "gh-base 组合接入 model-glm 行;apps/cli 与 host 构建面接入;闭包门禁保持绿色(无 pi-ai/llm-deepseek)",
+        "无 Key 产品闭环验证:本地线协议 mock 上 gh-headless 完整跑通(任务 + session-title 辅助调用,stdout 好/exit 0);无 Key 显式 MISSING_CREDENTIAL"
+      ],
+      "verification": {
+        "runIds": ["gh003-20261017-184634"],
+        "gatesPassed": ["constraints", "typecheck", "lint:contracts-ready", "verify-translation-pairing", "check-gh-closure", "build"],
+        "semanticEvidence": "off/high 二态映射 thinking;工具分片按线序号组装、空参数记 {};cached_tokens 拆 cacheReadTokens 并从 inputTokens 扣除;content_filter 显式失败;401/429/quota/context/5xx 分类带 retry-after/requestId"
+      },
+      "deviations": [
+        "真实 GLM 服务验证阻塞于 D01;目录(glm-4.6/4.5-air/4.5-flash)数字为公开文档声明值,未实测",
+        "adapter 暂不产出 replayState(GLM 协议无 thinking 签名回传需求);attribution user-agent 仍为 deepseek-harness 默认身份,品牌化另立任务"
+      ],
+      "next": "GH-004 桌面最小完整工作流"
     }
   ],
   "blocked": [
