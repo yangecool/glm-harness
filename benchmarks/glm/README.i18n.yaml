@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write benchmarks/glm/README.md
+/gh-resource-baseline:
+  en: dffc0b52ca9b273c
+  zh: 2e788c4e15b93b25
+/gh-resource-baseline/run:
+  en: 3de7479d5c257a72
+  zh: d7c511f7d8969f96
+/gh-resource-baseline/scenarios-and-outputs:
+  en: 76a2191093421090
+  zh: a4ea095b95847b73

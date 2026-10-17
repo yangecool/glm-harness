@@ -1,0 +1,69 @@
+{
+  "runId": "gh002-20261017-180858",
+  "note": "GH-002 acceptance items as cases; statuses follow the plan's vocabulary (pass/fail/blocked/skipped/not-run). Evidence refs are files in this directory.",
+  "cases": [
+    {
+      "id": "E00.4/fixture-idle",
+      "status": "pass",
+      "expected": "idle steady window over an empty home, complete process tree, OS memory basis",
+      "actual": "idle-empty gh 122.3 MiB / dsh 133.8 MiB PSS p50 over 60 one-second ticks, single-process tree",
+      "evidence": ["memory.csv", "scenarios.json#/results/0", "scenarios.json#/results/4"]
+    },
+    {
+      "id": "E00.4/fixture-corpus-1000",
+      "status": "pass",
+      "expected": "1,000-session index fixture shared byte-identically by both sets",
+      "actual": "1,000 sessions, 22 distinct bodies, 635,126 events, 859,513,879 logical bytes; sessions roots are per-entry symlinks into one corpus home",
+      "evidence": ["fixture-corpus-facts.json", "run.json#/fixture"]
+    },
+    {
+      "id": "E00.4/fixture-adopt-10k-events",
+      "status": "pass",
+      "expected": "adoption of the ~11.6k-event session measured to process exit with an explicit model failure",
+      "actual": "bench-00990 (anchor 17, 11,620 events) adopted by both products; gh peak 133.7 MiB / dsh 150.8 MiB at 100ms ticks; exits: NO_ADAPTER (gh, 1) / MISSING_CREDENTIAL (dsh, 1); first attempt exposed the cwd-mismatch refusal, fixed by rewriting the adopt file's header frame to the set workspace",
+      "evidence": ["scenarios.json#/results/2", "scenarios.json#/results/6", "memory.csv"]
+    },
+    {
+      "id": "E00.4/fixture-boot-cycles-100",
+      "status": "pass",
+      "expected": "100 boot cycles for start stability, labeled as not leak evidence",
+      "actual": "100 cycles each; boot ms p50/p95/max gh 905/1005/1006, dsh 1004/1105/1106; steady tree PSS at +2s p50/p95/max gh 183.0/191.8/203.1 MiB, dsh 194.2/200.2/201.7 MiB (corpus home, still inside the boot transient)",
+      "evidence": ["scenarios.json#/results/3", "scenarios.json#/results/7"]
+    },
+    {
+      "id": "E00.4/process-tree-and-os-basis",
+      "status": "pass",
+      "expected": "all GH-managed processes sampled; PSS primary, RSS/private/swap alongside",
+      "actual": "tree walked by ppid each tick; steady trees are single node processes; per-pid rows in memory.csv, per-pid maxima in processes.json",
+      "evidence": ["memory.csv", "processes.json", "benchmarks/glm/proc-tree-sampler.ts"]
+    },
+    {
+      "id": "E00.4/sampler-cost",
+      "status": "pass",
+      "expected": "the measuring driver's own cost is reported next to the numbers",
+      "actual": "driver CPU per measured window recorded in every idle result note: ~0.25-0.6s user+sys per 60s window",
+      "evidence": ["scenarios.json#/results/*/note"]
+    },
+    {
+      "id": "E00.4/repeatability",
+      "status": "pass",
+      "expected": "a second run over the same fixture explains itself against the first",
+      "actual": "idle PSS p50 deltas between run-main and run-full: gh empty 119.4→122.3, gh corpus 141.6→141.6, dsh empty 133.9→133.8, dsh corpus 148.7→155.0 MiB; same transient shape; adopt differs only in sampling resolution (1s→100ms)",
+      "evidence": ["scenarios-repeat.json", "scenarios.json"]
+    },
+    {
+      "id": "E00.4/zcode-baseline",
+      "status": "not-run",
+      "expected": "ZCode pinned-revision memory baseline for the plan's GH/ZCode comparison",
+      "actual": "blocked: build requires Node >= 24, host has v22.23.2 with no Node 24 toolchain; unblock step recorded in run.json",
+      "evidence": ["run.json#/revisions/zcode"]
+    },
+    {
+      "id": "E12.1/in-process-counters",
+      "status": "skipped",
+      "expected": "heap/external, cache/lease/handle counts split out per §6.3",
+      "actual": "out of scope for this OS-level runner; requires the in-process resource-sampling provider, tracked as follow-up work before any MEM verdict",
+      "evidence": ["summary.md"]
+    }
+  ]
+}

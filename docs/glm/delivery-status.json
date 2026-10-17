@@ -32,12 +32,41 @@
         "web_search 无 provider(web_fetch 可用);遥测闭包为空(E09 再建)"
       ],
       "next": "GH-002 资源基线;GH-003 GLM adapter 接 ctx.llm"
+    },
+    {
+      "id": "GH-002",
+      "title": "资源基线与可重复 fixture",
+      "planRefs": ["E00.4", "E12.1"],
+      "owner": "性能/质量",
+      "status": "complete",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "benchmarks/glm/proc-tree-sampler.ts:进程树 PSS/RSS/private/swap 采样(smaps_rollup,ppid 遍历,逐 tick 流式)",
+        "benchmarks/glm/run-gh-baseline.ts:seed(1000 会话合成语料 + 22 形态 + 采用会话头部重写)与 run(idle-empty/idle-corpus/adopt/boot-cycles)",
+        "benchmarks/glm/README.md(+zh+i18n):方法、场景、无 MEM 结论声明",
+        "对照数据:gh vs dsh 同载体同 fixture(稳态 PSS gh 低 11.5-13.4 MiB,adopt 峰值低 17.1 MiB,boot p50 快 ~100ms)"
+      ],
+      "verification": {
+        "runIds": ["gh002-20261017-180858"],
+        "gatesPassed": ["constraints", "typecheck", "lint:contracts-ready", "verify-translation-pairing"],
+        "measurementEvidence": "60s×1s 采样窗口 + adopt 100ms;100 循环启动稳定性;重复运行 idle p50 差 ≤3 MiB;sampler 驱动 CPU 随结果记录;adopt 无凭据显式失败(gh NO_ADAPTER / dsh MISSING_CREDENTIAL)"
+      },
+      "deviations": [
+        "ZCode 基线 not-run:固定修订构建需 Node ≥24(本机 22.23.2);解锁:安装 Node 24 后重建 aac4755 再测",
+        "进程内 heap/external 与 cache/lease/handle 计数未采(需 E12 进程内资源采样 provider);boot-cycles 只作启动稳定性,不作泄漏证据",
+        "第一次 adopt 因语料合成 cwd 与运行 cwd 不符被 headless 拒绝;已改为按 set 重写采用会话头部帧(正文逐字节共享)"
+      ],
+      "next": "GH-003 原生模型路由与 GLM 文本/工具闭环"
     }
   ],
   "blocked": [
     {
       "id": "D01",
       "summary": "GLM/BigModel/Z.AI 真实服务凭据与端点未接入;模型/账号功能保持未完成状态"
+    },
+    {
+      "id": "D02",
+      "summary": "ZCode 固定修订(aac4755)基线未测:构建需 Node ≥24,本机仅 22.23.2 且无 nvm/fnm/volta;解锁:安装 Node 24"
     }
   ]
 }

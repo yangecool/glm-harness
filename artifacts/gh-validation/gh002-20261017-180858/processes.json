@@ -1,0 +1,66 @@
+{
+  "machine": "local (yangecool-NUC15CRHU5, Ubuntu 24.04.4)",
+  "note": "per scenario: every pid seen in the tree, kernel comm, parent pid, and its observed maxima; no command lines recorded",
+  "rows": [
+    {
+      "scenario": "adopt",
+      "set": "dsh",
+      "pid": 2328032,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 154442,
+      "maxRssKb": 197460,
+      "ticks": 8
+    },
+    {
+      "scenario": "adopt",
+      "set": "gh",
+      "pid": 2321397,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 136877,
+      "maxRssKb": 178920,
+      "ticks": 7
+    },
+    {
+      "scenario": "idle-corpus",
+      "set": "dsh",
+      "pid": 2327209,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 201127,
+      "maxRssKb": 244284,
+      "ticks": 60
+    },
+    {
+      "scenario": "idle-corpus",
+      "set": "gh",
+      "pid": 2320565,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 188467,
+      "maxRssKb": 231624,
+      "ticks": 60
+    },
+    {
+      "scenario": "idle-empty",
+      "set": "dsh",
+      "pid": 2326202,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 137050,
+      "maxRssKb": 180208,
+      "ticks": 60
+    },
+    {
+      "scenario": "idle-empty",
+      "set": "gh",
+      "pid": 2319740,
+      "ppid": 2319721,
+      "comm": "node",
+      "maxPssKb": 125220,
+      "maxRssKb": 168332,
+      "ticks": 60
+    }
+  ]
+}

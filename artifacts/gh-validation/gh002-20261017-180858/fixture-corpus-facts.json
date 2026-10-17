@@ -1,0 +1,17 @@
+{
+  "sessions": 1000,
+  "projects": 53,
+  "distinctBodies": 22,
+  "events": 635126,
+  "logicalBytes": 859513879,
+  "compressedBytes": 310891335,
+  "frames": 374666,
+  "adoptSessionId": "bench-00990",
+  "adoptAnchor": 17,
+  "adoptShape": {
+    "anchor": 17,
+    "events": 11620,
+    "logicalBytes": 10570582,
+    "turns": 20
+  }
+}

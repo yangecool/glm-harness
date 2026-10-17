@@ -1,0 +1,2885 @@
+{
+  "meta": {
+    "node": "v22.23.2",
+    "bin": "apps/cli/lib/bin.js (built)",
+    "os": "Intel(R) Core(TM) Ultra 5 225H, 14 cores, 30.7 GiB, x64",
+    "settleSec": 15,
+    "measureSec": 60,
+    "cycles": 100,
+    "sampleIntervalMs": 1000,
+    "fixtureRoot": "/disk/ssd1/codecache/gh002-fixture-v790vy",
+    "corpus": {
+      "sessions": 1000,
+      "projects": 53,
+      "distinctBodies": 22,
+      "events": 635126,
+      "logicalBytes": 859513879,
+      "compressedBytes": 310891335,
+      "frames": 374666,
+      "adoptSessionId": "bench-00990",
+      "adoptAnchor": 17,
+      "adoptShape": {
+        "anchor": 17,
+        "events": 11620,
+        "logicalBytes": 10570582,
+        "turns": 20
+      }
+    }
+  },
+  "results": [
+    {
+      "scenario": "idle-empty",
+      "set": "gh",
+      "profile": "gh-web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 702,
+      "summary": {
+        "samples": 60,
+        "durationMs": 59437,
+        "pssKb": {
+          "p50": 125216,
+          "p95": 125220,
+          "max": 125220
+        },
+        "rssKb": {
+          "p50": 168328,
+          "p95": 168332,
+          "max": 168332
+        },
+        "privateKb": {
+          "p50": 114656,
+          "max": 114660
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2319740,
+            "comm": "node",
+            "pssKb": 125220,
+            "rssKb": 168332
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792230804986,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 166924,
+          "pssKb": 123834,
+          "privateKb": 113296,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230805995,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167092,
+          "pssKb": 124002,
+          "privateKb": 113464,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230807002,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167256,
+          "pssKb": 124144,
+          "privateKb": 113584,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230808010,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167420,
+          "pssKb": 124308,
+          "privateKb": 113748,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230809019,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167504,
+          "pssKb": 124392,
+          "privateKb": 113832,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230810028,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167516,
+          "pssKb": 124404,
+          "privateKb": 113844,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230811035,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167524,
+          "pssKb": 124412,
+          "privateKb": 113852,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230812042,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167540,
+          "pssKb": 124428,
+          "privateKb": 113868,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230813050,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167544,
+          "pssKb": 124432,
+          "privateKb": 113872,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230814058,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167544,
+          "pssKb": 124432,
+          "privateKb": 113872,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230815066,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167544,
+          "pssKb": 124432,
+          "privateKb": 113872,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230816073,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167544,
+          "pssKb": 124432,
+          "privateKb": 113872,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230817079,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 167600,
+          "pssKb": 124488,
+          "privateKb": 113928,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230818087,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168196,
+          "pssKb": 125084,
+          "privateKb": 114524,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230819095,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230820103,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230821110,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230822118,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230823126,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230824133,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230825140,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230826146,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230827153,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230828161,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230829167,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230830175,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168220,
+          "pssKb": 125108,
+          "privateKb": 114548,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230831181,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168224,
+          "pssKb": 125112,
+          "privateKb": 114552,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230832189,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168280,
+          "pssKb": 125168,
+          "privateKb": 114608,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230833196,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230834203,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230835211,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230836218,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230837226,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230838233,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230839239,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230840247,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230841254,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230842261,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168328,
+          "pssKb": 125216,
+          "privateKb": 114656,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230843269,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230844277,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230845284,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230846292,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230847299,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230848307,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230849314,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230850321,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230851329,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230852335,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230853342,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 124780,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230854350,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230855357,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230856364,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230857371,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230858379,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230859386,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230860394,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230861401,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230862409,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230863416,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230864423,
+          "pids": [
+            2319740
+          ],
+          "rssKb": 168332,
+          "pssKb": 125220,
+          "privateKb": 114660,
+          "swapKb": 0
+        }
+      ],
+      "note": "sampler driver CPU over the measured window: user 146ms sys 312ms; stderr tail: dsh: warning: 1 entry did not activate | account-controller (@deepseek-ai/dsh-api-account-controller): pending (waiting for service: deepseekAccount)"
+    },
+    {
+      "scenario": "idle-corpus",
+      "set": "gh",
+      "profile": "gh-web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 901,
+      "summary": {
+        "samples": 60,
+        "durationMs": 59660,
+        "pssKb": {
+          "p50": 144975,
+          "p95": 188447.6,
+          "max": 188467
+        },
+        "rssKb": {
+          "p50": 188132,
+          "p95": 231604.6,
+          "max": 231624
+        },
+        "privateKb": {
+          "p50": 134412,
+          "max": 177904
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2320565,
+            "comm": "node",
+            "pssKb": 145151,
+            "rssKb": 188308
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792230881352,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231596,
+          "pssKb": 188439,
+          "privateKb": 177876,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230882364,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231596,
+          "pssKb": 188439,
+          "privateKb": 177876,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230883376,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231596,
+          "pssKb": 188439,
+          "privateKb": 177876,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230884388,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231604,
+          "pssKb": 188447,
+          "privateKb": 177884,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230885400,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231604,
+          "pssKb": 188447,
+          "privateKb": 177884,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230886413,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231604,
+          "pssKb": 188447,
+          "privateKb": 177884,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230887425,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231616,
+          "pssKb": 188459,
+          "privateKb": 177896,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230888437,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231616,
+          "pssKb": 188459,
+          "privateKb": 177896,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230889448,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 231624,
+          "pssKb": 188467,
+          "privateKb": 177904,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230890460,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 195008,
+          "pssKb": 151851,
+          "privateKb": 141288,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230891471,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 186520,
+          "pssKb": 143363,
+          "privateKb": 132800,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230892481,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 186656,
+          "pssKb": 143499,
+          "privateKb": 132936,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230893491,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 186796,
+          "pssKb": 143639,
+          "privateKb": 133076,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230894503,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 186996,
+          "pssKb": 143839,
+          "privateKb": 133276,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230895515,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187108,
+          "pssKb": 143951,
+          "privateKb": 133388,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230896527,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187200,
+          "pssKb": 144043,
+          "privateKb": 133480,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230897539,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187256,
+          "pssKb": 144099,
+          "privateKb": 133536,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230898549,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187348,
+          "pssKb": 144191,
+          "privateKb": 133628,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230899562,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187400,
+          "pssKb": 144243,
+          "privateKb": 133680,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230900575,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187456,
+          "pssKb": 144299,
+          "privateKb": 133736,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230901585,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187516,
+          "pssKb": 144359,
+          "privateKb": 133796,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230902596,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187568,
+          "pssKb": 144411,
+          "privateKb": 133848,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230903606,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187624,
+          "pssKb": 144467,
+          "privateKb": 133904,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230904617,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187712,
+          "pssKb": 144555,
+          "privateKb": 133992,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230905628,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187768,
+          "pssKb": 144611,
+          "privateKb": 134048,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230906639,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187820,
+          "pssKb": 144663,
+          "privateKb": 134100,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230907650,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187876,
+          "pssKb": 144719,
+          "privateKb": 134156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230908663,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187936,
+          "pssKb": 144779,
+          "privateKb": 134216,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230909675,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 187992,
+          "pssKb": 144835,
+          "privateKb": 134272,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230910686,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188048,
+          "pssKb": 144891,
+          "privateKb": 134328,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230911698,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188104,
+          "pssKb": 144947,
+          "privateKb": 134384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230912708,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230913719,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230914730,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230915741,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230916752,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230917763,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230918773,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230919784,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230920795,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230921806,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230922816,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230923828,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230924838,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230925849,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230926859,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230927870,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188132,
+          "pssKb": 144975,
+          "privateKb": 134412,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230928881,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188172,
+          "pssKb": 145015,
+          "privateKb": 134452,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230929892,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188228,
+          "pssKb": 145071,
+          "privateKb": 134508,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230930903,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188288,
+          "pssKb": 145131,
+          "privateKb": 134568,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230931915,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230932925,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230933935,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230934946,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230935957,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230936968,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230937978,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230938990,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230940001,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230941012,
+          "pids": [
+            2320565
+          ],
+          "rssKb": 188308,
+          "pssKb": 145151,
+          "privateKb": 134588,
+          "swapKb": 0
+        }
+      ],
+      "note": "sampler driver CPU over the measured window: user 186ms sys 460ms; stderr tail: dsh: warning: 1 entry did not activate | account-controller (@deepseek-ai/dsh-api-account-controller): pending (waiting for service: deepseekAccount)"
+    },
+    {
+      "scenario": "adopt",
+      "set": "gh",
+      "profile": "gh-headless",
+      "exitCode": 1,
+      "signaled": false,
+      "bootMs": 759,
+      "summary": {
+        "samples": 7,
+        "durationMs": 650,
+        "pssKb": {
+          "p50": 92612,
+          "p95": 133953.5,
+          "max": 136877
+        },
+        "rssKb": {
+          "p50": 134540,
+          "p95": 175971.6,
+          "max": 178920
+        },
+        "privateKb": {
+          "p50": 82872,
+          "max": 127088
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2321397,
+            "comm": "node",
+            "pssKb": 136877,
+            "rssKb": 178920
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792230942026,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 28624,
+          "pssKb": 5790,
+          "privateKb": 1888,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942132,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 79844,
+          "pssKb": 39546,
+          "privateKb": 30648,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942240,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 101176,
+          "pssKb": 60736,
+          "privateKb": 51748,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942348,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 134540,
+          "pssKb": 92612,
+          "privateKb": 82872,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942457,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 149844,
+          "pssKb": 107916,
+          "privateKb": 98176,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942567,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 169092,
+          "pssKb": 127132,
+          "privateKb": 117360,
+          "swapKb": 0
+        },
+        {
+          "t": 1792230942676,
+          "pids": [
+            2321397
+          ],
+          "rssKb": 178920,
+          "pssKb": 136877,
+          "privateKb": 127088,
+          "swapKb": 0
+        }
+      ],
+      "note": "adopt session bench-00990; expected explicit model-failure exit. stdout tail: ; stderr tail: dsh: NO_ADAPTER: no adapter registered for provider \"glm\""
+    },
+    {
+      "scenario": "boot-cycles",
+      "set": "gh",
+      "profile": "gh-web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 901,
+      "summary": {
+        "samples": 100,
+        "durationMs": 0,
+        "pssKb": {
+          "p50": 187342,
+          "p95": 196409.85,
+          "max": 207979
+        },
+        "rssKb": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "privateKb": {
+          "p50": 0,
+          "max": 0
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": []
+      },
+      "ticks": [],
+      "note": "boot ms p50 905 p95 1005 max 1006; steady tree PSS at +2s per cycle; 100 cycles"
+    },
+    {
+      "scenario": "idle-empty",
+      "set": "dsh",
+      "profile": "web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 803,
+      "summary": {
+        "samples": 60,
+        "durationMs": 59466,
+        "pssKb": {
+          "p50": 137050,
+          "p95": 137050,
+          "max": 137050
+        },
+        "rssKb": {
+          "p50": 180208,
+          "p95": 180208,
+          "max": 180208
+        },
+        "privateKb": {
+          "p50": 126492,
+          "max": 126492
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2326202,
+            "comm": "node",
+            "pssKb": 137050,
+            "rssKb": 180208
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792231263368,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179488,
+          "pssKb": 136330,
+          "privateKb": 125772,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231264379,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179652,
+          "pssKb": 136494,
+          "privateKb": 125936,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231265391,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179816,
+          "pssKb": 136658,
+          "privateKb": 126100,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231266401,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179900,
+          "pssKb": 136742,
+          "privateKb": 126184,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231267411,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179900,
+          "pssKb": 136742,
+          "privateKb": 126184,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231268421,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179900,
+          "pssKb": 136742,
+          "privateKb": 126184,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231269431,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179900,
+          "pssKb": 136742,
+          "privateKb": 126184,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231270441,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179916,
+          "pssKb": 136758,
+          "privateKb": 126200,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231271448,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179920,
+          "pssKb": 136762,
+          "privateKb": 126204,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231272455,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179920,
+          "pssKb": 136762,
+          "privateKb": 126204,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231273462,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 179976,
+          "pssKb": 136818,
+          "privateKb": 126260,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231274469,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180068,
+          "pssKb": 136910,
+          "privateKb": 126352,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231275477,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180084,
+          "pssKb": 136926,
+          "privateKb": 126368,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231276485,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180084,
+          "pssKb": 136926,
+          "privateKb": 126368,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231277493,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231278501,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231279508,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231280516,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231281524,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231282532,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231283539,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231284547,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180100,
+          "pssKb": 136942,
+          "privateKb": 126384,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231285554,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180104,
+          "pssKb": 136946,
+          "privateKb": 126388,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231286561,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180160,
+          "pssKb": 137002,
+          "privateKb": 126444,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231287569,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231288576,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231289584,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231290593,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231291600,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231292607,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231293615,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231294622,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231295630,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231296638,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231297646,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231298654,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231299661,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231300669,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231301677,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231302685,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231303691,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231304699,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231305707,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231306714,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231307722,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231308728,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231309736,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231310744,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231311751,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231312759,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231313767,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231314774,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231315782,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231316789,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231317796,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231318804,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231319812,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231320819,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231321826,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231322834,
+          "pids": [
+            2326202
+          ],
+          "rssKb": 180208,
+          "pssKb": 137050,
+          "privateKb": 126492,
+          "swapKb": 0
+        }
+      ],
+      "note": "sampler driver CPU over the measured window: user 103ms sys 341ms; stderr tail: "
+    },
+    {
+      "scenario": "idle-corpus",
+      "set": "dsh",
+      "profile": "web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 1001,
+      "summary": {
+        "samples": 60,
+        "durationMs": 59495,
+        "pssKb": {
+          "p50": 158719,
+          "p95": 201119.4,
+          "max": 201127
+        },
+        "rssKb": {
+          "p50": 201876,
+          "p95": 244276.4,
+          "max": 244284
+        },
+        "privateKb": {
+          "p50": 148156,
+          "max": 190564
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2327209,
+            "comm": "node",
+            "pssKb": 158074,
+            "rssKb": 202056
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792231339863,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243940,
+          "pssKb": 200783,
+          "privateKb": 190220,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231340874,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243940,
+          "pssKb": 200783,
+          "privateKb": 190220,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231341885,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243940,
+          "pssKb": 200783,
+          "privateKb": 190220,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231342894,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243952,
+          "pssKb": 200795,
+          "privateKb": 190232,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231343903,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243952,
+          "pssKb": 200795,
+          "privateKb": 190232,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231344911,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243952,
+          "pssKb": 200795,
+          "privateKb": 190232,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231345920,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 243952,
+          "pssKb": 200795,
+          "privateKb": 190232,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231346928,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244272,
+          "pssKb": 201115,
+          "privateKb": 190552,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231347937,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231348946,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231349954,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231350963,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231351972,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231352981,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244276,
+          "pssKb": 201119,
+          "privateKb": 190556,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231353989,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244284,
+          "pssKb": 201127,
+          "privateKb": 190564,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231354999,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244284,
+          "pssKb": 201127,
+          "privateKb": 190564,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231356007,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 244284,
+          "pssKb": 201127,
+          "privateKb": 190564,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231357016,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 203292,
+          "pssKb": 160135,
+          "privateKb": 149572,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231358024,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200428,
+          "pssKb": 157271,
+          "privateKb": 146708,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231359032,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200528,
+          "pssKb": 157371,
+          "privateKb": 146808,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231360040,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200628,
+          "pssKb": 157471,
+          "privateKb": 146908,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231361048,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200732,
+          "pssKb": 157575,
+          "privateKb": 147012,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231362056,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200836,
+          "pssKb": 157679,
+          "privateKb": 147116,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231363064,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200924,
+          "pssKb": 157767,
+          "privateKb": 147204,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231364072,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 200980,
+          "pssKb": 157823,
+          "privateKb": 147260,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231365080,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201068,
+          "pssKb": 157911,
+          "privateKb": 147348,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231366089,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201120,
+          "pssKb": 157963,
+          "privateKb": 147400,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231367098,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201176,
+          "pssKb": 158019,
+          "privateKb": 147456,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231368106,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201232,
+          "pssKb": 158075,
+          "privateKb": 147512,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231369114,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201292,
+          "pssKb": 158135,
+          "privateKb": 147572,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231370123,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201372,
+          "pssKb": 158215,
+          "privateKb": 147652,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231371130,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201428,
+          "pssKb": 158271,
+          "privateKb": 147708,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231372138,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201484,
+          "pssKb": 158327,
+          "privateKb": 147764,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231373147,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201544,
+          "pssKb": 158387,
+          "privateKb": 147824,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231374155,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201596,
+          "pssKb": 158439,
+          "privateKb": 147876,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231375163,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201652,
+          "pssKb": 158495,
+          "privateKb": 147932,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231376171,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201712,
+          "pssKb": 158555,
+          "privateKb": 147992,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231377180,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201768,
+          "pssKb": 158611,
+          "privateKb": 148048,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231378189,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201824,
+          "pssKb": 158667,
+          "privateKb": 148104,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231379196,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231380204,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231381213,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231382221,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231383229,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231384237,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231385245,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231386253,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231387262,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231388272,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231389280,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231390288,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231391296,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231392304,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231393312,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231394320,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201876,
+          "pssKb": 158719,
+          "privateKb": 148156,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231395327,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201892,
+          "pssKb": 158735,
+          "privateKb": 148172,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231396335,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 201948,
+          "pssKb": 158791,
+          "privateKb": 148228,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231397343,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 202004,
+          "pssKb": 158847,
+          "privateKb": 148284,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231398350,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 202056,
+          "pssKb": 158899,
+          "privateKb": 148336,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231399358,
+          "pids": [
+            2327209
+          ],
+          "rssKb": 202056,
+          "pssKb": 158074,
+          "privateKb": 148336,
+          "swapKb": 0
+        }
+      ],
+      "note": "sampler driver CPU over the measured window: user 116ms sys 364ms; stderr tail: "
+    },
+    {
+      "scenario": "adopt",
+      "set": "dsh",
+      "profile": "headless",
+      "exitCode": 1,
+      "signaled": false,
+      "bootMs": 848,
+      "summary": {
+        "samples": 8,
+        "durationMs": 742,
+        "pssKb": {
+          "p50": 98846,
+          "p95": 152716.5,
+          "max": 154442
+        },
+        "rssKb": {
+          "p50": 140812,
+          "p95": 195704.4,
+          "max": 197460
+        },
+        "privateKb": {
+          "p50": 88924,
+          "max": 143948
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": [
+          {
+            "pid": 2328032,
+            "comm": "node",
+            "pssKb": 154442,
+            "rssKb": 197460
+          }
+        ]
+      },
+      "ticks": [
+        {
+          "t": 1792231400368,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 28216,
+          "pssKb": 5592,
+          "privateKb": 1732,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231400473,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 78920,
+          "pssKb": 38618,
+          "privateKb": 29720,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231400577,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 100608,
+          "pssKb": 60164,
+          "privateKb": 51176,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231400683,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 133612,
+          "pssKb": 92374,
+          "privateKb": 82812,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231400789,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 148012,
+          "pssKb": 105318,
+          "privateKb": 95036,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231400896,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 169924,
+          "pssKb": 126992,
+          "privateKb": 116516,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231401003,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 192444,
+          "pssKb": 149512,
+          "privateKb": 139036,
+          "swapKb": 0
+        },
+        {
+          "t": 1792231401110,
+          "pids": [
+            2328032
+          ],
+          "rssKb": 197460,
+          "pssKb": 154442,
+          "privateKb": 143948,
+          "swapKb": 0
+        }
+      ],
+      "note": "adopt session bench-00990; expected explicit model-failure exit. stdout tail: ; stderr tail: dsh: MISSING_CREDENTIAL: llm-deepseek: no API key for provider route \"deepseek-official\"; store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API"
+    },
+    {
+      "scenario": "boot-cycles",
+      "set": "dsh",
+      "profile": "web",
+      "exitCode": 0,
+      "signaled": false,
+      "bootMs": 1002,
+      "summary": {
+        "samples": 100,
+        "durationMs": 0,
+        "pssKb": {
+          "p50": 198899,
+          "p95": 204992.6,
+          "max": 206563
+        },
+        "rssKb": {
+          "p50": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "privateKb": {
+          "p50": 0,
+          "max": 0
+        },
+        "swapKb": {
+          "max": 0
+        },
+        "finalPids": []
+      },
+      "ticks": [],
+      "note": "boot ms p50 1004 p95 1105 max 1106; steady tree PSS at +2s per cycle; 100 cycles"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "runId": "gh002-20261017-180858",
+  "task": "GH-002",
+  "planRefs": ["E00.4", "E12.1"],
+  "startedAt": "2026-10-17T09:52:15Z (run-main summary timestamp; seed preceded it)",
+  "endedAt": "2026-10-17T10:08:36Z (run-full summary timestamp)",
+  "commands": [
+    {
+      "step": "seed",
+      "command": "corepack pnpm exec tsx benchmarks/glm/run-gh-baseline.ts seed --fixture-root /disk/ssd1/codecache/gh002-fixture-v790vy",
+      "exitCode": 0,
+      "note": "fixture root is a throwaway mkdtemp directory; synthetic corpus only"
+    },
+    {
+      "step": "run-main",
+      "command": "corepack pnpm exec tsx benchmarks/glm/run-gh-baseline.ts run --fixture-root /disk/ssd1/codecache/gh002-fixture-v790vy --out <fixture>/out-main",
+      "exitCode": 0,
+      "note": "idle/adopt at default settle 15s measure 60s; recorded here as scenarios-repeat.json"
+    },
+    {
+      "step": "run-full",
+      "command": "corepack pnpm exec tsx benchmarks/glm/run-gh-baseline.ts run --fixture-root /disk/ssd1/codecache/gh002-fixture-v790vy --out <fixture>/out-full --cycles 100",
+      "exitCode": 0,
+      "note": "adopt at 100ms sampling; recorded here as scenarios.json + memory.csv"
+    }
+  ],
+  "revisions": {
+    "gh": { "branch": "gh/bootstrap", "sha": "6ac9fec4a33dbd9c2b9c5a5bdb1e1aac32083499" },
+    "dshBase": { "tag": "dsh-v0.2.1-rc.1", "sha": "1600d8a1e140dcde43a1a0941940a0480712c011" },
+    "zcode": {
+      "sha": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "status": "not-run",
+      "reason": "building the pinned ZCode revision requires Node >= 24; this host has v22.23.2 and no Node 24 toolchain (no nvm/fnm/volta)",
+      "unblock": "install Node 24, then rebuild the pinned revision before any ZCode-side comparison"
+    }
+  },
+  "environment": {
+    "host": "yangecool-NUC15CRHU5",
+    "os": "Ubuntu 24.04.4 LTS",
+    "kernel": "Linux 7.0.0-38-generic",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) Ultra 5 225H, 14 cores",
+    "totalMemGiB": 30.7,
+    "node": "v22.23.2",
+    "pnpm": "11.28.5"
+  },
+  "bin": "apps/cli/lib/bin.js (pnpm run build at gh sha 6ac9fec; the driver refuses the tsx source path)",
+  "profiles": {
+    "gh": ["gh-web = @glm-harness/gh-base 0.2.1-rc.1 + @deepseek-ai/dsh-web-app", "gh-headless = @glm-harness/gh-base + @deepseek-ai/dsh-headless"],
+    "dsh": ["web (shipped template)", "headless (shipped template)"]
+  },
+  "fixture": {
+    "root": "/disk/ssd1/codecache/gh002-fixture-v790vy",
+    "corpusFactsSha256_16": "bca5a6afeb8bda6e",
+    "syntheticOnly": true,
+    "sessions": 1000,
+    "distinctBodies": 22,
+    "events": 635126,
+    "logicalBytes": 859513879,
+    "compressedBytes": 310891335,
+    "adoptSessionId": "bench-00990",
+    "adoptAnchor": 17,
+    "adoptShape": { "anchor": 17, "events": 11620, "logicalBytes": 10570582, "turns": 20 },
+    "adoptCwdRewrite": "each set's adopt session file is a real file whose header frame names that set's workspace; every other corpus entry is a symlink into the shared corpus home"
+  },
+  "measurement": {
+    "basis": "PSS sum over the whole process tree (/proc/<pid>/smaps_rollup), 1s ticks; adopt 100ms ticks; RSS/private/swap recorded alongside",
+    "settleSec": 15,
+    "measureSec": 60,
+    "verdictPolicy": "raw numbers only; no MEM budget verdicts are issued by this run"
+  }
+}
