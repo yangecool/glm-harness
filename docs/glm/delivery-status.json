@@ -11,7 +11,11 @@
     {
       "id": "GH-001",
       "title": "派生仓库与最小产品组合",
-      "planRefs": ["E00.1", "E01.1", "E12.2"],
+      "planRefs": [
+        "E00.1",
+        "E01.1",
+        "E12.2"
+      ],
       "owner": "基础架构",
       "status": "complete",
       "completed": "2026-10-17",
@@ -23,8 +27,16 @@
         "apps/cli 安装依赖 + host 构建面引用"
       ],
       "verification": {
-        "runIds": ["gh001-20261017-171001"],
-        "gatesPassed": ["constraints", "typecheck", "build", "verify-translation-pairing", "check-gh-closure"],
+        "runIds": [
+          "gh001-20261017-171001"
+        ],
+        "gatesPassed": [
+          "constraints",
+          "typecheck",
+          "build",
+          "verify-translation-pairing",
+          "check-gh-closure"
+        ],
         "bootEvidence": "gh-web 无 Key HTTP 200;gh-headless 显式 NO_ADAPTER(provider glm),无上游回退"
       },
       "deviations": [
@@ -36,7 +48,10 @@
     {
       "id": "GH-002",
       "title": "资源基线与可重复 fixture",
-      "planRefs": ["E00.4", "E12.1"],
+      "planRefs": [
+        "E00.4",
+        "E12.1"
+      ],
       "owner": "性能/质量",
       "status": "complete",
       "completed": "2026-10-17",
@@ -47,8 +62,15 @@
         "对照数据:gh vs dsh 同载体同 fixture(稳态 PSS gh 低 11.5-13.4 MiB,adopt 峰值低 17.1 MiB,boot p50 快 ~100ms)"
       ],
       "verification": {
-        "runIds": ["gh002-20261017-180858"],
-        "gatesPassed": ["constraints", "typecheck", "lint:contracts-ready", "verify-translation-pairing"],
+        "runIds": [
+          "gh002-20261017-180858"
+        ],
+        "gatesPassed": [
+          "constraints",
+          "typecheck",
+          "lint:contracts-ready",
+          "verify-translation-pairing"
+        ],
         "measurementEvidence": "60s×1s 采样窗口 + adopt 100ms;100 循环启动稳定性;重复运行 idle p50 差 ≤3 MiB;sampler 驱动 CPU 随结果记录;adopt 无凭据显式失败(gh NO_ADAPTER / dsh MISSING_CREDENTIAL)"
       },
       "deviations": [
@@ -61,7 +83,10 @@
     {
       "id": "GH-003",
       "title": "原生模型路由与 GLM 文本/工具闭环",
-      "planRefs": ["E02.1", "E02.2"],
+      "planRefs": [
+        "E02.1",
+        "E02.2"
+      ],
       "owner": "模型",
       "status": "complete",
       "completed": "2026-10-17",
@@ -72,8 +97,17 @@
         "无 Key 产品闭环验证:本地线协议 mock 上 gh-headless 完整跑通(任务 + session-title 辅助调用,stdout 好/exit 0);无 Key 显式 MISSING_CREDENTIAL"
       ],
       "verification": {
-        "runIds": ["gh003-20261017-184634"],
-        "gatesPassed": ["constraints", "typecheck", "lint:contracts-ready", "verify-translation-pairing", "check-gh-closure", "build"],
+        "runIds": [
+          "gh003-20261017-184634"
+        ],
+        "gatesPassed": [
+          "constraints",
+          "typecheck",
+          "lint:contracts-ready",
+          "verify-translation-pairing",
+          "check-gh-closure",
+          "build"
+        ],
         "semanticEvidence": "off/high 二态映射 thinking;工具分片按线序号组装、空参数记 {};cached_tokens 拆 cacheReadTokens 并从 inputTokens 扣除;content_filter 显式失败;401/429/quota/context/5xx 分类带 retry-after/requestId"
       },
       "deviations": [
@@ -81,6 +115,48 @@
         "adapter 暂不产出 replayState(GLM 协议无 thinking 签名回传需求);attribution user-agent 仍为 deepseek-harness 默认身份,品牌化另立任务"
       ],
       "next": "GH-004 桌面最小完整工作流"
+    },
+    {
+      "id": "GH-004",
+      "title": "桌面最小完整工作流",
+      "planRefs": [
+        "E01.2",
+        "E01.3",
+        "E05 首批",
+        "MEM01",
+        "MEM02"
+      ],
+      "owner": "桌面",
+      "status": "complete",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "packages/glm/desktop (@glm-harness/gh-desktop):保留名 desktop 组合的行覆盖层,无条件禁用以保留名为启用条件的上游遥测/分析两行;Electron main 零改动",
+        "scripts/gh-init-profiles.ts:保留名 desktop profile(gh-base + dsh-web-app + gh-desktop);CLI 侧上游守卫(拒绝终端启动保留名)保持原样",
+        "apps/cli 依赖 + tsconfig.host 引用;README 双语配对"
+      ],
+      "verification": {
+        "runIds": [
+          "gh004-20261017-200400"
+        ],
+        "gatesPassed": [
+          "constraints",
+          "typecheck",
+          "lint:contracts-ready",
+          "verify-translation-pairing",
+          "build",
+          "check-gh-closure"
+        ],
+        "workflowEvidence": "真实浏览器驱动:打开测试仓库(browse 目录流)→GLM-4.6 选择→WRITEFILE 工具轮→磁盘逐字校验→结束文案+工具卡;草稿切换/重载均不丢;停止点击后传输层首片段内中断+UI 中断态",
+        "lockedEvidence": "sessions+storages chmod 000:webserver/静态壳/诊断页可用,发送路径显式失败,锁定目录零写入;独立 home 的 gh-headless 同期完整跑通",
+        "memEvidence": "MEM01: server 167.5 MiB + browser 409.7 MiB ≈577 MiB(web 载体,预算 450 未达标,超额归因浏览器载体树,Electron 载体测量 deferred);MEM02: 155.0+406.8≈562 MiB(≤600,千会话正文未开不抬常驻,列表零 Agent 激活);ZCode 相对值 D02 not-run"
+      },
+      "deviations": [
+        "changed-files 卡片渲染间歇(数据链稳定:workspace/changes 事件+/api/changes.summary 响应可查;部分运行渲染部分不渲染)→登记 GH-008",
+        "锁定态错误浮出 ~38.6s(RPC 重试后可见)→登记 GH-006/007 连接层",
+        "品牌仍为上游壳(DSH Local Build/Preview 文案)→gh-brand 独立任务",
+        "审批路径未弹窗:workspace-write 下工作区内写自动允许,符合策略语义;越界写/命令审批反馈留待权限专项"
+      ],
+      "next": "GH-005 完整远端制品与 SSH 自举(依赖 GH-001/002 已备)"
     }
   ],
   "blocked": [

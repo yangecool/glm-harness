@@ -1,0 +1,32 @@
+# The gh-desktop bundle patch: the GH product layer over the dsh web-app
+# surface, applied AFTER `@deepseek-ai/dsh-web-app` so these rows win by id
+# (last write wins per row). The reserved `desktop` profile in a GH-owned
+# Harness home composes gh-base + dsh-web-app + this bundle; the unmodified
+# upstream Electron shell then boots the GH composition, because the shell
+# only reads whatever `$DSH_HOME/profiles/desktop` provides.
+#
+# What this layer owns today: removing rows whose upstream enablement is
+# keyed to the reserved profile name. The dsh-web-app patch enables its
+# product-telemetry rows only when `profileContext.name === 'desktop'`, which
+# is exactly the name a GH desktop home carries, so a GH desktop profile
+# would otherwise start the upstream OTel exporter and the client analytics
+# beacon pointed at upstream production endpoints. GH reporting config is a
+# GH-owned decision that arrives with its own observability layer; until then
+# the composition runs with neither exporter mounted.
+#
+# Product identity (branding, window titles, deep links) is NOT set here:
+# the workbench still renders the upstream shell chrome, and the gh-brand
+# layer that replaces it is a separate GH task. This file stays a thin,
+# reviewable list of row-level removals and value overrides.
+
+- insert:
+    # Upstream desktop OTel exporter; disabled regardless of the profile-name
+    # check, so a GH desktop composition reports nothing upstream.
+    - id: desktop-product-telemetry
+      name: '@deepseek-ai/dsh-host-product-telemetry-otel'
+      disabled: true
+
+    # Upstream client analytics beacon riding the reserved desktop profile.
+    - id: product-analytics
+      name: '@deepseek-ai/dsh-client-product-analytics'
+      disabled: true

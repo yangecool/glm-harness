@@ -22,10 +22,17 @@ import { initProfile } from '../packages/boot/app-boot/src/profile.ts'
  * bundle. Every entry starts from `@glm-harness/gh-base`, never
  * `@deepseek-ai/dsh-base`; `scripts/check-gh-closure.ts` fails when a
  * composed GH profile names an upstream model, account, or telemetry package.
+ *
+ * `desktop` is the RESERVED profile name the upstream Electron shell reads
+ * from `$DSH_HOME/profiles/desktop`; claiming it with the GH tuple (base,
+ * web-app, then the gh-desktop product overlay) is what lets the unmodified
+ * shell boot the GH composition. The overlay removes the upstream telemetry
+ * rows that the reserved name would otherwise enable.
  */
 export const GH_PROFILES: Readonly<Record<string, readonly string[]>> = {
   'gh-web': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app'],
   'gh-headless': ['@glm-harness/gh-base', '@deepseek-ai/dsh-headless'],
+  desktop: ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-desktop'],
 }
 
 /**

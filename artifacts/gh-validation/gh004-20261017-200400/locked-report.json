@@ -1,0 +1,25 @@
+{
+ "phases": [
+  {
+   "name": "static-shell-boots",
+   "ok": true,
+   "note": "empty-state hero present=true (composer gated behind workspace choice)"
+  },
+  {
+   "name": "diagnostics-page-usable",
+   "ok": false,
+   "note": "plugin inventory renders"
+  },
+  {
+   "name": "send-fails-explicitly",
+   "ok": true,
+   "note": "38646ms: ew SessionPluginsAutomation tasksWorkspacesNo sessions yetMoreInto the UnknownPreviewChoose workspaceStandard modeChoose a workspace to start Select Workspace D"
+  },
+  {
+   "name": "locked-roots-untouched",
+   "ok": true,
+   "note": "modes 40000 40000, home entries [\".credentials.yaml\",\"profiles\",\"sessions\",\"storages\"]"
+  }
+ ],
+ "failureLatencyMs": 38646
+}

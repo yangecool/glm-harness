@@ -494,6 +494,9 @@ importers:
       '@glm-harness/gh-base':
         specifier: workspace:*
         version: link:../../packages/glm/base
+      '@glm-harness/gh-desktop':
+        specifier: workspace:*
+        version: link:../../packages/glm/desktop
       '@glm-harness/gh-model-glm':
         specifier: workspace:*
         version: link:../../packages/glm/model-glm
@@ -10484,6 +10487,12 @@ importers:
       '@glm-harness/gh-model-glm':
         specifier: workspace:*
         version: link:../model-glm
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
+  packages/glm/desktop:
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~

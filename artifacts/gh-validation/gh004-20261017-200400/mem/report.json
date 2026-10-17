@@ -1,0 +1,69 @@
+{
+  "startedAt": "2026-10-17T11:44:38.979Z",
+  "steadySeconds": 300,
+  "port": 18501,
+  "mem01": {
+    "serverSteady": {
+      "samples": 59,
+      "medianKb": 171529,
+      "p95Kb": 171529,
+      "maxKb": 171529
+    },
+    "browserSteady": {
+      "samples": 59,
+      "medianKb": 419495,
+      "p95Kb": 419744.8,
+      "maxKb": 419779
+    },
+    "serverComms": [
+      "node"
+    ],
+    "browserComms": [
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome"
+    ]
+  },
+  "mem02Seed": {
+    "sessions": 1000,
+    "projects": 53,
+    "distinctBodies": 22,
+    "events": 635126,
+    "logicalBytes": 859513879,
+    "compressedBytes": 310891335,
+    "frames": 374666
+  },
+  "mem02": {
+    "serverSteady": {
+      "samples": 59,
+      "medianKb": 158710,
+      "p95Kb": 158710,
+      "maxKb": 158710
+    },
+    "browserSteady": {
+      "samples": 59,
+      "medianKb": 416581,
+      "p95Kb": 416975.4,
+      "maxKb": 416979
+    },
+    "serverComms": [
+      "node"
+    ],
+    "browserComms": [
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome",
+      "chrome"
+    ],
+    "serverPidCountStable": 1
+  }
+}

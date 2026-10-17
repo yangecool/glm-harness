@@ -1,0 +1,27 @@
+{
+  "card": "GH-004 桌面最小完整工作流",
+  "runId": "gh004-20261017-200400",
+  "date": "2026-10-17",
+  "carrier": "web (gh-web profile over gh-base + dsh-web-app; the reserved-name desktop composition verified by dump under an alias name — the launcher refuses terminal boots of the reserved profile by design)",
+  "machine": "yangecool-NUC15CRHU5, Ubuntu 24.04, linux 7.0.0-38-generic x64",
+  "modelRoute": "glm → @glm-harness/gh-model-glm → stateful loopback chat-completions mock (GLM v4 wire, /tmp/gh004-mock-glm.mjs), GLM_API_KEY=test-key-gh004 synthetic",
+  "baselineCommits": {
+    "dsh": "1600d8a1e140dcde43a1a0941940a0480712c011",
+    "ghHead": "317bb89d94 (GH-003)"
+  },
+  "gates": {
+    "typecheck": "PASS (host aggregate)",
+    "lint:contracts-ready": "PASS (glm/desktop 0 warnings 0 errors)",
+    "verify-translation-pairing": "PASS (1014 pairs)",
+    "check-gh-closure": "PASS (closure + composed profiles, incl. new desktop profile)",
+    "check-workspace-constraints": "PASS",
+    "build": "PASS"
+  },
+  "newPackages": ["@glm-harness/gh-desktop (packages/glm/desktop)"],
+  "changedFiles": [
+    "packages/glm/desktop/* (new bundle: reserved-desktop overlay disabling upstream telemetry rows)",
+    "scripts/gh-init-profiles.ts (desktop profile entry)",
+    "apps/cli/package.json (gh-desktop dependency)",
+    "tsconfig.host.json (glm/desktop project)"
+  ]
+}

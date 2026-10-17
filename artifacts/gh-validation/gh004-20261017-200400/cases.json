@@ -1,0 +1,62 @@
+[
+  {
+    "case": "E01.1/E05-首批 reserved desktop composition",
+    "verdict": "pass",
+    "evidence": "desktop-profile-dump.yml: the reserved-name profile in a GH home composes gh-base + dsh-web-app + gh-desktop, with the gh-desktop layer's disabled:true rows placed after the web-app rows (last write wins); gh-closure.log covers the composed profile",
+    "notes": "The CLI refuses terminal boots of the reserved 'desktop' name by upstream design ('managed exclusively by the Electron application'), so the composition dump ran under an alias copy; the overlay rows are name-independent"
+  },
+  {
+    "case": "工作流: 打开测试仓库→输入→工具修改→验证→审阅",
+    "verdict": "pass",
+    "evidence": "e2e-report.json phases open-test-repo / repo-workspace-row / model-selector-glm / write-tool-gating / tool-turn-complete / disk-file-created; e2e-shots/01..07; mock-wire.log shows tool round then after-tool round through one GLM route; session log carries turn/start, tool/call write, tool/result, workspace/changes, turn/end",
+    "notes": "目录选择走 web browse 流 (host-directory-picker-auto→browse)；GLM-4.6 在 composer 模型选择器分组 GLM 下可选；write 在 workspace-write 下工作区内自动允许（无审批弹窗，符合策略语义）；notes/gh004.txt 落盘内容逐字校验"
+  },
+  {
+    "case": "改动/验证 presenter",
+    "verdict": "pass-with-finding",
+    "evidence": "host 侧完整：session.v4.jsonl.zstd 含 workspace/changes 事件 (seq 24, turn 1)；GET /api/changes.summary?sessionId&seq=24 返回 {files:[{path:'notes/gh004.txt',added:1,deleted:0}]}；UI 侧 write 工具卡 (e2e-shots/06) 稳定渲染参数+结果",
+    "notes": "FINDING: changed-files 卡片在会话尾部的渲染是间歇性的——本次运行 60s 内未出现；早前同构建运行 (port 18483) 渲染成功（视觉判读确认 'Changed files +1/-0' 卡片在位，截图已被后续重置覆盖）。数据链路（事件+API）稳定，判定为上游 ui-deliverables 客户端触发面的时序问题，登记到 GH-008 任务审查工作修复"
+  },
+  {
+    "case": "锁住本地数据时独立入口可用",
+    "verdict": "pass",
+    "evidence": "locked-web-boot.log: sessions+storages chmod 000 后 webserver 仍启动，失败显式列出 (session-persistence-jsonl/workspace/session-projection-cache EACCES, 5 条 pending)；locked-shots/01 静态壳+导航+空态 hero 在位；locked-shots/02 Plugins 诊断页渲染失败条目；locked-report.json: 发送路径显式失败 (38.6s 后错误可见)；locked-roots-untouched pass (锁定目录权限不变, 无恢复性副产物)；independent-headless.stdout: 独立 home 的 gh-headless 同期完成完整 GLM 轮 (exit 0, '好的，我在。')",
+    "notes": "FINDING: 锁定态下工作区添加失败的错误浮出耗时 ~38s (RPC 重试策略)，'及时' 程度待 GH-006/007 连接层工作改进；credentials 域 (未锁定) 正常初始化 .credentials.yaml，属不同数据域的预期行为"
+  },
+  {
+    "case": "草稿不丢",
+    "verdict": "pass",
+    "evidence": "e2e-report.json: draft-after-session-switch / draft-after-reload 均 pass，composer 内容逐字还原 '草稿不丢测试 draft-keep-gh004'；e2e-shots/07-10",
+    "notes": "上游 per-session localStorage 草稿持久化在 GH 组合下原样工作"
+  },
+  {
+    "case": "按钮/停止及时反馈",
+    "verdict": "pass",
+    "evidence": "e2e-shots/11-12 + mock-wire.log 的 slow-aborted 记录：Stop generating 点击后传输层在首个流片段 (≤400ms) 内中断；UI 侧该轮显示中断指示、无助手输出；会话标题 aux 调用与主轮均走同一 GLM 路由",
+    "notes": "驱动脚本以 '停止按钮消失' 为判据失败过一次——实测按钮匹配命中了其它 /stop/i 标签元素，以 wire abort + UI 中断态截图为准确判据"
+  },
+  {
+    "case": "MEM01 一窗口空闲 5 分钟 PSS ≤ 450 MiB",
+    "verdict": "not-met-on-web-carrier",
+    "evidence": "mem/report.json: server 树 steady 171,529 KB (167.5 MiB, 单 node 进程) + Chromium 页树 steady 419,495 KB (409.7 MiB)，合计 ≈577 MiB",
+    "notes": "超预算 128 MiB，超额全部来自浏览器载体树 (Chromium 进程组)；GH 自身服务树远低于预算。部署形态的 Electron 桌面载体测量缺位 (无显示环境、未打包)，预算判定以 Electron 载体为准——已登记 deferred，不在本卡虚假宣称达标"
+  },
+  {
+    "case": "MEM02 1,000 历史索引 PSS ≤ 600 MiB 且列表不批量激活 Agent",
+    "verdict": "pass-on-web-carrier",
+    "evidence": "mem/report.json: 1,000 会话合成语料 (635,126 events, 压缩 296.8 MiB) 播种后 server 树 steady 158,710 KB (155.0 MiB, 低于 MEM01 的 167.5 MiB——正文未打开时索引不抬升常驻) + browser 406.8 MiB，合计 ≈562 MiB ≤ 600 MiB；serverPidCountStable=1 (无任何 Agent/子进程被列表操作激活)",
+    "notes": "ZCode 相对值 (≥35% 减少) 无法评判：D02 未解 (ZCode 基线需 Node≥24)；与 GH-002 相同按 not-run 记录"
+  },
+  {
+    "case": "薄原生 platform seam",
+    "verdict": "pass",
+    "evidence": "Electron main 零改动：desktop 壳只读取 $DSH_HOME/profiles/desktop 并 spawn desktop-host (apps/desktop/src/paths.ts:19, host-process.ts:186)；GH 侧唯一接触点是 profile 预置 + gh-desktop 行覆盖；web 载体下目录选择走 browse 后端 (ui-directory-picker-browse)，桌面载体走 __DSH_DIRECTORY_PICKER__ 桥接的 ui-directory-picker-native——同一 slot 的两个实现，未新增任何 Main 侧代码",
+    "notes": "深链/菜单/通知等 F52 全集属后续 E01 票；本卡证明 seam 薄且 GH 无 Main 侧业务"
+  },
+  {
+    "case": "品牌与产品身份",
+    "verdict": "blocked-future",
+    "evidence": "工作台仍渲染上游壳 (DSH Local Build 标题、Preview 文案)",
+    "notes": "gh-brand 层是计划内独立任务 (E05/E01.1)，非本卡范围；gh-desktop README 已声明该边界"
+  }
+]

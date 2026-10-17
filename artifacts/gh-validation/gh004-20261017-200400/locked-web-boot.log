@@ -1,0 +1,29 @@
+dsh web: http://127.0.0.1:18490/?token=QmvGiXMpvagz9uolqo5Kjm1YTcjm7upcb9JnFB72f4k
+dsh: warning: 10 entries did not activate
+session-persistence-jsonl (@deepseek-ai/dsh-session-persistence-jsonl): Error: EACCES: permission denied, scandir '/tmp/gh004-locked-home/sessions'
+    at readdirSync (node:fs:1590:26)
+    at JsonlSessionPersistence.assertUsableRoot (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/session/session-persistence-jsonl/lib/index.js:3461:4)
+    at new JsonlSessionPersistence (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/session/session-persistence-jsonl/lib/index.js:2443:8)
+    at Object.apply [as callback] (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/session/session-persistence-jsonl/lib/index.js:3634:5)
+    at Fiber.execute (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/vendor/cordis/lib/index.js:1071:28)
+    at file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/vendor/cordis/lib/index.js:1142:34
+    at Fiber.<anonymous> (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/session/session-persistence-jsonl/lib/index.js:3631:17)
+    at Generator.next (<anonymous>)
+    at file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/vendor/cordis/lib/index.js:1150:26
+    at file:///tmp/gh004-locked-home/profiles/gh-web/#session-persistence-jsonl
+    at file:///tmp/gh004-locked-home/profiles/gh-web/#include
+session-projection-cache (@deepseek-ai/dsh-session-projection-cache): Error: EACCES: permission denied, scandir '/tmp/gh004-locked-home/storages/session_projcache'
+    at async readdir (node:internal/fs/promises:955:18)
+    at async loadPerRecordState (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/storage/storage-json/lib/index.js:334:13)
+    at async PerRecordJsonUnit.loadAll (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/storage/storage-json/lib/index.js:452:17)
+    at async DomainFacility.open (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/storage/storage-domain/lib/index.js:364:22)
+    at async [cordis.init] (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/packages/session/session-projection-cache/lib/index.js:151:18)
+    at async Fiber._reload (file:///disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/vendor/cordis/lib/index.js:1356:5)
+session-checkpoint-policy (@deepseek-ai/dsh-session-checkpoint-policy): pending (waiting for service: sessionPersistence)
+message-feedback (@deepseek-ai/dsh-message-feedback): pending (waiting for service: sessionPersistence)
+workspace (@deepseek-ai/dsh-workspace): pending (waiting for service: sessionPersistence)
+session-controller (@deepseek-ai/dsh-api-session-controller): pending (waiting for service: workspaceRegistry)
+schedule (@deepseek-ai/dsh-schedule): pending (waiting for services: sessionController, sessionPersistence)
+account-controller (@deepseek-ai/dsh-api-account-controller): pending (waiting for service: deepseekAccount)
+workspace-controller (@deepseek-ai/dsh-api-workspace-controller): pending (waiting for service: workspaceRegistry)
+ui-deliverables (@deepseek-ai/dsh-client-ui-deliverables): pending (waiting for service: sessionController)

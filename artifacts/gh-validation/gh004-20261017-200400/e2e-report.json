@@ -1,0 +1,62 @@
+{
+ "phases": [
+  {
+   "name": "workbench-booted",
+   "ok": true,
+   "note": "static shell + sidebar + composer visible"
+  },
+  {
+   "name": "open-test-repo",
+   "ok": true,
+   "note": "workspace added and listed"
+  },
+  {
+   "name": "repo-workspace-row",
+   "ok": true,
+   "note": "row action present"
+  },
+  {
+   "name": "model-selector-glm",
+   "ok": true,
+   "note": "GLM group listed GLM-4.6"
+  },
+  {
+   "name": "write-tool-gating",
+   "ok": true,
+   "note": "workspace-internal write auto-allowed under workspace-write policy (no prompt)"
+  },
+  {
+   "name": "tool-turn-complete",
+   "ok": true,
+   "note": "closing prose + write presenter rendered"
+  },
+  {
+   "name": "disk-file-created",
+   "ok": true,
+   "note": "content=\"created by the GH-004 desktop workflow\\n\""
+  },
+  {
+   "name": "changed-files-card",
+   "ok": false,
+   "note": "no changed-files text found"
+  },
+  {
+   "name": "draft-after-session-switch",
+   "ok": true,
+   "note": "composer=\"草稿不丢测试 draft-keep-gh004\""
+  },
+  {
+   "name": "draft-after-reload",
+   "ok": true,
+   "note": "composer=\"草稿不丢测试 draft-keep-gh004\""
+  },
+  {
+   "name": "stop-feedback",
+   "ok": false,
+   "note": "streaming=false stopButton=\"Stop generating\" stoppedInMs=-1"
+  }
+ ],
+ "startedAt": "2026-10-17T11:25:40.174Z",
+ "returnedToSession": true,
+ "finishedAt": "2026-10-17T11:26:43.701Z"
+}
