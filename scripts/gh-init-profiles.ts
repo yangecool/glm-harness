@@ -30,9 +30,9 @@ import { initProfile } from '../packages/boot/app-boot/src/profile.ts'
  * rows that the reserved name would otherwise enable.
  */
 export const GH_PROFILES: Readonly<Record<string, readonly string[]>> = {
-  'gh-web': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app'],
+  'gh-web': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-brand'],
   'gh-headless': ['@glm-harness/gh-base', '@deepseek-ai/dsh-headless'],
-  desktop: ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-desktop'],
+  desktop: ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-brand', '@glm-harness/gh-desktop'],
 }
 
 /**

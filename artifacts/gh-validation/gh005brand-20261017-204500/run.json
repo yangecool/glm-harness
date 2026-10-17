@@ -1,0 +1,23 @@
+{
+  "card": "GH 品牌与界面重设计（参考 Grok Harness 视觉替换方案）",
+  "runId": "gh005brand-20261017-204500",
+  "date": "2026-10-17",
+  "approach": "GSH 传承：bundle 覆盖层禁用官方品牌行 + 客户端插件占据通用品牌槽位 + 运行时级联覆盖色阶；插件缝之外（标题/图标/manifest/桌面文案/渲染资产）按 GSH 先例做最小 copy/asset 替换，零逻辑改动",
+  "carrier": "web (gh-web = gh-base + dsh-web-app + gh-brand)；桌面渲染页以独立加载方式验证（本机无显示/无 Electron 二进制）",
+  "gates": {
+    "typecheck": "PASS (host + client aggregate)",
+    "lint": "PASS (glm/brand 0/0)",
+    "build": "PASS (brand client bundle 进入构建管线)",
+    "check-gh-closure": "PASS",
+    "check-workspace-constraints": "PASS",
+    "verify-translation-pairing": "PASS (1015 pairs)",
+    "tests": "PASS (brand 3 + 受影响包共 69 files / 1238 tests)"
+  },
+  "newPackages": ["@glm-harness/gh-brand (packages/glm/brand)"],
+  "glmBrandValues": {
+    "name": "GLM Harness / GLMH",
+    "mark": "四角火花（原创几何，currentColor mask + 品牌蓝 favicon）",
+    "accentRamp": "--dsw-static-deepseek-* ← GLM 蓝 rgb(59,111,255) 明度对齐色阶（50..900 + onboarding accent），light/dark 双块覆盖",
+    "font": "字标沿用平台随包 Montserrat；UI 字体体系不变"
+  }
+}

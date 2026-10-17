@@ -157,6 +157,47 @@
         "审批路径未弹窗:workspace-write 下工作区内写自动允许,符合策略语义;越界写/命令审批反馈留待权限专项"
       ],
       "next": "GH-005 完整远端制品与 SSH 自举(依赖 GH-001/002 已备)"
+    },
+    {
+      "id": "GH-BRAND",
+      "title": "品牌与界面重设计(参考 GSH 视觉替换方案)",
+      "planRefs": [
+        "E01.1",
+        "E05.3",
+        "F51",
+        "F52 部分"
+      ],
+      "owner": "桌面/品牌",
+      "status": "complete",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "packages/glm/brand (@glm-harness/gh-brand):bundle 覆盖层(禁用 ui-brand-official)+品牌槽位占据(火花标记/字标/徽标)+GLM 色阶运行时级联覆盖;gh-web/desktop profile 均接线",
+        "资产与命名:apps/web index.html 标题/GLM favicon/manifest(GLM Harness/GLMH);glm-mark/glm-favicon(+dark) SVG",
+        "文案:首启欢迎说明、hero 标题(Build with GLM/与 GLM 共建)、品牌回退、apps/desktop locale 22 处产品名 → GLM Harness",
+        "桌面渲染面:welcome-brand.svg 字标资产、update-dialog/mandatory-update 强调色 → GLM 蓝",
+        "逐页视觉验收:启动/登录(首启)/工作台(明暗)/设置/更新(渲染页级)/欢迎(资产级) 8 组截图+11 项自动检查"
+      ],
+      "verification": {
+        "runIds": [
+          "gh005brand-20261017-204500"
+        ],
+        "gatesPassed": [
+          "constraints",
+          "typecheck(host+client)",
+          "lint",
+          "build",
+          "check-gh-closure",
+          "verify-translation-pairing 1015",
+          "受影响包 69 files/1238 tests + brand 3 tests"
+        ],
+        "visualEvidence": "色阶 computed 值精确匹配 rgb(59,111,255)(明暗双块);侧栏品牌替换后 DSH Local Build/鲸鱼零残留;标题/favicon/manifest 名称校验;视觉判读复核 6 张关键截图"
+      },
+      "deviations": [
+        "桌面欢迎窗/更新窗运行时截图 deferred:本机无显示、无 Electron 二进制;以渲染页独立加载+资产/文案构建级验证补偿,随打包桌面构建补齐",
+        "账号登录表单随 GH-007;当前登录类表面=首启说明+欢迎窗",
+        "dsh bin 名与控制台前缀保持上游(glmh 命名属打包票);启动页平台词标 HARNESS 保留(产品中立,GSH 同款)"
+      ],
+      "next": "GH-005 远端制品与 SSH 自举;桌面打包票补 Electron 窗运行时视觉验收"
     }
   ],
   "blocked": [

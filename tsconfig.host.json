@@ -470,6 +470,7 @@
     { "path": "./packages/glm/base" },
     { "path": "./packages/glm/model-glm" },
     { "path": "./packages/glm/desktop" },
+    { "path": "./packages/glm/brand" },
     { "path": "./packages/boot/app-boot" },
     { "path": "./packages/boot/cmdline" },
     { "path": "./packages/sdk/server" },

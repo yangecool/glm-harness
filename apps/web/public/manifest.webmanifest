@@ -1,12 +1,12 @@
 {
-  "name": "DeepSeek Harness",
-  "short_name": "DSH",
+  "name": "GLM Harness",
+  "short_name": "GLMH",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
   "icons": [
     {
-      "src": "favicon.svg",
+      "src": "glm-favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

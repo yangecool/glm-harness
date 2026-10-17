@@ -1,0 +1,28 @@
+# The gh-brand bundle patch: the GLM product identity layer over the dsh
+# web-app surface, applied AFTER `@deepseek-ai/dsh-web-app` so these rows win
+# by id (last write wins per row).
+#
+# The stock composition fills the generic brand slots with the official
+# occupants (the ui-brand-official row) or, in local builds where that row's
+# env gate keeps it inert, with the shell's built-in fallbacks (the stock mark
+# artwork and the `brand.localBuild` label). This layer turns the official
+# occupants off and mounts @glm-harness/gh-brand in their place: its browser
+# half owns the four brand slots (sidebar mark/name, conversation-hero
+# mark/name) and installs the GLM color ramp as a runtime cascade override,
+# so removing this bundle layer restores the stock identity wholesale.
+#
+# The remaining GLM surfaces live outside plugin seams and are carried by the
+# repository's build inputs instead, each a copy or asset swap with no logic
+# change, following the Grok Harness precedent:
+#   - apps/web/index.html — document title and favicon links
+#   - apps/web/public/glm-mark.svg, glm-favicon*.svg, manifest.webmanifest
+#   - apps/desktop/src/locale.ts — product-name strings (menus, dialogs)
+#   - apps/desktop renderer assets — welcome wordmark, update-dialog accent
+#   - client locale files — brand fallback, hero headline, welcome notice copy
+
+- id: ui-brand-official
+  disabled: true
+
+- insert:
+    - id: gh-brand
+      name: '@glm-harness/gh-brand'

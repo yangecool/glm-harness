@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/brand/README.md
+/:
+  en: 2f9090a0cc26472c
+  zh: 44ddd4d30dc65b1d
+/glm-harness-gh-brand:
+  en: 2b738dd9d08b7290
+  zh: 73b501591dde4f2a
+/glm-harness-gh-brand/summary:
+  en: 906b2f5de487f581
+  zh: cb2e1f9bb7c258d1
+/glm-harness-gh-brand/table-of-contents:
+  en: 5db0ae01d50cb0e4
+  zh: e5a8221553ee3d19
+/glm-harness-gh-brand/use-this-package:
+  en: f5bb8efde9e366bf
+  zh: 60602be19a7a799b
+/glm-harness-gh-brand/use-this-package/what-you-get:
+  en: 00463b03e13761ce
+  zh: 7df09733eb093c13
+/glm-harness-gh-brand/understand-the-implementation:
+  en: ee4615a04fa6503d
+  zh: ee2c5fb2204a43cf
+/glm-harness-gh-brand/understand-the-implementation/composition-mechanics:
+  en: 1a9f4a2890dd77a5
+  zh: 7dfb6348f9b99281
+/glm-harness-gh-brand/understand-the-implementation/beyond-plugin-seams:
+  en: c8f83d8b9f2f0dee
+  zh: 04905d7f0551acf5
+/glm-harness-gh-brand/understand-the-implementation/source-map:
+  en: 7a0c028394c4e18b
+  zh: 83b8537d69732977
+/glm-harness-gh-brand/further-exploration:
+  en: a7f03af77579c4d9
+  zh: 41e48293a6bdd009
+/glm-harness-gh-brand/known-limitations-and-deferred-work:
+  en: ccb833b365fe4713
+  zh: d003eb9077ceecd7

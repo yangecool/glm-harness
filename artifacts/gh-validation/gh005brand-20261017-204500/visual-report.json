@@ -1,0 +1,60 @@
+{
+ "checks": [
+  {
+   "name": "startup-page",
+   "ok": true,
+   "note": "boot-phase frame captured at navigation commit"
+  },
+  {
+   "name": "first-run-notice-glm-copy",
+   "ok": true,
+   "note": "GLM preview notice rendered"
+  },
+  {
+   "name": "hero-headline-glm",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "name": "hero-mark-glm-asset",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "name": "glm-ramp-override-live",
+   "ok": true,
+   "note": "500=rgb(59, 111, 255) 450=rgb(88, 140, 255) onboarding=rgb(59, 111, 255)"
+  },
+  {
+   "name": "document-title",
+   "ok": true,
+   "note": "title=\"GLM Harness\""
+  },
+  {
+   "name": "favicon-and-manifest",
+   "ok": true,
+   "note": "icon=200 name=GLM Harness"
+  },
+  {
+   "name": "sidebar-brand-replaced",
+   "ok": true,
+   "note": "mark=true dsh-build-gone=true"
+  },
+  {
+   "name": "no-upstream-product-strings",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "name": "settings-plugins-page",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "name": "dark-ramp-override",
+   "ok": true,
+   "note": "500=rgb(59, 111, 255)"
+  }
+ ],
+ "finishedAt": "2026-10-17T12:27:56.485Z"
+}

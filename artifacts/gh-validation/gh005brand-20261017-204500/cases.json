@@ -1,0 +1,52 @@
+[
+  {
+    "case": "启动界面",
+    "verdict": "pass",
+    "evidence": "shots/01-boot.png（加载期框架无关启动页帧）；文档标题 'GLM Harness'（document-title 检查）；favicon /glm-favicon.svg 200 + manifest name=GLM Harness/short_name=GLMH",
+    "notes": "启动页平台词标 HARNESS 保留（产品中立，与 GSH 一致）"
+  },
+  {
+    "case": "登录/首次运行界面",
+    "verdict": "pass",
+    "evidence": "shots/02-first-run-notice.png：首启弹窗为 GLM Harness 预览说明（标题/正文/按钮均为 GLM 文案，无 DeepSeek 字样）；视觉判读确认",
+    "notes": "账号登录页属 GH-007（当前无账号服务）；桌面欢迎窗资产见下条"
+  },
+  {
+    "case": "工作台（空态 hero + 侧栏 + composer）",
+    "verdict": "pass",
+    "evidence": "shots/03-empty-hero.png：四角火花标记 + 'Build with GLM' 标题（视觉判读确认非鱼形）；shots/04-workbench-light.png：侧栏 'GLM HARNESS' + HARNESS 徽标，无 'DSH Local Build'/鲸鱼残留（sidebar-brand-replaced + no-upstream-product-strings 检查）；hero-mark-glm-asset 检查 mask 指向 /glm-mark.svg"
+  },
+  {
+    "case": "设置界面",
+    "verdict": "pass",
+    "evidence": "shots/05-settings-plugins.png（Plugins 诊断页渲染）；设置页共享同一品牌槽位与色阶体系"
+  },
+  {
+    "case": "安装/更新界面",
+    "verdict": "pass-at-renderer-level",
+    "evidence": "shots/07-update-dialog.png：update-dialog 渲染页（GLM Harness 更新标题+按钮），焦点描边 computed rgb(59,111,255)；mandatory-update #copy 强调色 computed rgb(59,111,255)；apps/desktop/src/locale.ts 22 处产品名改为 GLM Harness（菜单/退出/启动失败等）",
+    "notes": "本机无显示/无 Electron 二进制——渲染页以独立加载验证 + 文案/资产构建级验证；运行时窗口截图随打包桌面构建补齐（README 已声明）"
+  },
+  {
+    "case": "欢迎（登录前置）界面资产",
+    "verdict": "pass-at-asset-level",
+    "evidence": "shots/08-welcome-brand-asset.png：welcome-brand.svg 替换为火花 + 'GLM HARNESS' 字标（明暗自适应，视觉判读确认）；窗口运行时验证同上条 deferred"
+  },
+  {
+    "case": "配色（GLM 品牌色阶）",
+    "verdict": "pass",
+    "evidence": "glm-ramp-override-live：body computed --dsw-static-deepseek-500=rgb(59,111,255)、450=rgb(88,140,255)、onboarding=rgb(59,111,255)；dark-ramp-override：暗色块同样生效；06-workbench-dark.png 视觉判读确认蓝色强调分布且品牌清晰可读",
+    "notes": "以运行时级联覆盖实现（同选择器后位样式表），不改上游主题文件；禁用 gh-brand 即整体还原"
+  },
+  {
+    "case": "字体/组件/布局",
+    "verdict": "pass-inherited",
+    "evidence": "组件与布局复用平台设计体系（--dsw-* token 全量继承）；品牌字体 Montserrat 随包不变，字标以真实文本渲染保证明暗清晰；色阶覆盖使按钮/链接/焦点等强调组件全局换为 GLM 蓝",
+    "notes": "不做组件级换肤——GSH 同样只做槽位+色阶，保持与平台升级的兼容面"
+  },
+  {
+    "case": "逐页视觉验收纳入交付标准",
+    "verdict": "pass",
+    "evidence": "visual-report.json 11 项检查全过（本目录随 run 归档）；后续桌面打包票补 Electron 窗运行时截图后并入同一验收格式"
+  }
+]
