@@ -19,7 +19,7 @@ Concretely:
 | Branch | Contents |
 | --- | --- |
 | `main` | GLM Harness history: one squashed snapshot of the DSH baseline plus the GLM Harness commits. It does not carry the upstream commit sequence. |
-| `upstream` | The DeepSeek Harness baseline this repository builds on, at commit `1600d8a1`, with the full upstream history. Read-only reference. |
+| `upstream` | The DeepSeek Harness baseline this repository builds on, at `dsh-v0.2.1-rc.1`, with the full upstream history. Read-only reference. |
 
 `origin` points to `deepseek-ai/deepseek-harness` and is fetched, never pushed to.
 
@@ -32,14 +32,16 @@ Bootstrap phase. Delivered so far, each with recorded evidence under `artifacts/
 - runtime derivation with an explicit DeepSeek-free base bundle (GH-001);
 - resource baseline with repeatable fixtures (GH-002);
 - the native GLM provider route (GH-003);
-- the desktop minimal workflow over the reserved GH composition (GH-004);
-- the full GLM Harness brand and interface redesign (GH-BRAND).
+- the Web workflow prototype and reserved desktop composition (GH-004);
+- the initial GLM Harness brand layer and partial interface replacement (GH-BRAND).
 
 The live ledger — including blocked items and honestly recorded not-met budgets — is [docs/glm/delivery-status.json](docs/glm/delivery-status.json). Upcoming work includes remote artifacts with SSH bootstrap (GH-005) and the supervisor and connection cards.
 
 Validation against the real GLM API is pending credentials and stays open in the ledger; every workflow claim so far is backed by a scripted mock endpoint recorded in the evidence runs.
 
 <a id="run-from-source"></a>
+
+<a id="run"></a>
 
 ## Run from source
 

@@ -51,8 +51,6 @@
     "@deepseek-ai/dsh-api-gateway": "workspace:*",
     "@deepseek-ai/dsh-api-remote-access": "workspace:*",
     "@deepseek-ai/dsh-llm": "workspace:*",
-    "@glm-harness/gh-model-glm": "workspace:*",
-    "@deepseek-ai/dsh-llm-retry": "workspace:*",
     "@deepseek-ai/dsh-mcp-resources": "workspace:*",
     "@deepseek-ai/dsh-permission-presets": "workspace:*",
     "@deepseek-ai/dsh-plan-mode": "workspace:*",
@@ -111,7 +109,10 @@
     "@deepseek-ai/dsh-config-editor": "workspace:*",
     "@deepseek-ai/dsh-settings": "workspace:*",
     "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-tool-working-directory": "workspace:*"
+    "@deepseek-ai/dsh-tool-working-directory": "workspace:*",
+    "@glm-harness/gh-model-glm": "workspace:*",
+    "@glm-harness/gh-model-retry": "workspace:*",
+    "@glm-harness/gh-persona": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"

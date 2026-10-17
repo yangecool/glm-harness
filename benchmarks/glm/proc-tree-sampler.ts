@@ -52,7 +52,7 @@ interface ProcStat {
 function readProcStats(): Map<number, ProcStat> {
   const stats = new Map<number, ProcStat>()
   for (const entry of readdirSync('/proc')) {
-    if (entry.length === 0 || entry < '0' || entry > '9') continue
+    if (!/^\d+$/.test(entry)) continue
     const pid = Number(entry)
     if (!Number.isInteger(pid)) continue
     let raw: string

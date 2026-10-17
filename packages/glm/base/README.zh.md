@@ -9,13 +9,14 @@ kind: "package-bundle"
 
 ## 概述
 
-每个 GH profile 都运行在 `gh-base` 之上，因此各 GH 界面共享完整的工具集、持久会话历史、工作区安全默认值和同一个供应方中立的 LLM 接缝——同时不携带任何上游模型、账号或遥测业务。本 bundle 的依赖清单就是产品对 dsh 公共包的最小闭包：`@deepseek-ai/dsh-llm-pi-ai`、DeepSeek 模型适配器与账号平台、DeepSeek 会话日志扩展、DeepSeek 网页搜索供应方和 OTel 导出器既不在本 manifest 中，也不在组合出的树里；`scripts/check-gh-closure.ts` 会在它们任何一方重新出现时报错。模型接入不是回退决策：GLM 路由以 `@glm-harness` 模型插件的形式挂载到同一个 `ctx.llm` 接缝上；在该层挂载之前，模型请求会显式失败。
+GH profile 通过这层显式公共 DSH 组合共享会话、工具、工作区执行、设置和 GH 原生 GLM 适配器。`scripts/gh-init-profiles.ts` 为 GH home 选择此层。闭包门禁排除上游模型、重试、账号和遥测实现。无 GLM 凭据时显式失败。GH 账号与 ZCode 权限策略仍需分别实现;GH 自有有界重试已随本层交付。
 
 ## 目录
 
 - [使用本包](#use-this-package)
 - [理解实现](#understand-the-implementation)
 - [延伸阅读](#further-exploration)
+- [模型体验](#model-experience)
 - [已知限制与后续工作](#known-limitations-and-deferred-work)
 
 -----
@@ -27,7 +28,7 @@ GH profile 先写 `@glm-harness/gh-base`，再写它的界面 bundle；`scripts/
 
 ### 你会得到什么
 
-dsh 核心减去上游业务行：会话、工具、沙箱与审批策略、技能、子代理、后台任务、工作流、spill、存储、设置和凭据——以及 LLM 接缝本身（`dsh-llm`、`dsh-llm-retry`、`dsh-agent-default-model`），但不注册任何适配器。默认模型路由为 `provider: glm`，当前没有任何层提供它，因此在 GH 模型路由落地之前，新建 agent 会以"供应方未注册"错误显式失败，而不是触达上游端点。
+dsh 核心减去上游业务行：会话、工具、沙箱与审批策略、技能、子代理、后台任务、工作流、spill、存储、设置和凭据——以及 LLM 接缝本身（`dsh-llm`、`dsh-agent-default-model`），以及 GH 原生的 `gh-model-glm` 适配器、`model-retry` 重试执行器和 `gh-persona` 工作策略。默认路由为 `provider: glm`、`model: glm-4.6`；无凭据时以 `MISSING_CREDENTIAL` 显式失败。上游重试执行器已排除;GH 自有的有界执行器(`gh-model-retry`)在 agent 请求恢复点上运行 GLM 路由的 provider 策略。
 
 ### 修改默认值
 
@@ -38,7 +39,7 @@ dsh 核心减去上游业务行：会话、工具、沙箱与审批策略、技�
 
 ### 组合机制
 
-`gh-base` 镜像上游 `dsh-base` 的行集，移除了十行（`deepseek-llm-api-extensions`、`session-log-deepseek`、`plugin-package-inventory-deepseek`、`deepseek-account`、`llm-pi-ai`、`otel`、`session-telemetry-otel`、`web-search-deepseek`、`llm-deepseek`、`llm-deepseek-account`），并重述了两行：`web` 只固定 `fetchProvider: http`，`agent-default-model` 指向 GH 供应方 id。`cordis.patch.yml` 的头部注释与 `scripts/check-gh-closure.ts` 维护同一份清单；边界变化时三处必须同步。
+`gh-base` 镜像上游 `dsh-base` 的行集，排除了十一条业务行（`deepseek-llm-api-extensions`、`session-log-deepseek`、`plugin-package-inventory-deepseek`、`deepseek-account`、`llm-pi-ai`、`otel`、`session-telemetry-otel`、`web-search-deepseek`、`llm-deepseek`、`llm-deepseek-account`、`llm-retry`），添加 GH 原生 `model-glm` 行，并重述了两条共享行：`web` 只固定 `fetchProvider: http`，`agent-default-model` 指向 GH 供应方 id。`cordis.patch.yml` 的头部注释与 `scripts/check-gh-closure.ts` 维护同一份清单；边界变化时三处必须同步。
 
 ### 源码地图
 
@@ -52,9 +53,36 @@ dsh 核心减去上游业务行：会话、工具、沙箱与审批策略、技�
 - [dsh-base](../../bundle/base/README.zh.md) —— 本层的上游来源；逐行语义请读它。
 - [app-boot profiles](../../boot/app-boot/README.zh.md#profiles) —— profile 如何把本 bundle 与界面 bundle、用户 patch 叠加。
 
-<a id="known-limitations-and-deferred-work"></a>
+<a id="model-experience"></a>
+## 模型体验
+
+<a id="composition-effects"></a>
+### 组合影响
+
+<a id="what-the-model-sees"></a>
+#### 模型所见
+
+本 bundle 选择模型/工具/提示能力，实际请求由对应插件决定，本层不独立添加提示文本。
+
+<a id="token-effect"></a>
+#### Token 影响
+
+`gh-base` 不独立调用模型，token 消耗由组合出的能力 owner 决定。
+
+<a id="kv-cache-effect"></a>
+#### KV Cache 影响
+
+本层不序列化请求。改变模型可见能力的选择可能改变前缀，具体影响由对应 owner 说明。
+
 ## 已知限制与后续工作
 
-- 此处不携带任何模型适配器。GLM 供应方路由、目录、wire 协议和账号属于 `@glm-harness` 模型包（计划 E02）；在它们落地之前，GH profile 可以启动并运行工具，但每个模型请求都会显式失败。
+<a id="known-limitations-and-deferred-work"></a>
+
+- 此处已组合 GH 原生文本/工具 GLM 适配器。完整模型配置与账号/PAT 集成尚待完成(计划 E02);GH 自有有界重试已在此交付,purpose 级模型预算随模型工作方式工作交付。当前权限预设仍继承 DSH 行为；ZCode 三种权限需要独立实现策略与 UI。
 - 此处不携带遥测。GH 诊断与反馈（计划 E09）将提供带 GH 自有端点的导出器；上游 OTel 包保持闭包之外。
 - 在 GH 搜索决策落地前没有网页搜索供应方；`web_fetch` 通过匿名 HTTP fetch 供应方工作。
+
+<a id="dev-note"></a>
+### 开发备注
+
+业务行为保留在其所属插件，并验证组合后的 profile。

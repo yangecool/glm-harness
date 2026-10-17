@@ -10,10 +10,10 @@
   zh: 6e8a7438e99927da
 /glm-harness-gh-desktop/summary:
   en: fb4e0033da0182af
-  zh: 99a65d4b8d6e99e7
+  zh: 410af30b07fba3e7
 /glm-harness-gh-desktop/table-of-contents:
-  en: 5db0ae01d50cb0e4
-  zh: e5a8221553ee3d19
+  en: b563e4ec4727d0de
+  zh: d0228da978238e05
 /glm-harness-gh-desktop/use-this-package:
   en: 8df2a19e7fd88c31
   zh: 2886371ea4354051
@@ -30,8 +30,26 @@
   en: ac5b3be3afd11319
   zh: 87b654286d09c141
 /glm-harness-gh-desktop/further-exploration:
-  en: 09d357e6fce94fec
-  zh: 77ac3e08563161ca
+  en: aa3a3b4a143971c5
+  zh: b1c602dc583136a5
+/glm-harness-gh-desktop/model-experience:
+  en: 215e7ba838619b7b
+  zh: 9504705eabfaca9c
+/glm-harness-gh-desktop/model-experience/composition-effects:
+  en: 2a896d9682be069d
+  zh: 7cf57c18a7f8da68
+/glm-harness-gh-desktop/model-experience/composition-effects/what-the-model-sees:
+  en: f6942dbf01eb5309
+  zh: 58525e81c70716f7
+/glm-harness-gh-desktop/model-experience/composition-effects/token-effect:
+  en: 933f8a86f5f76755
+  zh: dcc10e4a767d2643
+/glm-harness-gh-desktop/model-experience/composition-effects/kv-cache-effect:
+  en: ca35b9ac5c475c8e
+  zh: 4b38100fe1f915ce
 /glm-harness-gh-desktop/known-limitations-and-deferred-work:
-  en: 85590b4ac5bbd540
-  zh: 42977c40b40cf43d
+  en: 27246a042c6ed5a9
+  zh: 4e8ec86a12705dd9
+/glm-harness-gh-desktop/known-limitations-and-deferred-work/dev-note:
+  en: d79d3f1bf3563160
+  zh: a8b22fdaa54c32a8

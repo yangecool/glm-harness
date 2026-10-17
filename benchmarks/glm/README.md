@@ -23,3 +23,5 @@ corepack pnpm exec tsx benchmarks/glm/run-gh-baseline.ts run --fixture-root <fre
 Each `run` writes `memory.csv` (per-tick per-pid rows), `scenarios.json` (summaries, raw per-tick tree totals, exit codes, boot times, sampler driver CPU), and `summary.md` (tables). The sampler's own driver CPU is reported per scenario so its cost is visible next to the numbers it produced.
 
 The ZCode baseline the plan also names is not run by this driver: building the pinned ZCode revision requires Node ≥ 24, which this machine does not have installed. Record it as not-run with that reason and the unblock step (install Node 24); do not substitute a different revision.
+
+The 2026-10-17 review fixed numeric /proc directory filtering that excluded multi-digit PIDs beginning with 9. Earlier GH-002/004 results are historical and must be remeasured before any MEM verdict. An unreadable or short-lived process can still be absent from a tick; these samples do not prove complete coverage or PID-reuse safety.

@@ -31,7 +31,7 @@ export interface WireToolCall {
 export type WireMessage =
   | { role: 'system'; content: string }
   | { role: 'user'; content: string }
-  | { role: 'assistant'; content: string; tool_calls?: WireToolCall[] }
+  | { role: 'assistant'; content: string; reasoning_content?: string; tool_calls?: WireToolCall[] }
   | { role: 'tool'; tool_call_id: string; content: string }
 
 /**
@@ -63,9 +63,9 @@ export interface WireToolCallDelta {
 /** The `choices[0].delta` object of one streamed frame. */
 export interface WireDelta {
   role?: string
-  content?: string
-  /** GLM reasoning output; never sent back in later requests. */
-  reasoning_content?: string
+  content?: string | null
+  /** GLM reasoning output, retained for same-provider/model tool continuation. */
+  reasoning_content?: string | null
   tool_calls?: WireToolCallDelta[]
 }
 

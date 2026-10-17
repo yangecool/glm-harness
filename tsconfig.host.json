@@ -469,6 +469,8 @@
     { "path": "./packages/bundle/web-app" },
     { "path": "./packages/glm/base" },
     { "path": "./packages/glm/model-glm" },
+    { "path": "./packages/glm/model-retry" },
+    { "path": "./packages/glm/persona" },
     { "path": "./packages/glm/desktop" },
     { "path": "./packages/glm/brand" },
     { "path": "./packages/boot/app-boot" },

@@ -61,9 +61,6 @@
       "path": "../../llm/llm"
     },
     {
-      "path": "../../llm/llm-retry"
-    },
-    {
       "path": "../../workspace/workspace"
     },
     {

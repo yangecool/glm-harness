@@ -16,6 +16,7 @@ The desktop Electron shell owns no GH business logic: it reads whatever composit
 - [Use this package](#use-this-package)
 - [Understand the implementation](#understand-the-implementation)
 - [Further Exploration](#further-exploration)
+- [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
 -----
@@ -55,8 +56,30 @@ The upstream web-app patch guards its telemetry rows with `profileContext.name !
 - `scripts/check-gh-closure.ts` — the gate proving no banned upstream package re-enters a composed GH profile.
 - `packages/bundle/web-app/cordis.patch.yml` — the overlaid rows and their profile-name guards.
 
-<a id="known-limitations-and-deferred-work"></a>
+## Model Experience
+
+### Composition effects
+
+#### What the model sees
+
+The overlay disables upstream telemetry rows and contributes no model-facing context.
+
+#### Token effect
+
+`gh-desktop` makes no independent model calls. The selected capability owners determine token use.
+
+#### KV Cache effect
+
+This layer does not serialize requests. Changes to selected model-facing capabilities can change prefixes; their owners document that effect.
+
 ## Known Limitations and Deferred Work
+
+<a id="known-limitations-and-deferred-work"></a>
 
 - Product identity (branding, window titles, deep links) still renders the upstream shell chrome; the gh-brand layer that replaces it is a separate GH task.
 - GH-owned reporting and diagnostics replace the removed exporters in a later observability layer; until then no exporter is mounted.
+
+<a id="dev-note"></a>
+### Dev Note
+
+Keep business behavior in its owning plugins and verify the composed profile.

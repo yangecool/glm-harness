@@ -7,7 +7,7 @@ kind: "package-bundle"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 dsh 客户端壳之上的 GLM 产品身份，组合方式沿用 Grok Harness 的做法：一个应用在 `@deepseek-ai/dsh-web-app` 之后的 bundle 层，关掉官方品牌行并挂载本包；其浏览器半边用 GLM 火花标记与字标占据通用品牌槽位（侧栏标记与名称、会话空态标记），并以运行时级联覆盖方式安装 GLM 色阶，覆盖平台样式表的强调色自定义属性。不改上游主题文件，不写 Electron main 代码；移除本 bundle 层即整体还原官方身份与色阶。
 
@@ -16,6 +16,7 @@ dsh 客户端壳之上的 GLM 产品身份，组合方式沿用 Grok Harness 的
 - [使用本包](#use-this-package)
 - [理解实现](#understand-the-implementation)
 - [进一步探索](#further-exploration)
+- [模型体验](#model-experience)
 - [已知限制与延后工作](#known-limitations-and-deferred-work)
 
 -----
@@ -57,13 +58,40 @@ bundles:
 <a id="further-exploration"></a>
 ## 进一步探索
 
-- Grok Harness 运行时的 `packages/grok/brand` — 本包沿用的先例。
+- Grok Harness 运行时的 `brand` — 本包沿用的先例。
 - `packages/client/ui-sidebar/src/client/SidebarRoot.tsx` — 槽位的宿主表面与官方回退。
 - `packages/client/ui-theme/src/styles/design-platform.css` — 色阶覆盖所指向的 token 词表。
 
-<a id="known-limitations-and-deferred-work"></a>
+<a id="model-experience"></a>
+## 模型体验
+
+<a id="composition-effects"></a>
+### 组合影响
+
+<a id="what-the-model-sees"></a>
+#### 模型所见
+
+只改变浏览器身份与主题 slots，不贡献提示、工具 schema 或模型消息。
+
+<a id="token-effect"></a>
+#### Token 影响
+
+`gh-brand` 不独立调用模型，token 消耗由组合出的能力 owner 决定。
+
+<a id="kv-cache-effect"></a>
+#### KV Cache 影响
+
+本层不序列化请求。改变模型可见能力的选择可能改变前缀，具体影响由对应 owner 说明。
+
 ## 已知限制与延后工作
+
+<a id="known-limitations-and-deferred-work"></a>
 
 - 无框架启动页保留平台词标 `HARNESS`；它是产品中立的，为各 harness 产品共享。
 - 启动器的 `dsh` bin 名与控制台前缀保持上游；产品命令命名（`glmh`）属打包任务。
 - 更新/安装与欢迎桌面窗在本机以资产与文案级别验证（无显示器、无 Electron 二进制）；这些窗的运行时截图随打包后的桌面构建补齐。
+
+<a id="dev-note"></a>
+### 开发备注
+
+业务行为保留在其所属插件，并验证组合后的 profile。

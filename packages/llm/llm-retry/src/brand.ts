@@ -1,7 +1,7 @@
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { RetryId as RetryIdentity } from '@deepseek-ai/dsh-agent/types'
 
-/** Stable identity shared by every attempt in one request-step retry chain. */
-export type RetryId = Branded<'RetryId'>
+/** Stable request retry identity, shared with policy-independent readers. */
+export type RetryId = RetryIdentity
 
 /**
  * Brand an implementation-minted retry-chain identity.

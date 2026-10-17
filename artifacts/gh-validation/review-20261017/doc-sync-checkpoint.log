@@ -1,0 +1,180 @@
+$ tsx scripts/run-gates.ts doc-sync
+run-gates: doc-sync running 43 gate(s) with 8 worker(s) from 12 local default worker(s) of 14 CPU(s), doc-sync cap 8.
+run-gates: start doc-typecheck
+run-gates: start documentation build
+run-gates: start doc graphs
+run-gates: start CLI help reference
+run-gates: start markdown links
+run-gates: start type equivalence
+run-gates: start cordis catalog
+run-gates: start Cordis inspect catalog
+run-gates: PASS CLI help reference (4.28s)
+run-gates: start workflow guest source
+run-gates: PASS workflow guest source (1.19s)
+run-gates: start verify-mermaid
+run-gates: PASS type equivalence (5.66s)
+run-gates: start translation pairing
+run-gates: PASS Cordis inspect catalog (9.78s)
+run-gates: start markdown wrap
+run-gates: PASS cordis catalog (13.97s)
+run-gates: start client catalog
+run-gates: PASS markdown links (20.16s)
+run-gates: start export jsdoc
+run-gates: PASS client catalog (6.30s)
+run-gates: start tool catalog
+run-gates: PASS tool catalog (2.20s)
+run-gates: start config catalog
+run-gates: PASS verify-mermaid (18.90s)
+run-gates: start skill plugin package list
+run-gates: PASS markdown wrap (15.96s)
+run-gates: start npm dependency catalog
+run-gates: PASS config catalog (3.56s)
+run-gates: start persistence catalog
+run-gates: PASS npm dependency catalog (0.87s)
+run-gates: start persistence type history
+run-gates: PASS skill plugin package list (2.65s)
+run-gates: start released persistence history
+
+== FAILED translation pairing (21.49s) ==
+command: pnpm run verify-translation-pairing
+outcome: exit 1
+$ tsx scripts/verify-translation-pairing.ts
+verify-translation-pairing: bilingual pairing rules violated (see docs/i18n/README.md):
+  packages/glm/base/README.i18n.yaml: out of sync — section /glm-harness-gh-base/model-experience/composition-effects/kv-cache-effect changed since confirmation (zh) (bring the other side along, then re-record with --write)
+  packages/glm/base/README.i18n.yaml: out of sync — section /glm-harness-gh-base/known-limitations-and-deferred-work changed since confirmation (zh) (bring the other side along, then re-record with --write)
+  packages/glm/brand/README.i18n.yaml: out of sync — section /glm-harness-gh-brand/model-experience/composition-effects/kv-cache-effect changed since confirmation (zh) (bring the other side along, then re-record with --write)
+  packages/glm/brand/README.i18n.yaml: out of sync — section /glm-harness-gh-brand/known-limitations-and-deferred-work changed since confirmation (zh) (bring the other side along, then re-record with --write)
+  packages/glm/desktop/README.i18n.yaml: out of sync — section /glm-harness-gh-desktop/model-experience/composition-effects/kv-cache-effect changed since confirmation (zh) (bring the other side along, then re-record with --write)
+  packages/glm/desktop/README.i18n.yaml: out of sync — section /glm-harness-gh-desktop/known-limitations-and-deferred-work changed since confirmation (zh) (bring the other side along, then re-record with --write)
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start Session format references
+run-gates: PASS doc graphs (28.05s)
+run-gates: start Session format catalog
+run-gates: PASS Session format catalog (0.77s)
+run-gates: start public repository links
+run-gates: PASS export jsdoc (8.86s)
+run-gates: start repository references
+run-gates: PASS released persistence history (2.99s)
+run-gates: start concrete terms
+run-gates: PASS doc-typecheck (30.64s)
+run-gates: start doc refs
+run-gates: PASS doc refs (1.17s)
+run-gates: start subsystem pages
+run-gates: PASS concrete terms (2.42s)
+run-gates: start package paths
+run-gates: PASS Session format references (5.42s)
+run-gates: start tsconfig paths
+run-gates: PASS subsystem pages (1.29s)
+run-gates: start config source ownership
+run-gates: PASS public repository links (4.42s)
+run-gates: start package README Summaries
+run-gates: PASS tsconfig paths (0.96s)
+run-gates: start package README model experience
+run-gates: PASS package paths (1.53s)
+run-gates: start agent note classification
+run-gates: PASS config source ownership (0.97s)
+run-gates: start agent note format
+run-gates: PASS package README Summaries (0.84s)
+run-gates: start archived agent notes
+run-gates: PASS agent note classification (0.82s)
+run-gates: start skill invocation metadata
+run-gates: PASS archived agent notes (1.07s)
+run-gates: start translation prompt
+run-gates: PASS agent note format (1.09s)
+run-gates: start doc budgets
+run-gates: PASS skill invocation metadata (1.03s)
+run-gates: start upgrade guides
+run-gates: PASS translation prompt (0.94s)
+run-gates: start documentation standard tests
+run-gates: PASS doc budgets (1.09s)
+run-gates: start documentation site checks
+run-gates: PASS upgrade guides (1.15s)
+run-gates: start package README limitations
+
+== FAILED package README model experience (4.11s) ==
+command: pnpm run verify-package-readme-model-experience
+outcome: exit 1
+$ tsx scripts/verify-package-readme-model-experience.ts
+verify-package-readme-model-experience failed:
+  packages/glm/base/README.md: structured Model Experience must ground at least one entry with inline code, a nested `markdown` block, or an anchored tool-catalog link
+  packages/glm/brand/README.md: structured Model Experience must ground at least one entry with inline code, a nested `markdown` block, or an anchored tool-catalog link
+  packages/glm/desktop/README.md: structured Model Experience must ground at least one entry with inline code, a nested `markdown` block, or an anchored tool-catalog link
+[ELIFECYCLE] Command failed with exit code 1.
+
+== FAILED documentation standard tests (1.96s) ==
+command: pnpm exec vitest run scripts/doc-standard.spec.ts
+outcome: exit 1
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+ ❯ |thread-safe| scripts/doc-standard.spec.ts (22 tests | 1 failed) 264ms
+     × keeps every package README on the summary, contents, and Dev Note skeleton 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |thread-safe| scripts/doc-standard.spec.ts > dsh-doc skill consolidation > keeps every package README on the summary, contents, and Dev Note skeleton
+AssertionError: packages/glm/base/README.zh.md: expected [ 'missing 开发备注' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "missing 开发备注",
++ ]
+
+ ❯ scripts/doc-standard.spec.ts:404:64
+    402|     for (const file of packageReadmes().filter(file => file.split('/')…
+    403|       const source = readFileSync(resolve(root, file), 'utf8')
+    404|       expect(packageReadmeStructureErrors(file, source), file).toEqual…
+       |                                                                ^
+    405|     }
+    406|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  21:38:14
+   Duration  457ms (transform 67ms, setup 52ms, import 40ms, tests 264ms, environment 0ms)
+
+
+== FAILED repository references (9.08s) ==
+command: pnpm run verify-repository-references
+outcome: exit 1
+$ tsx scripts/verify-repository-references.ts
+verify-repository-references: use release tags or maintained repository links:
+  README.zh.md:22 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:8 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:14 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/summary.md:7 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:28 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:29 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:47 commit-hash
+  artifacts/gh-validation/gh003-20261017-184634/run.json:25 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:9 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:10 commit-hash
+  docs/glm/delivery-status.json:7 commit-hash
+  python/sdk/uv.lock:113 commit-hash
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: PASS package README limitations (4.31s)
+run-gates: PASS persistence type history (16.56s)
+run-gates: PASS persistence catalog (19.73s)
+run-gates: PASS documentation site checks (10.41s)
+run-gates: PASS documentation build (57.46s)
+
+run-gates: 39 passed, 4 failed, 0 skipped in 57.46s.
+run-gates: unsuccessful gates:
+  - FAILED translation pairing (21.49s, exit 1)
+    pnpm run verify-translation-pairing
+  - FAILED repository references (9.08s, exit 1)
+    pnpm run verify-repository-references
+  - FAILED package README model experience (4.11s, exit 1)
+    pnpm run verify-package-readme-model-experience
+  - FAILED documentation standard tests (1.96s, exit 1)
+    pnpm exec vitest run scripts/doc-standard.spec.ts
+[ELIFECYCLE] Command failed with exit code 1.

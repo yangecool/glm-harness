@@ -19,7 +19,7 @@ GLM Harness（`glmh`）是一个面向 GLM 大模型的编码 agent harness，�
 | 分支 | 内容 |
 | --- | --- |
 | `main` | GLM Harness 的提交历史：一份压缩为单个提交的 DSH 基线快照，加上 GLM Harness 的各张卡。不包含上游的提交序列。 |
-| `upstream` | 本仓库所基于的 DeepSeek Harness 基线，提交号 `1600d8a1`，保留完整上游历史。只读参考。 |
+| `upstream` | 本仓库所基于的 DeepSeek Harness 基线，基于 `dsh-v0.2.1-rc.1`，保留完整上游历史。只读参考。 |
 
 `origin` 指向 `deepseek-ai/deepseek-harness`，只拉取，永不推送。
 
@@ -32,14 +32,16 @@ GLM Harness（`glmh`）是一个面向 GLM 大模型的编码 agent harness，�
 - 运行时派生与显式无 DeepSeek 依赖的 base bundle（GH-001）；
 - 可复用夹具的资源基线（GH-002）；
 - 原生 GLM 提供商路由（GH-003）；
-- 保留 GH 组合之上的桌面最小工作流（GH-004）；
-- GLM Harness 全套品牌与界面重设计（GH-BRAND）。
+- Web 最小工作流原型与保留名桌面组合（GH-004）；
+- GLM Harness 初步品牌层与部分界面替换（GH-BRAND）。
 
 实时台账——包括受阻项与如实记录的未达标预算——见 [docs/glm/delivery-status.json](docs/glm/delivery-status.json)。后续工作包括远端制品与 SSH 自举（GH-005）以及 supervisor、连接等卡。
 
 对真实 GLM API 的验证仍在等待凭据，在台账中保持未决；目前的每一条工作流结论都由证据运行中记录的脚本化 mock 端点支撑。
 
 <a id="run-from-source"></a>
+
+<a id="run"></a>
 
 ## 从源码运行
 

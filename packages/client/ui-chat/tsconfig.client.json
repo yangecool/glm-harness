@@ -52,9 +52,6 @@
       "path": "../../llm/llm"
     },
     {
-      "path": "../../llm/llm-retry"
-    },
-    {
       "path": "../../llm/token-meter"
     },
     {

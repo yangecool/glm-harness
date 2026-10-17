@@ -71,6 +71,8 @@ await handle.agent.whenIdle()
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
+`@deepseek-ai/dsh-agent/types` 类型入口还持有未改变的 `llm/retry`、`llm/retry-started` 事件契约及 `RetryId`。观察者无需安装重试策略执行器即可读取历史；这些声明不会调度请求。
+
 <details>
 <summary>实现细节——点击展开</summary>
 

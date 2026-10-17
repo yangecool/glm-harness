@@ -2,12 +2,45 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/glm/model-glm/README.md
+/:
+  en: e2894f3c89e0324c
+  zh: 62c41d993d138fc6
 /glm-model-adapter:
-  en: 8b9961d6551dee5c
-  zh: 4a007cae3a23284b
-/glm-model-adapter/behavior:
-  en: 9d364244d32f887c
-  zh: df8d35ee8dd88b68
+  en: dc91b3f2308762e2
+  zh: 3bbe8d89e60ca56b
+/glm-model-adapter/summary:
+  en: 79b700fc30e9c891
+  zh: 740a0f87d69c3755
+/glm-model-adapter/table-of-contents:
+  en: 23386452a66b2fbd
+  zh: b8d879783e7edbe0
 /glm-model-adapter/use-this-package:
-  en: ba7612232e5038cb
-  zh: 8d91d9c91dcf3200
+  en: ade9d16c004024c6
+  zh: 480dfa558c3cdf94
+/glm-model-adapter/understand-the-implementation:
+  en: 777bc36a85f37387
+  zh: 137cf4216fe31d3a
+/glm-model-adapter/further-exploration:
+  en: 6d524f623d8800aa
+  zh: d1552d1bfbf1ad0c
+/glm-model-adapter/model-experience:
+  en: 215e7ba838619b7b
+  zh: 506b52e8d0d1ea72
+/glm-model-adapter/model-experience/glm-request-and-replay:
+  en: 4983eb7a8c27f6aa
+  zh: 93c989e695aeb478
+/glm-model-adapter/model-experience/glm-request-and-replay/what-the-model-sees:
+  en: 0059d5bfbbb7ab0d
+  zh: 74ab0a657e98acd7
+/glm-model-adapter/model-experience/glm-request-and-replay/token-effect:
+  en: 6c42aa341eb67027
+  zh: 8464bb91568294e2
+/glm-model-adapter/model-experience/glm-request-and-replay/kv-cache-effect:
+  en: e57993af6489f836
+  zh: 0ecaa5e505c30ad3
+/glm-model-adapter/known-limitations-and-deferred-work:
+  en: 66bdf4ef07764cc2
+  zh: 0bd54259f420a435
+/glm-model-adapter/known-limitations-and-deferred-work/dev-note:
+  en: f2cd711cd4e4615c
+  zh: a465beaeb482b4d3

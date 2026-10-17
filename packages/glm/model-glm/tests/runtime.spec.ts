@@ -90,6 +90,13 @@ describe('GlmChatAdapter.stream', () => {
     })
   })
 
+  it('preserves rate-limit classification for zero, expired, and overflowing retry hints', async () => {
+    for (const hint of ['0', 'Wed, 21 Oct 2015 07:28:00 GMT', '9'.repeat(400)]) {
+      const { glm } = await boot(errorReply(429, { error: { message: 'wait' } }, { 'retry-after': hint }))
+      await expect(assemble(glm.stream(options()))).rejects.toMatchObject({ code: 'RATE_LIMIT' })
+    }
+  })
+
   it('completes a full tool round trip over the wire', async () => {
     const { glm } = await boot(sseReply([
       ...toolFrames(),
@@ -107,6 +114,52 @@ describe('GlmChatAdapter.stream', () => {
     controller.abort()
     await expect(assemble(glm.stream(options({ signal: controller.signal })))).rejects.toMatchObject({ code: 'ABORTED' })
     expect(endpoint.requests.length).toBe(0)
+  })
+
+  it('times out a stalled credential lookup without issuing HTTP', async () => {
+    const { endpoint } = await boot(sseReply([textFrame('x'), finishFrame(), DONE]))
+    const glm = adapter({ baseURL: endpoint.url, requestTimeoutMs: 25 }, {
+      resolveApiKey: () => new Promise<string>(() => {}),
+    })
+    await expect(assemble(glm.stream(options()))).rejects.toMatchObject({ code: 'TIMEOUT' })
+    expect(endpoint.requests).toHaveLength(0)
+  })
+
+  it('bounds response headers and a stalled HTTP error body', async () => {
+    for (const status of [undefined, 500]) {
+      const { endpoint } = await boot((response) => {
+        if (status !== undefined) {
+          response.writeHead(status, { 'content-type': 'application/json' })
+          response.flushHeaders()
+        }
+      })
+      await expect(assemble(adapter({ baseURL: endpoint.url, requestTimeoutMs: 50 }).stream(options())))
+        .rejects.toMatchObject({ code: 'TIMEOUT' })
+    }
+  })
+
+  it('bounds a half-open stream after its headers arrived', async () => {
+    const { endpoint } = await boot((response) => {
+      response.writeHead(200, { 'content-type': 'text/event-stream' })
+      response.flushHeaders()
+    })
+    await expect(assemble(adapter({ baseURL: endpoint.url, streamIdleTimeoutMs: 25 }).stream(options())))
+      .rejects.toMatchObject({ code: 'TIMEOUT' })
+  })
+
+  it('cancels a shared credential wait without waiting for its deadline', async () => {
+    const waiting = Promise.withResolvers<undefined>()
+    const controller = new AbortController()
+    const glm = adapter({}, {
+      resolveApiKey: () => {
+        waiting.resolve(undefined)
+        return new Promise<string>(() => {})
+      },
+    })
+    const running = assemble(glm.stream(options({ signal: controller.signal })))
+    await waiting.promise
+    controller.abort()
+    await expect(running).rejects.toMatchObject({ code: 'ABORTED' })
   })
 })
 
@@ -127,12 +180,10 @@ describe('GlmChatAdapter capabilities', () => {
     expect(flagship.reasoning?.defaultEffort).toBe('high')
   })
 
-  it('answers uncatalogued ids with text-only negative capability', async () => {
-    const unknown = await adapter().resolveModel('glm', 'some-other-model')
-    expect(unknown.context?.contextWindow).toBe(128_000)
-    expect(unknown.reasoning?.efforts.map(effort => effort.id)).toEqual(['off'])
-    expect(unknown.reasoning?.defaultEffort).toBeUndefined()
-    expect(unknown.inputModalities).toEqual(['text'])
+  it('rejects uncatalogued ids without inventing capabilities or sending them upstream', () => {
+    const glm = adapter()
+    expect(() => glm.resolveModel('glm', 'some-other-model')).toThrow(/not configured/)
+    expect(() => glm.stream(options({ model: 'unspecified' }))).toThrow(/not configured/)
   })
 
   it('binds capability answers and dispatch to one connection generation', async () => {
@@ -140,5 +191,22 @@ describe('GlmChatAdapter capabilities', () => {
     const prepared = await glm.prepareCall('glm', 'glm-4.6')
     expect(prepared.model.id).toBe('glm-4.6')
     await expect(assemble(prepared.stream(options()))).rejects.toMatchObject({ code: 'TRANSPORT' })
+  })
+})
+
+describe('GLM retry policy', () => {
+  it('exposes the bounded GH default with the stream-close code retryable', () => {
+    const glm = adapter()
+    const policy = glm.providerRetryPolicy('glm')
+    expect(policy).toMatchObject({ mode: 'normal', maxRetries: 3 })
+    if (policy?.mode !== 'normal') throw new Error('expected the resolved normal policy')
+    expect(policy.retryableCodes).toContain('STREAM_CLOSED')
+    expect(policy.retryableCodes).not.toContain('AUTH')
+    expect(policy.retryableCodes).not.toContain('TRUNCATED_TOOL_CALLS')
+  })
+
+  it('carries a deployment-configured policy through the connection generation', () => {
+    const glm = adapter({ retryPolicy: { mode: 'normal', maxRetries: 0, retryableCodes: ['SERVER'] } })
+    expect(glm.providerRetryPolicy('glm')).toMatchObject({ mode: 'normal', maxRetries: 0, retryableCodes: ['SERVER'] })
   })
 })

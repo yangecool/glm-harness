@@ -11,6 +11,12 @@ import {
   ProviderRequestId,
 } from '@deepseek-ai/dsh-llm'
 
+/** Terminal code when the stream ends before the `[DONE]` marker. */
+export const GLM_STREAM_CLOSED_CODE = 'STREAM_CLOSED'
+
+/** Terminal code when the output limit cuts a response that carries tool calls. */
+export const GLM_TRUNCATED_TOOL_CALLS_CODE = 'TRUNCATED_TOOL_CALLS'
+
 /** The subset of `Headers` read for error facts. */
 export interface ErrorHeaderReader {
   get(name: string): string | null
@@ -96,12 +102,12 @@ function errorDetail(bodyText: string): { message: string; code?: string; type?:
   return { message: bodyText.trim().slice(0, 400) }
 }
 
-/** Parse `retry-after` (delay-seconds or HTTP-date) into milliseconds. */
+/** Parse a positive provider delay; zero/expired hints impose no additional minimum. */
 function retryAfterMs(raw: string | null): number | undefined {
-  if (raw === null || raw === '') return undefined
-  const seconds = Number(raw)
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1_000)
-  const date = Date.parse(raw)
-  if (!Number.isNaN(date)) return Math.max(0, date - Date.now())
-  return undefined
+  const value = raw?.trim()
+  if (value === undefined || value === '') return undefined
+  const delay = /^\d+$/.test(value)
+    ? Number(value) * 1_000
+    : Date.parse(value) - Date.now()
+  return Number.isFinite(delay) && delay > 0 ? delay : undefined
 }

@@ -243,6 +243,15 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-tool-fs-search` | yes | Model-facing filesystem discovery tools (glob, grep) backed by the packaged ripgrep binary (@vscode/ripgrep) |
 | `@deepseek-ai/dsh-tool-str-replace-editor` | yes | Model-facing view, create, literal replace, and line insert tool over the Harness filesystem service |
 
+## glm
+
+| Package | Config | Description |
+|---|---|---|
+| `@glm-harness/gh-brand` | no | The GLM Harness browser brand: occupants for the generic client brand slots plus the GLM color ramp override, composed as a bundle layer over the dsh web-app surface |
+| `@glm-harness/gh-model-glm` | yes | GLM chat-completions adapter: request serialization, SSE parsing, and stream translation for the glm provider route, written against the BigModel/Z.AI v4 protocol with no upstream model business |
+| `@glm-harness/gh-model-retry` | yes | GLM Harness bounded model-request retry executor: provider-owned normal-mode policies executed on the agent request-error extension point with durable retry events, cancellable waits, and an explicit refusal of unbounded retry |
+| `@glm-harness/gh-persona` | no | GLM Harness model identity and work policy as system-prompt sections: goal-driven execution, locate before modifying, self-verification, and honest reporting, promising nothing the composed tool catalog does not grant |
+
 ## goal
 
 | Package | Config | Description |

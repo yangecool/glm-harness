@@ -11,6 +11,8 @@ English | [中文](README.zh.md)
 
 Mount `@deepseek-ai/dsh-llm-retry` to retry failed model requests at durable agent-step boundaries. Provider `retryPolicy` settings choose bounded normal-mode retries or unlimited always-mode retries; scheduled attempts reach the session log before backoff, and cancellation leaves consistent history. Retries re-run the failed step in the same open turn, while direct `ctx.llm.stream()` calls remain single-attempt. Each retry is another billed provider request, and always mode continues until success, cancellation, or disposal.
 
+Browser-safe retry event contracts are owned by `@deepseek-ai/dsh-agent/types` and re-exported from this package’s `types` entry. Read-only consumers need no dependency on this policy implementation; event names and persisted payloads are unchanged.
+
 ## Table of Contents
 
 - [Use this package](#use-this-package)

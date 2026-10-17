@@ -37,6 +37,8 @@ const root = resolve(import.meta.dirname, '..')
  */
 export const GH_BANNED_UPSTREAM_PACKAGES: readonly string[] = [
   '@deepseek-ai/dsh-llm-pi-ai',
+  '@deepseek-ai/dsh-llm-deepseek',
+  '@deepseek-ai/dsh-llm-retry',
   '@deepseek-ai/dsh-llm-deepseek-api-key',
   '@deepseek-ai/dsh-llm-deepseek-account',
   '@deepseek-ai/dsh-deepseek-account-platform',

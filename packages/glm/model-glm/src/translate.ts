@@ -8,8 +8,8 @@
 
 import { LlmError, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, StreamChunk, TokenUsage } from '@deepseek-ai/dsh-llm'
-import { streamError } from './transport.ts'
-import { STREAM_DONE, type WireDelta, type WireFrame, type WireToolCallDelta } from './wire-types.ts'
+import { GLM_STREAM_CLOSED_CODE, GLM_TRUNCATED_TOOL_CALLS_CODE, streamError } from './transport.ts'
+import { STREAM_DONE, type WireDelta, type WireFrame, type WireToolCallDelta, type WireUsage } from './wire-types.ts'
 
 /** One synthesized output block under construction. */
 interface OpenBlock {
@@ -30,13 +30,14 @@ const STOP_FINISH = new Set(['stop', 'stop_sequence'])
  * @param events - JSON-parsed frames in arrival order, ending with the
  * `[DONE]` marker string.
  * @yields the neutral chunk sequence, terminated by one finish chunk.
+ * @returns the asynchronous translated chunk iterator.
  */
 export async function* translate(events: AsyncIterable<unknown>): AsyncGenerator<StreamChunk> {
   const blocks = new Map<string, OpenBlock>()
   const keyByToolId = new Map<string, string>()
   let nextIndex = 0
   let finishKind: 'stop' | 'tool-calls' | 'max-tokens' | undefined
-  let usage: TokenUsage | undefined
+  let usage: WireUsage | undefined
 
   const openBlock = (key: string, kind: OpenBlock['kind'], facts: Omit<OpenBlock, 'index' | 'kind'>): OpenBlock => {
     const created: OpenBlock = { index: nextIndex++, kind, ...facts }
@@ -73,7 +74,7 @@ export async function* translate(events: AsyncIterable<unknown>): AsyncGenerator
     yield* deltaChunks(delta, blocks, keyByToolId, openBlock)
   }
   // The stream ended without the `[DONE]` marker.
-  throw new LlmError('GLM stream closed before the [DONE] marker', 'STREAM_CLOSED')
+  throw new LlmError('GLM stream closed before the [DONE] marker', GLM_STREAM_CLOSED_CODE)
 }
 
 /** Emit the chunks of one wire delta, synthesizing blocks as content appears. */
@@ -83,27 +84,38 @@ function* deltaChunks(
   keyByToolId: Map<string, string>,
   openBlock: (key: string, kind: OpenBlock['kind'], facts: Omit<OpenBlock, 'index' | 'kind'>) => OpenBlock,
 ): Generator<StreamChunk> {
-  if (delta.reasoning_content !== undefined && delta.reasoning_content !== '') {
+  const reasoning = deltaText(delta.reasoning_content, 'reasoning_content')
+  if (reasoning !== undefined && reasoning !== '') {
     let block = blocks.get('reasoning')
     if (block === undefined) {
       block = openBlock('reasoning', 'reasoning', { text: '' })
       yield { type: 'block-start', index: block.index, blockType: 'reasoning' }
     }
-    block.text += delta.reasoning_content
-    yield { type: 'reasoning-delta', index: block.index, text: delta.reasoning_content }
+    block.text += reasoning
+    yield { type: 'reasoning-delta', index: block.index, text: reasoning }
   }
-  if (delta.content !== undefined && delta.content !== '') {
+  const text = deltaText(delta.content, 'content')
+  if (text !== undefined && text !== '') {
     let block = blocks.get('text')
     if (block === undefined) {
       block = openBlock('text', 'text', { text: '' })
       yield { type: 'block-start', index: block.index, blockType: 'text' }
     }
-    block.text += delta.content
-    yield { type: 'text-delta', index: block.index, text: delta.content }
+    block.text += text
+    yield { type: 'text-delta', index: block.index, text }
   }
   for (const fragment of delta.tool_calls ?? []) {
     yield* toolCallChunk(fragment, blocks, keyByToolId, openBlock)
   }
+}
+
+/** Nullable protocol fields carry no content; other non-string values are malformed. */
+function deltaText(value: unknown, field: string): string | undefined {
+  if (value === undefined || value === null) return undefined
+  if (typeof value !== 'string') {
+    throw new LlmError(`GLM delta ${field} is not a string or null`, 'MALFORMED_RESPONSE')
+  }
+  return value
 }
 
 /** Emit one tool-call fragment's chunk, synthesizing the call's block on first sight. */
@@ -148,18 +160,44 @@ function stopReason(reason: string): 'stop' | 'tool-calls' | 'max-tokens' {
   throw new LlmError(`GLM finished with unsupported reason "${reason}"`, 'SERVER')
 }
 
-/** Merge one wire usage frame into the running total; the last frame wins per field. */
-function mergeUsage(previous: TokenUsage | undefined, wire: NonNullable<WireFrame['usage']>): TokenUsage {
-  const prompt = wire.prompt_tokens ?? previous?.inputTokens ?? 0
-  const completion = wire.completion_tokens ?? previous?.outputTokens ?? 0
-  const cached = wire.prompt_tokens_details?.cached_tokens ?? previous?.cacheReadTokens ?? 0
-  const reasoning = wire.completion_tokens_details?.reasoning_tokens ?? previous?.reasoningTokens
+/** Merge raw counters without subtracting cache until the complete stream settles. */
+function mergeUsage(previous: WireUsage | undefined, wire: WireUsage): WireUsage {
+  const merged: WireUsage = {
+    ...previous,
+    ...wire,
+    prompt_tokens_details: { ...previous?.prompt_tokens_details, ...wire.prompt_tokens_details },
+    completion_tokens_details: { ...previous?.completion_tokens_details, ...wire.completion_tokens_details },
+  }
+  for (const [field, value] of Object.entries({
+    prompt_tokens: merged.prompt_tokens,
+    completion_tokens: merged.completion_tokens,
+    total_tokens: merged.total_tokens,
+    cached_tokens: merged.prompt_tokens_details?.cached_tokens,
+    reasoning_tokens: merged.completion_tokens_details?.reasoning_tokens,
+  })) {
+    if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
+      throw new LlmError(`GLM usage ${field} is not a non-negative integer`, 'MALFORMED_RESPONSE')
+    }
+  }
+  return merged
+}
+
+/** Emit complete aggregate usage only; absent counters never become measured zeroes. */
+function tokenUsage(wire: WireUsage | undefined): TokenUsage | undefined {
+  if (wire?.prompt_tokens === undefined || wire.completion_tokens === undefined) return undefined
+  const prompt = wire.prompt_tokens
+  const completion = wire.completion_tokens
+  const cached = wire.prompt_tokens_details?.cached_tokens
+  const reasoning = wire.completion_tokens_details?.reasoning_tokens
+  if (cached !== undefined && cached > prompt) {
+    throw new LlmError('GLM cache token count exceeds aggregate prompt tokens', 'MALFORMED_RESPONSE')
+  }
+  const total = prompt + completion
   return {
-    // inputTokens counts uncached input only; the wire total includes cache.
-    inputTokens: Math.max(0, prompt - cached),
+    inputTokens: prompt - (cached ?? 0),
     outputTokens: completion,
-    totalTokens: wire.total_tokens ?? prompt + completion,
-    ...cached === 0 ? {} : { cacheReadTokens: cached },
+    ...wire.total_tokens === undefined || wire.total_tokens === total ? { totalTokens: total } : {},
+    ...cached === undefined ? {} : { cacheReadTokens: cached },
     ...reasoning === undefined ? {} : { reasoningTokens: reasoning },
   }
 }
@@ -168,7 +206,7 @@ function mergeUsage(previous: TokenUsage | undefined, wire: NonNullable<WireFram
 function* close(
   blocks: Map<string, OpenBlock>,
   finishKind: 'stop' | 'tool-calls' | 'max-tokens' | undefined,
-  usage: TokenUsage | undefined,
+  usage: WireUsage | undefined,
 ): Generator<StreamChunk> {
   if (finishKind === undefined) {
     throw new LlmError('GLM stream ended without a finish_reason', 'MALFORMED_RESPONSE')
@@ -177,13 +215,22 @@ function* close(
   if (ordered.length === 0) {
     throw new LlmError('GLM response carried no content blocks', 'EMPTY_RESPONSE')
   }
+  if (finishKind === 'max-tokens' && ordered.some(block => block.kind === 'tool-call')) {
+    // The output limit cut this response mid-batch: call identities may be
+    // complete while their arguments are not, so nothing in the batch is
+    // trustworthy enough to execute.
+    throw new LlmError(
+      'GLM tool calls were cut off by the output limit; the batch is not executed',
+      GLM_TRUNCATED_TOOL_CALLS_CODE,
+    )
+  }
   for (const block of ordered) {
     if (block.kind === 'tool-call') {
       const tool = block.tool
       if (tool === undefined) throw new LlmError('GLM tool-call block lost its identity', 'MALFORMED_RESPONSE')
       // No-argument calls legitimately arrive with empty arguments.
       const args = tool.args === '' ? '{}' : tool.args
-      if (finishKind !== 'max-tokens' && !isObjectJson(args)) {
+      if (!isObjectJson(args)) {
         throw new LlmError('GLM tool-call arguments are not a JSON object', 'MALFORMED_RESPONSE')
       }
       yield {
@@ -198,7 +245,8 @@ function* close(
       : { type: 'reasoning', text: block.text }
     yield { type: 'block-end', index: block.index, block: assembled }
   }
-  if (usage !== undefined) yield { type: 'usage', usage }
+  const measuredUsage = tokenUsage(usage)
+  if (measuredUsage !== undefined) yield { type: 'usage', usage: measuredUsage }
   yield {
     type: 'finish',
     reason: finishKind === 'tool-calls'

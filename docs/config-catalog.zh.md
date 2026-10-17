@@ -4556,6 +4556,46 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-workspace-changes -->
 
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-model-glm -->
+<a id="glm-harnessgh-model-glm"></a>
+
+## `@glm-harness/gh-model-glm`
+
+- `inject`: `llm`
+- `refs`: [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts) · `Volatile` (`@deepseek-ai/cordis`)
+- `source`: [`packages/glm/model-glm/src/config.ts:38`](../packages/glm/model-glm/src/config.ts)
+
+```ts config-catalog
+/** Live plugin configuration. */
+export interface Config {
+  /** Chat-completions root; empty reads GLM_BASE_URL or the public BigModel default. */
+  baseURL: Volatile<string>
+  /** Credentials-service reference or launch-environment variable containing the bearer key. */
+  apiKeyEnv: Volatile<string>
+  /** Maximum idle milliseconds while waiting for streamed provider progress. */
+  streamIdleTimeoutMs: Volatile<number>
+  /** Maximum milliseconds for credential lookup, response headers, and an HTTP error body. */
+  requestTimeoutMs: Volatile<number>
+  /** Model-request retry policy captured with each connection generation. */
+  retryPolicy: Volatile<RetryPolicyConfig | undefined>
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-model-glm -->
+
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-model-retry -->
+<a id="glm-harnessgh-model-retry"></a>
+
+## `@glm-harness/gh-model-retry`
+
+- `inject`: `agents` · `sessionProjections`
+- `source`: [`packages/glm/model-retry/src/index.ts:33`](../packages/glm/model-retry/src/index.ts)
+
+```ts config-catalog
+/** This executor has no config; provider registrations own retry policy. */
+export type Config = Readonly<Record<string, never>>
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-model-retry -->
+
 ## 无配置的可加载插件
 
 这些插件通过 `cordis.yml` 中不含 `config:` 块的条目加载；它们未声明任何配置接口。
@@ -4669,6 +4709,8 @@ export interface Config {
 | `@deepseek-ai/dsh-user-questions` | — | [`packages/interaction/user-questions/src/index.ts`](../packages/interaction/user-questions/src/index.ts) |
 | `@deepseek-ai/dsh-webhook` | `agents` · `agentDefaultModel` · `agentPresets` · `permissionPresets` · `sessionTitle` · `workspaceRegistry` | [`packages/experimental/webhook/src/index.ts`](../packages/experimental/webhook/src/index.ts) |
 | `@deepseek-ai/dsh-workspace` | `storageDomain` · `sessionPersistence` | [`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts) |
+| `@glm-harness/gh-brand` | — | [`packages/glm/brand/src/index.ts`](../packages/glm/brand/src/index.ts) |
+| `@glm-harness/gh-persona` | `systemPrompt` | [`packages/glm/persona/src/index.ts`](../packages/glm/persona/src/index.ts) |
 <!-- END GENERATED config-catalog:no-config -->
 
 ## Seam 包（不可直接加载）
@@ -4770,4 +4812,6 @@ export interface Config {
 | `@deepseek-ai/dsh-util-values` | — | [`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts) |
 | `@deepseek-ai/dsh-util-workspace-path` | — | [`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts) |
 | `@deepseek-ai/dsh-win32-process` | — | [`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts) |
+| `@glm-harness/gh-base` | — | [`packages/glm/base/src/index.ts`](../packages/glm/base/src/index.ts) |
+| `@glm-harness/gh-desktop` | — | [`packages/glm/desktop/src/index.ts`](../packages/glm/desktop/src/index.ts) |
 <!-- END GENERATED config-catalog:library -->

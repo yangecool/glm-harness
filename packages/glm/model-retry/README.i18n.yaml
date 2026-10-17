@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/model-retry/README.md
+/:
+  en: 3ed240e3ff49cf52
+  zh: 8d2a82e943584496
+/glm-harness-gh-model-retry:
+  en: e18215251fe66e60
+  zh: 3087f29381641dde
+/glm-harness-gh-model-retry/summary:
+  en: b7636d70b46a2e8c
+  zh: 357c075f837f7449
+/glm-harness-gh-model-retry/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 405b30feaf48c087
+/glm-harness-gh-model-retry/use-this-package:
+  en: 2ec347ca59c398e6
+  zh: 1357bf2e49887c14
+/glm-harness-gh-model-retry/use-this-package/when-to-choose-it:
+  en: c8c079e53b3480d9
+  zh: e9f6821ec1d0835d
+/glm-harness-gh-model-retry/use-this-package/minimal-configuration:
+  en: ff924cb08a61b17d
+  zh: 4def7e11896ca5a4
+/glm-harness-gh-model-retry/understand-the-implementation:
+  en: 120ef2b99b23f2a0
+  zh: cc630b74d4b41260
+/glm-harness-gh-model-retry/further-exploration:
+  en: 6a6bd5932b7eebfb
+  zh: e3ffb39b533f6458
+/glm-harness-gh-model-retry/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/glm-harness-gh-model-retry/model-experience/gh-bounded-retry-executor:
+  en: f5ce2e5d0fcd6c78
+  zh: 04aca0b8f50951fc
+/glm-harness-gh-model-retry/model-experience/gh-bounded-retry-executor/what-the-model-sees:
+  en: b9424ccdbb7acf43
+  zh: e6907981ce2f16ac
+/glm-harness-gh-model-retry/model-experience/gh-bounded-retry-executor/token-effect:
+  en: 2bd46b5fda4fe4bc
+  zh: 53bbcbb7f26e1d29
+/glm-harness-gh-model-retry/model-experience/gh-bounded-retry-executor/kv-cache-effect:
+  en: 6064876e2d09099d
+  zh: be6d647680e023cb
+/glm-harness-gh-model-retry/known-limitations-and-deferred-work:
+  en: da8d6178a247e953
+  zh: 2ae4acd4fca57556
+/glm-harness-gh-model-retry/known-limitations-and-deferred-work/dev-note:
+  en: dc749e67a34a359e
+  zh: d93caae46ba786dd

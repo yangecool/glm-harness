@@ -126,9 +126,24 @@ describe('translate', () => {
     expect(assembler.finish).toEqual({ kind: 'tool-calls' })
   })
 
-  it('maps length to max-tokens and keeps truncated tool arguments', async () => {
+  it('refuses to execute a tool batch that the output limit truncated', async () => {
+    // Even a complete-looking call is untrustworthy when `length` cut the
+    // response mid-batch, so the whole batch fails instead of executing.
+    await expect(chunks(translate(events([
+      { choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: 'call_1', type: 'function', function: { name: 'f', arguments: '{"a":' } }] } }] },
+      finishFrame('length'),
+      DONE,
+    ])))).rejects.toMatchObject({ code: 'TRUNCATED_TOOL_CALLS' })
+    await expect(chunks(translate(events([
+      { choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: 'call_1', type: 'function', function: { name: 'f', arguments: '{"a":1}' } }] } }] },
+      finishFrame('length'),
+      DONE,
+    ])))).rejects.toMatchObject({ code: 'TRUNCATED_TOOL_CALLS' })
+  })
+
+  it('maps a text-only length finish to max-tokens', async () => {
     const { assembler } = await assemble(translate(events([
-      { choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: 'call_1', type: 'function', function: { name: 'f', arguments: '{"a"' } }] } }] },
+      textFrame('partial'),
       finishFrame('length'),
       DONE,
     ])))
@@ -157,6 +172,51 @@ describe('translate', () => {
       cacheReadTokens: 64,
       reasoningTokens: 24,
     })
+  })
+
+  it('merges partial usage before subtracting cache exactly once', async () => {
+    const { assembler } = await assemble(translate(events([
+      textFrame('ok'),
+      { choices: [], usage: { prompt_tokens: 100, prompt_tokens_details: { cached_tokens: 64 } } },
+      { choices: [], usage: { completion_tokens: 40 } },
+      finishFrame(),
+      DONE,
+    ])))
+    expect(assembler.usage).toEqual({ inputTokens: 36, outputTokens: 40, cacheReadTokens: 64, totalTokens: 140 })
+  })
+
+  it('preserves reported zero cache and omits incomplete or inconsistent usage', async () => {
+    const complete = await assemble(translate(events([
+      textFrame('ok'),
+      finishFrame('stop', { prompt_tokens: 10, completion_tokens: 0, prompt_tokens_details: { cached_tokens: 0 }, total_tokens: 99 }),
+      DONE,
+    ])))
+    expect(complete.assembler.usage).toEqual({ inputTokens: 10, outputTokens: 0, cacheReadTokens: 0 })
+    const partial = await chunks(translate(events([
+      textFrame('ok'), finishFrame('stop', { completion_tokens: 5 }), DONE,
+    ])))
+    expect(partial.some(chunk => chunk.type === 'usage')).toBe(false)
+  })
+
+  it('rejects invalid usage counters instead of fabricating accounting', async () => {
+    for (const usage of [
+      { prompt_tokens: -1, completion_tokens: 2 },
+      { prompt_tokens: 10, completion_tokens: 2, prompt_tokens_details: { cached_tokens: 11 } },
+    ]) {
+      await expect(chunks(translate(events([textFrame('ok'), finishFrame('stop', usage), DONE]))))
+        .rejects.toMatchObject({ code: 'MALFORMED_RESPONSE' })
+    }
+  })
+
+  it('ignores nullable text deltas and rejects non-string content', async () => {
+    const { message } = await assemble(translate(events([
+      { choices: [{ delta: { content: null, reasoning_content: null } }] },
+      textFrame('real output'), finishFrame(), DONE,
+    ])))
+    expect(message.content).toEqual([{ type: 'text', text: 'real output' }])
+    await expect(chunks(translate(events([
+      { choices: [{ delta: { content: 1 } }] }, finishFrame(), DONE,
+    ])))).rejects.toMatchObject({ code: 'MALFORMED_RESPONSE' })
   })
 
   it('rejects a stream that ends without [DONE]', async () => {
@@ -196,7 +256,7 @@ describe('translate', () => {
 })
 
 describe('serialize', () => {
-  it('serializes a tool conversation without reasoning and with tool identity intact', () => {
+  it('preserves reasoning and tool identity in a same-model continuation', () => {
     const body = serialize(options({
       messages: toolHistory(),
       tools: [{ name: 'get_weather', description: '查天气', parameters: { type: 'object' }, deferLoading: true }],
@@ -208,11 +268,16 @@ describe('serialize', () => {
     expect(body.messages).toEqual([
       { role: 'system', content: '你是 GH' },
       { role: 'user', content: '杭州天气怎么样?' },
-      { role: 'assistant', content: '我来查一下。', tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'get_weather', arguments: '{"city":"杭州"}' } }] },
+      { role: 'assistant', content: '我来查一下。', reasoning_content: '需要查天气', tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'get_weather', arguments: '{"city":"杭州"}' } }] },
       { role: 'tool', tool_call_id: 'call_1', content: '晴,26℃' },
     ])
     expect(body.tools).toEqual([{ type: 'function', function: { name: 'get_weather', description: '查天气', parameters: { type: 'object' } } }])
     expect(body.thinking).toBeUndefined()
+  })
+
+  it('does not attach another model history to GLM reasoning replay', () => {
+    const body = serialize(options({ model: 'glm-4.5-air', messages: toolHistory() }), { thinking: true })
+    expect(body.messages.find(message => message.role === 'assistant')).not.toHaveProperty('reasoning_content')
   })
 
   it('folds a one-shot system prompt into a history system message', () => {

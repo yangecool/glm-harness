@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/README.md
+/:
+  en: edcddeea1e9e95c7
+  zh: 652871473b2b1be6
+/glm-harness-packages:
+  en: 76cb2a82c72d938d
+  zh: e20185020f1c5b7f
+/glm-harness-packages/summary:
+  en: 78cf6fadb54a5370
+  zh: 77e19fd60a988513
+/glm-harness-packages/packages:
+  en: b4bc08035e1d2835
+  zh: a1d24820d3c1b511
+/glm-harness-packages/further-exploration:
+  en: 8072dcc072121c08
+  zh: cdbb2579282e64e1

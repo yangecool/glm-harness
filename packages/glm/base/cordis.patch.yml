@@ -5,15 +5,14 @@
 #
 # This layer mirrors the upstream dsh-base composition minus every package
 # that carries upstream model, account, or telemetry business. The GH product
-# mounts no model adapter here on purpose: GLM model access arrives as
-# @glm-harness model plugins (provider routing, catalog, wire protocol) in a
-# later layer, and until then a model request fails explicitly instead of
-# falling back to an upstream provider. Excluded upstream rows and their
+# composes the GH-native model-glm adapter on the shared LLM service. Missing
+# credentials fail explicitly; no upstream fallback or retry executor is mounted.
+# Excluded upstream rows and their
 # packages:
 #
 #   llm/deepseek-llm-api-extensions, session/session-log-deepseek,
 #   llm/plugin-package-inventory-deepseek, llm/llm-deepseek-api-key,
-#   llm/llm-deepseek-account, llm/llm-pi-ai,
+#   llm/llm-deepseek-account, llm/llm-pi-ai, llm/llm-retry,
 #   boot/deepseek-account-platform, web/web-search-deepseek,
 #   telemetry/otel, telemetry/session-telemetry-otel
 #
@@ -55,6 +54,20 @@
     # explicitly with MISSING_CREDENTIAL, never an upstream fallback.
     - id: model-glm
       name: '@glm-harness/gh-model-glm'
+
+    # GH's own bounded model-request retry executor. The GLM route's policy
+    # (normal mode, capped retries, Retry-After honored within the delay cap)
+    # is captured with each connection generation above; this row only
+    # executes provider-owned policies, so removing it returns GH to explicit
+    # failure with no hidden retries.
+    - id: model-retry
+      name: '@glm-harness/gh-model-retry'
+
+    # The GLM Harness model identity and work policy. The system-prompt row
+    # below drops the upstream harness identity, so this plugin owns it: the
+    # sections name no tool or platform and dispose with the plugin.
+    - id: gh-persona
+      name: '@glm-harness/gh-persona'
 
     - id: session
       name: '@deepseek-ai/dsh-session'
@@ -111,13 +124,10 @@
       name: '@deepseek-ai/dsh-agent-default-model'
       config:
         provider: glm
-        model: unspecified
+        model: glm-4.6
 
     - id: jobs
       name: '@deepseek-ai/dsh-jobs-local'
-
-    - id: llm-retry
-      name: '@deepseek-ai/dsh-llm-retry'
 
     # Live Config forms persist through the active profile patch.
 
@@ -456,7 +466,12 @@
       name: '@deepseek-ai/dsh-tools'
 
     # The deployment persona is a deployment choice; plan-mode and tool plugins own
-    # their own prompt sections.
+    # their own prompt sections. This shared default only holds until a
+    # surface bundle re-addresses the row (both shipped surfaces write their
+    # own one-line persona), so the GH decisions that must survive that
+    # rewrite — dropping the upstream harness identity for gh-persona, and the
+    # pinned model-facing tool order — live in the profile product layer that
+    # gh-init-profiles writes after every bundle.
     - id: system-prompt
       name: '@deepseek-ai/dsh-system-prompt'
       config:

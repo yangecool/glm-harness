@@ -9,17 +9,17 @@
   en: b983ac50df88c670
   zh: d3d23afaf4fd36e0
 /glm-harness-gh-base/summary:
-  en: daf64f98ac5d0aa4
-  zh: 01f5a504f4600510
+  en: dad6fdc24d9a9b00
+  zh: 15fc359b6ffe8164
 /glm-harness-gh-base/table-of-contents:
-  en: 5db0ae01d50cb0e4
-  zh: da127c656e81b685
+  en: b563e4ec4727d0de
+  zh: 0b283b30acc898ed
 /glm-harness-gh-base/use-this-package:
   en: 1bb435a6e2e2d434
   zh: 17c160141dee01ed
 /glm-harness-gh-base/use-this-package/what-you-get:
-  en: 813904a2683c9182
-  zh: 283c1a5923cdc7bb
+  en: f5ce13b127908442
+  zh: cac2a556c8566009
 /glm-harness-gh-base/use-this-package/changing-the-defaults:
   en: 1f49a84ecb1b0692
   zh: 948c7d81d7cf46fb
@@ -27,14 +27,32 @@
   en: ee4615a04fa6503d
   zh: ee2c5fb2204a43cf
 /glm-harness-gh-base/understand-the-implementation/composition-mechanics:
-  en: 576d9f8daf80d836
-  zh: 04d1d73de87fa93f
+  en: 1fa072682df5713b
+  zh: 65bd1224530ea6e8
 /glm-harness-gh-base/understand-the-implementation/source-map:
   en: 4f122ef29510d038
   zh: 19ee01c759bca8f5
 /glm-harness-gh-base/further-exploration:
-  en: 720a1a09e7b21af4
-  zh: 1a65d82f387ecb5c
+  en: 78b43befcf0dfc2d
+  zh: 5bd7ba627eae4cf9
+/glm-harness-gh-base/model-experience:
+  en: 215e7ba838619b7b
+  zh: 9504705eabfaca9c
+/glm-harness-gh-base/model-experience/composition-effects:
+  en: 2a896d9682be069d
+  zh: 7cf57c18a7f8da68
+/glm-harness-gh-base/model-experience/composition-effects/what-the-model-sees:
+  en: d01daab51945914c
+  zh: 1b53cc231b23c6c6
+/glm-harness-gh-base/model-experience/composition-effects/token-effect:
+  en: cf43058db56dd9a6
+  zh: 0f6ca825bddeca9d
+/glm-harness-gh-base/model-experience/composition-effects/kv-cache-effect:
+  en: ca35b9ac5c475c8e
+  zh: 4b38100fe1f915ce
 /glm-harness-gh-base/known-limitations-and-deferred-work:
-  en: b93591a54a57a53c
-  zh: 98de04322d154631
+  en: 5a053e648d60d348
+  zh: c5e546c496c7a21e
+/glm-harness-gh-base/known-limitations-and-deferred-work/dev-note:
+  en: d79d3f1bf3563160
+  zh: a8b22fdaa54c32a8

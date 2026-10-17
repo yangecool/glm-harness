@@ -11,6 +11,8 @@ kind: "package-reference"
 
 挂载 `@deepseek-ai/dsh-llm-retry`，可在持久 agent 步骤边界重试失败的模型请求。提供方的 `retryPolicy` 设置可选择有界的 normal mode 重试或无上限的 always mode 重试；计划的尝试会在退避前写入会话日志，取消后历史仍保持一致。重试会在同一个打开的轮次内重跑失败步骤，而直接 `ctx.llm.stream()` 调用仍只尝试一次。每次重试都会产生另一次提供方请求计费，always mode 会持续到成功、取消或释放。
 
+浏览器安全的重试事件契约由 `@deepseek-ai/dsh-agent/types` 持有，并由本包 `types` 入口重新导出。只读消费者无需依赖此策略实现；事件名与持久化载荷未改变。
+
 ## 目录
 
 - [使用本包](#use-this-package)

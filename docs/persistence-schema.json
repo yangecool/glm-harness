@@ -23216,7 +23216,7 @@
       "digest": "374fdd68aee5ff844e378c0cbdd961d247a0f22e4ade0bb03d800cd2a46a2b8b",
       "names": [],
       "sources": [
-        "packages/llm/llm-retry/src/types.ts:30"
+        "packages/core/agent/src/types.ts:134"
       ]
     },
     {
@@ -23523,6 +23523,7 @@
         "packages/api/session-controller/src/types.ts#SessionRequestId",
         "packages/attachment/attachment/src/brand.ts#AttachmentId",
         "packages/compaction/compaction/src/brand.ts#CompactionId",
+        "packages/core/agent/src/types.ts#RetryId",
         "packages/core/session/src/types.ts#SessionId",
         "packages/experimental/agent-team/src/types.ts#TeamId",
         "packages/experimental/agent-team/src/types.ts#TeamMessageId",
@@ -23535,7 +23536,6 @@
         "packages/interaction/commands/src/brand.ts#CommandId",
         "packages/interaction/user-approval/src/types.ts#ApprovalRequestId",
         "packages/jobs/jobs/src/brand.ts#JobId",
-        "packages/llm/llm-retry/src/brand.ts#RetryId",
         "packages/llm/llm/src/brand.ts#MessageId",
         "packages/llm/llm/src/brand.ts#ProviderRequestId",
         "packages/llm/llm/src/brand.ts#ReasoningEffortId",
@@ -23549,6 +23549,7 @@
         "packages/api/session-controller/src/types.ts:409",
         "packages/attachment/attachment/src/brand.ts:6",
         "packages/compaction/compaction/src/brand.ts:4",
+        "packages/core/agent/src/types.ts:108",
         "packages/core/session/src/types.ts:21",
         "packages/experimental/agent-team/src/types.ts:21",
         "packages/experimental/agent-team/src/types.ts:33",
@@ -23561,7 +23562,6 @@
         "packages/interaction/commands/src/brand.ts:31",
         "packages/interaction/user-approval/src/types.ts:17",
         "packages/jobs/jobs/src/brand.ts:19",
-        "packages/llm/llm-retry/src/brand.ts:4",
         "packages/llm/llm/src/brand.ts:16",
         "packages/llm/llm/src/brand.ts:31",
         "packages/llm/llm/src/brand.ts:43",
@@ -24115,10 +24115,10 @@
     {
       "digest": "6f72ece8f317cd080c4f20a93f1bf709965f5b81ac4669528f5a023191cfcf20",
       "names": [
-        "packages/llm/llm-retry/src/types.ts#LlmRetryStartedEventData"
+        "packages/core/agent/src/types.ts#LlmRetryStartedEventData"
       ],
       "sources": [
-        "packages/llm/llm-retry/src/types.ts:43"
+        "packages/core/agent/src/types.ts:147"
       ]
     },
     {
@@ -24660,7 +24660,7 @@
         "packages/core/agent/src/types.ts#InboxTarget"
       ],
       "sources": [
-        "packages/core/agent/src/types.ts:39"
+        "packages/core/agent/src/types.ts:40"
       ]
     },
     {
@@ -25330,10 +25330,10 @@
     {
       "digest": "c170da8ab7c37635b10867b2571811d9e317ac3ec394e8ff8efe53f902fc41c1",
       "names": [
-        "packages/llm/llm-retry/src/types.ts#LlmRetryEventData"
+        "packages/core/agent/src/types.ts#LlmRetryEventData"
       ],
       "sources": [
-        "packages/llm/llm-retry/src/types.ts:16"
+        "packages/core/agent/src/types.ts:120"
       ]
     },
     {
@@ -25466,7 +25466,7 @@
       "digest": "cdee10e87dbed8440d8b6935888624884878efc7af95402e94171b29f173dced",
       "names": [],
       "sources": [
-        "packages/llm/llm-retry/src/types.ts:17"
+        "packages/core/agent/src/types.ts:121"
       ]
     },
     {
@@ -26047,7 +26047,7 @@
       "digest": "fa106c5b33b657e8ef16e8cbf39f3b7d44e5cbcdf4f9303d9db6410f28951e42",
       "names": [],
       "sources": [
-        "packages/core/agent/src/types.ts:96"
+        "packages/core/agent/src/types.ts:97"
       ]
     },
     {

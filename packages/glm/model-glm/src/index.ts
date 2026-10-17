@@ -15,14 +15,19 @@ import { Config, plainOptions, resolveAdapterOptions, type GlmConnectionOptions 
 
 export { Config, plainOptions, resolveAdapterOptions } from './config.ts'
 export type { Options, GlmConnectionOptions } from './config.ts'
+export { GLM_DEFAULT_RETRY_POLICY, PUBLIC_BASE_URL, BASE_URL_ENV } from './config.ts'
 export { GlmChatAdapter, GLM_IDLE_CODE } from './adapter.ts'
 export type { GlmAdapterOptions } from './adapter.ts'
 export { GLM_MODELS } from './models.ts'
-export { PUBLIC_BASE_URL, BASE_URL_ENV } from './config.ts'
 export { serialize, thinkingRequest } from './serialize.ts'
 export { parseSseFrames, type SseFrame } from './sse.ts'
 export { translate } from './translate.ts'
-export { providerError, streamError } from './transport.ts'
+export {
+  GLM_STREAM_CLOSED_CODE,
+  GLM_TRUNCATED_TOOL_CALLS_CODE,
+  providerError,
+  streamError,
+} from './transport.ts'
 
 export const name = 'model-glm'
 export const inject = ['llm']

@@ -71,6 +71,8 @@ The `agent/*` events let plugins act on live work without depending on the loop 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
+The type-only `@deepseek-ai/dsh-agent/types` entry also owns the unchanged `llm/retry` and `llm/retry-started` event contracts and `RetryId`. Observers can read retry history without installing a retry policy executor; these declarations schedule no requests.
+
 <details>
 <summary>Implementation internals — click to expand</summary>
 

@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-17",
+  "checks": [
+    {
+      "name": "regression",
+      "command": "node node_modules/vitest/vitest.mjs run packages/glm/model-glm/tests packages/glm/brand/tests scripts/check-gh-closure.spec.ts scripts/gh-resource-sampler.spec.ts packages/llm/llm-retry/tests packages/llm/token-meter/tests packages/client/ui-chat/tests/conversation-node-definitions.client.spec.ts",
+      "exitCode": 0,
+      "files": 15,
+      "tests": 297,
+      "evidence": "tests.log"
+    },
+    {
+      "name": "build",
+      "command": "pnpm run build",
+      "exitCode": 0,
+      "stepsPassed": 9,
+      "clientArtifacts": 328,
+      "evidence": "build.log"
+    },
+    {
+      "name": "built-product",
+      "command": "node --import tsx/esm scripts/gh-product-smoke.mjs <report.json>",
+      "exitCode": 0,
+      "cases": 2,
+      "realService": false,
+      "evidence": "product-smoke.json"
+    },
+    {
+      "name": "targeted-lint",
+      "exitCode": 0,
+      "evidence": "lint.log"
+    },
+    {
+      "name": "persistence",
+      "command": "node --import tsx/esm scripts/persistence-changes.ts --check",
+      "exitCode": 0,
+      "roots": 65,
+      "historyRecords": 15,
+      "evidence": "persistence.log"
+    },
+    {
+      "name": "doc-standard",
+      "command": "node node_modules/vitest/vitest.mjs run scripts/doc-standard.spec.ts",
+      "exitCode": 0,
+      "tests": 22,
+      "evidence": "doc-standard.log"
+    },
+    {
+      "name": "named-doc-pairing",
+      "exitCode": 0,
+      "pairs": 10,
+      "evidence": "doc-pairing.log"
+    },
+    {
+      "name": "workspace-constraints",
+      "command": "node --import tsx/esm scripts/check-workspace-constraints.ts",
+      "exitCode": 0
+    },
+    {
+      "name": "gh-closure",
+      "command": "node --import tsx/esm scripts/check-gh-closure.ts",
+      "exitCode": 0
+    },
+    {
+      "name": "published-dependency-policy",
+      "command": "node --import tsx/esm scripts/verify-package-dependencies.ts",
+      "exitCode": 0,
+      "packagesChecked": 84,
+      "evidence": "package-dependencies.log"
+    },
+    {
+      "name": "doc-sync-final",
+      "command": "pnpm --config.verifyDepsBeforeRun=false run doc-sync",
+      "exitCode": 1,
+      "passed": 42,
+      "failed": 1,
+      "failure": "verify-repository-references: 11 existing historical evidence/base-provenance/uv.lock commit pins",
+      "evidence": "doc-sync-final.log"
+    }
+  ],
+  "fixed": [
+    "RV01",
+    "RV02",
+    "RV03",
+    "RV04",
+    "RV05",
+    "RV06",
+    "RV07",
+    "RV08"
+  ],
+  "additionalCorrections": [
+    "Removed three Client-only UI peer declarations and root-provided @types/react from gh-brand; its public dsh.client.inject entries and dev dependencies remain. Published dependency gate now passes.",
+    "Repaired GH README contracts, stale generated documentation, and source/translation links; kept historical provenance and dependency lock pins intact."
+  ],
+  "scope": "synthetic fixtures / built profile, no real provider",
+  "remainingGate": {
+    "name": "repository references",
+    "findings": [
+      {
+        "file": "artifacts/gh-validation/gh001-20261017-171001/run.json",
+        "line": 8,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh001-20261017-171001/run.json",
+        "line": 14,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh001-20261017-171001/summary.md",
+        "line": 7,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+        "line": 28,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+        "line": 29,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+        "line": 47,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh003-20261017-184634/run.json",
+        "line": 25,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh004-20261017-200400/run.json",
+        "line": 9,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "artifacts/gh-validation/gh004-20261017-200400/run.json",
+        "line": 10,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "docs/glm/delivery-status.json",
+        "line": 7,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      },
+      {
+        "file": "python/sdk/uv.lock",
+        "line": 113,
+        "kind": "commit-hash",
+        "presentBeforeReview": true
+      }
+    ]
+  }
+}

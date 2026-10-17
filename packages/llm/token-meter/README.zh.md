@@ -72,6 +72,8 @@ const price = ctx.tokenMeter.estimateMessage(message)
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
+重试历史通过 `@deepseek-ai/dsh-agent/types` 定义类型；测量用量不依赖或激活重试策略实现。
+
 <details>
 <summary>实现细节——点击展开</summary>
 

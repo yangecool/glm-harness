@@ -8,7 +8,11 @@ import type { ContentBlock, GenerateOptions, ToolSchema } from '@deepseek-ai/dsh
 import type { GlmCatalogModel } from './models.ts'
 import type { WireMessage, WireRequest, WireTool, WireToolCall } from './wire-types.ts'
 
-/** The reasoning decision for one request, derived from model facts. */
+/** The reasoning decision for one request, derived from model facts.
+ * @param reasoningEffort - selected effort, absent when the caller leaves it unset.
+ * @param thinkingCapable - whether this model supports the thinking switch.
+ * @returns the explicit switch, or undefined when it must be omitted.
+ */
 export function thinkingRequest(
   reasoningEffort: string | undefined,
   thinkingCapable: boolean,
@@ -39,9 +43,13 @@ export function serialize(options: GenerateOptions, catalog: Pick<GlmCatalogMode
       }
       case 'assistant': {
         const text: string[] = []
+        const reasoning: string[] = []
         const toolCalls: WireToolCall[] = []
         for (const block of message.content) {
           if (block.type === 'text') text.push(block.text)
+          else if (block.type === 'reasoning'
+            && message.source.provider === options.provider
+            && message.source.model === options.model) reasoning.push(block.text)
           else if (block.type === 'tool-call') {
             toolCalls.push({
               id: block.id,
@@ -49,11 +57,11 @@ export function serialize(options: GenerateOptions, catalog: Pick<GlmCatalogMode
               function: { name: block.name, arguments: block.arguments },
             })
           }
-          // Reasoning is never sent back: the protocol discards it.
         }
         wireMessages.push({
           role: 'assistant',
           content: text.join('\n'),
+          ...reasoning.length === 0 ? {} : { reasoning_content: reasoning.join('') },
           ...toolCalls.length === 0 ? {} : { tool_calls: toolCalls },
         })
         continue

@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/persona/README.md
+/:
+  en: 238078cfe04dc2e3
+  zh: 457ad6200455beb6
+/glm-harness-gh-persona:
+  en: fb79d5aea6337241
+  zh: 9f2d5a8d363ffea8
+/glm-harness-gh-persona/summary:
+  en: 76f5ea8910f9ef67
+  zh: 8fe2e8f8b6bcbc7a
+/glm-harness-gh-persona/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 405b30feaf48c087
+/glm-harness-gh-persona/use-this-package:
+  en: 67c9b024baa318e2
+  zh: 0fa07e969ab52d79
+/glm-harness-gh-persona/use-this-package/when-to-choose-it:
+  en: 887a2c1f06a570dd
+  zh: 74b23e19305ccb09
+/glm-harness-gh-persona/use-this-package/minimal-configuration:
+  en: 7bd0b5f59a948356
+  zh: 77dee373637edad2
+/glm-harness-gh-persona/understand-the-implementation:
+  en: f4a306188d5de0df
+  zh: 026c730c90c0b30d
+/glm-harness-gh-persona/further-exploration:
+  en: 3a3a854c6448c00b
+  zh: 069fd3425ede68f1
+/glm-harness-gh-persona/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/glm-harness-gh-persona/model-experience/gh-persona-sections:
+  en: 914f7d80fabdedcf
+  zh: 8a33a805ff8c0246
+/glm-harness-gh-persona/model-experience/gh-persona-sections/what-the-model-sees:
+  en: cd7f147f01883bb5
+  zh: 0d952af3132b3752
+/glm-harness-gh-persona/model-experience/gh-persona-sections/token-effect:
+  en: 8cf542e1b2759344
+  zh: 6f6bad7810c4166a
+/glm-harness-gh-persona/model-experience/gh-persona-sections/kv-cache-effect:
+  en: 1901f72d0b245e0c
+  zh: 97430144dcb6484e
+/glm-harness-gh-persona/known-limitations-and-deferred-work:
+  en: 4acca0a9f83060cb
+  zh: 47474b6398eda1c2
+/glm-harness-gh-persona/known-limitations-and-deferred-work/dev-note:
+  en: a0e89ab7a293da12
+  zh: 5db74d346b356c35

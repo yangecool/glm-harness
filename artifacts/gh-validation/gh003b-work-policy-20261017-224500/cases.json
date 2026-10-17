@@ -1,0 +1,73 @@
+{
+  "runId": "gh003b-work-policy-20261017-224500",
+  "cases": [
+    {
+      "id": "SMOKE-tool-round",
+      "verdict": "pass",
+      "exitCode": 0,
+      "mainRequests": 2
+    },
+    {
+      "id": "SMOKE-rate-limit-retry",
+      "verdict": "pass",
+      "exitCode": 0,
+      "mainRequests": 3
+    },
+    {
+      "id": "SMOKE-rate-limit-exhaust",
+      "verdict": "pass",
+      "exitCode": 1,
+      "mainRequests": 4
+    },
+    {
+      "id": "UNIT-COMPOSITION",
+      "verdict": "pass",
+      "detail": "17 files / 313 tests"
+    },
+    {
+      "id": "TYPECHECK",
+      "verdict": "pass"
+    },
+    {
+      "id": "BUILD",
+      "verdict": "pass",
+      "detail": "9/9 gates, 328 artifacts"
+    },
+    {
+      "id": "GH-CLOSURE",
+      "verdict": "pass"
+    },
+    {
+      "id": "LINT",
+      "verdict": "pass"
+    },
+    {
+      "id": "CONSTRAINTS",
+      "verdict": "pass"
+    },
+    {
+      "id": "PERSISTENCE",
+      "verdict": "pass",
+      "detail": "65 roots / 15 records"
+    },
+    {
+      "id": "PAIRING",
+      "verdict": "pass",
+      "detail": "1018 pairs"
+    },
+    {
+      "id": "DOC-SYNC",
+      "verdict": "pass-with-known-failure",
+      "detail": "42 pass / 1 pre-existing repository-references failure (11 historical pins)"
+    },
+    {
+      "id": "WEB-COMPOSE-DUMP",
+      "verdict": "pass"
+    },
+    {
+      "id": "REAL-GLM",
+      "verdict": "not-run",
+      "detail": "D01 credentials blocked"
+    }
+  ]
+}

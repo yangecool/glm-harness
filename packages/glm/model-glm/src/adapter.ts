@@ -16,9 +16,10 @@ import type {
   LlmModelInfo,
   LlmResolvedModelInfo,
   PreparedAdapterCall,
+  ResolvedRetryPolicy,
   StreamChunk,
 } from '@deepseek-ai/dsh-llm'
-import { idleWatchdog, TimeoutReason } from '@deepseek-ai/dsh-timeout'
+import { deadline, idleWatchdog, TimeoutReason } from '@deepseek-ai/dsh-timeout'
 import { chatCompletionsUrl, type GlmConnectionOptions } from './config.ts'
 import {
   GLM_MODELS,
@@ -34,6 +35,8 @@ import { translate } from './translate.ts'
 
 /** Watchdog code carried by an idle GLM stream timeout. */
 export const GLM_IDLE_CODE = 'GLM_STREAM_IDLE'
+/** Deadline code for credential lookup and the HTTP response prelude. */
+export const GLM_REQUEST_TIMEOUT_CODE = 'GLM_REQUEST_TIMEOUT'
 
 /** Adapter-local dependencies injected by the plugin. */
 export interface GlmAdapterOptions {
@@ -54,6 +57,10 @@ export class GlmChatAdapter extends LlmAdapter {
 
   override providerInfo(provider: string): { id: string; name: string } {
     return { id: provider, name: 'GLM' }
+  }
+
+  override providerRetryPolicy(_provider: string): ResolvedRetryPolicy | undefined {
+    return this.dependencies.options().retryPolicy
   }
 
   override listModels(provider: string): Promise<readonly LlmModelInfo[]> {
@@ -102,9 +109,9 @@ export class GlmChatAdapter extends LlmAdapter {
       : AbortSignal.any([options.signal, consumer.signal])
     using watchdog = idleWatchdog(signal, connection.streamIdleTimeoutMs, GLM_IDLE_CODE)
     try {
-      yield* this.request(options, connection, entry, signal, watchdog)
+      yield* this.request(options, connection, entry, watchdog)
     } catch (error: unknown) {
-      throw generateError(error, signal)
+      throw generateError(error, watchdog.signal)
     } finally {
       consumer.abort()
     }
@@ -114,27 +121,9 @@ export class GlmChatAdapter extends LlmAdapter {
     options: GenerateOptions,
     connection: GlmConnectionOptions,
     entry: GlmCatalogModel,
-    signal: AbortSignal,
     watchdog: ReturnType<typeof idleWatchdog>,
   ): AsyncGenerator<StreamChunk> {
-    signal.throwIfAborted()
-    const key = await this.dependencies.resolveApiKey(connection)
-    const body = JSON.stringify(serialize(options, entry))
-    const response = await fetch(chatCompletionsUrl(connection.baseURL), {
-      method: 'POST',
-      signal,
-      body,
-      redirect: 'error',
-      headers: {
-        ...attributionHeaders(),
-        'content-type': 'application/json',
-        accept: 'text/event-stream',
-        authorization: `Bearer ${key}`,
-      },
-    })
-    if (!response.ok) {
-      providerError(await response.text(), response.status, response.headers)
-    }
+    const response = await this.openResponse(options, connection, entry, watchdog.signal)
     if (response.body === null) {
       throw new LlmError('GLM response carried no body', 'MALFORMED_RESPONSE')
     }
@@ -145,6 +134,48 @@ export class GlmChatAdapter extends LlmAdapter {
       if (next.done) return
       yield next.value
     }
+  }
+
+  /** Resolve credentials and receive headers within one disposable deadline. */
+  private async openResponse(
+    options: GenerateOptions,
+    connection: GlmConnectionOptions,
+    entry: GlmCatalogModel,
+    signal: AbortSignal,
+  ): Promise<Response> {
+    using initial = deadline(signal, connection.requestTimeoutMs, GLM_REQUEST_TIMEOUT_CODE)
+    const key = await abortable(initial.signal, () => this.dependencies.resolveApiKey(connection))
+    const body = JSON.stringify(serialize(options, entry))
+    const response = await abortable(initial.signal, () => fetch(chatCompletionsUrl(connection.baseURL), {
+      method: 'POST',
+      signal: initial.signal,
+      body,
+      redirect: 'error',
+      headers: {
+        ...attributionHeaders(),
+        'content-type': 'application/json',
+        accept: 'text/event-stream',
+        authorization: `Bearer ${key}`,
+      },
+    }))
+    if (!response.ok) {
+      const errorBody = await abortable(initial.signal, () => response.text())
+      providerError(errorBody, response.status, response.headers)
+    }
+    return response
+  }
+}
+
+/** Cancel this wait without cancelling another caller's shared credential lookup. */
+async function abortable<T>(signal: AbortSignal, operation: () => Promise<T>): Promise<T> {
+  signal.throwIfAborted()
+  const cancelled = Promise.withResolvers<never>()
+  const onAbort = (): void => { cancelled.reject(signal.reason) }
+  signal.addEventListener('abort', onAbort, { once: true })
+  try {
+    return await Promise.race([operation(), cancelled.promise])
+  } finally {
+    signal.removeEventListener('abort', onAbort)
   }
 }
 
@@ -166,8 +197,9 @@ async function* parseJsonFrames(frames: AsyncIterable<{ data: string }>) {
 /** Terminal-code mapping for one failed generation. */
 function generateError(error: unknown, signal: AbortSignal): unknown {
   if (error instanceof LlmError) return error
-  if (error instanceof TimeoutReason && error.code === GLM_IDLE_CODE) {
-    return new LlmError(`GLM stream idle over the configured window: ${error.message}`, 'TIMEOUT')
+  if (error instanceof TimeoutReason
+    && (error.code === GLM_IDLE_CODE || error.code === GLM_REQUEST_TIMEOUT_CODE)) {
+    return new LlmError(`GLM request exceeded its configured timeout: ${error.message}`, 'TIMEOUT')
   }
   if (signal.aborted || (error instanceof Error && error.name === 'AbortError')) {
     return new LlmError('GLM request aborted by the caller', 'ABORTED')
@@ -178,16 +210,13 @@ function generateError(error: unknown, signal: AbortSignal): unknown {
   )
 }
 
-/** Catalog entry of one model id; uncatalogued ids get text-only negative capability. */
+/** Catalog entry of one model id; unknown ids fail before provider I/O. */
 function catalogEntry(model: string): GlmCatalogModel {
-  return GLM_MODELS.find(entry => entry.id === model) ?? {
-    id: model,
-    name: model,
-    description: '',
-    contextWindow: 128_000,
-    defaultMaxTokens: 8_192,
-    thinking: false,
+  const entry = GLM_MODELS.find(candidate => candidate.id === model)
+  if (entry === undefined) {
+    throw new LlmError(`GLM model "${model}" is not configured; select a catalog model`, 'UNSUPPORTED_MODEL')
   }
+  return entry
 }
 
 /** Exact model metadata of one catalog entry. */

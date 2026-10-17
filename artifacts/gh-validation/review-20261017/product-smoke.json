@@ -1,0 +1,50 @@
+{
+  "scope": "built gh-headless profile / synthetic loopback, no real GLM",
+  "results": [
+    {
+      "name": "tool-round",
+      "passed": true,
+      "exitCode": 0,
+      "mainRequests": 2
+    },
+    {
+      "name": "rate-limit",
+      "passed": true,
+      "exitCode": 1,
+      "mainRequests": 1
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "tool-round",
+      "main": true,
+      "model": "glm-4.6",
+      "toolResult": false
+    },
+    {
+      "scenario": "tool-round",
+      "main": false,
+      "model": "glm-4.6",
+      "toolResult": false
+    },
+    {
+      "scenario": "tool-round",
+      "main": true,
+      "model": "glm-4.6",
+      "toolResult": true,
+      "reasoning": "先写入测试文件，再核验结果。"
+    },
+    {
+      "scenario": "rate-limit",
+      "main": true,
+      "model": "glm-4.6",
+      "toolResult": false
+    },
+    {
+      "scenario": "rate-limit",
+      "main": false,
+      "model": "glm-4.6",
+      "toolResult": false
+    }
+  ]
+}

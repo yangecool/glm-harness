@@ -1,0 +1,9 @@
+== check-gh-closure
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+
+== persistence
+persistence changes: 65 roots match 15 history records.
+
+== oxlint GH
+Found 0 warnings and 0 errors.
+Finished in 2.1s on 25 files with 90 rules using 14 threads.

@@ -16,6 +16,7 @@ The GLM product identity over the dsh client shell, composed the way Grok Harnes
 - [Use this package](#use-this-package)
 - [Understand the implementation](#understand-the-implementation)
 - [Further Exploration](#further-exploration)
+- [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
 -----
@@ -57,13 +58,35 @@ The surfaces without plugin seams carry GLM identity through copy and asset swap
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- `packages/grok/brand` in the Grok Harness runtime — the precedent this package follows.
+- `brand` in the Grok Harness runtime — the precedent this package follows.
 - `packages/client/ui-sidebar/src/client/SidebarRoot.tsx` — the slots' host surfaces and stock fallbacks.
 - `packages/client/ui-theme/src/styles/design-platform.css` — the token vocabulary the ramp override targets.
 
-<a id="known-limitations-and-deferred-work"></a>
+## Model Experience
+
+### Composition effects
+
+#### What the model sees
+
+Only browser identity and theme slots change. The plugin contributes no prompt, tool schema, or model message.
+
+#### Token effect
+
+`gh-brand` makes no independent model calls. The selected capability owners determine token use.
+
+#### KV Cache effect
+
+This layer does not serialize requests. Changes to selected model-facing capabilities can change prefixes; their owners document that effect.
+
 ## Known Limitations and Deferred Work
+
+<a id="known-limitations-and-deferred-work"></a>
 
 - The framework-free boot page keeps the platform wordmark `HARNESS`; it is product-neutral and shared across harness products.
 - The launcher's `dsh` bin name and console prefixes stay upstream; product command naming (`glmh`) belongs to the packaging task.
 - The update/install and welcome desktop windows are verified at the asset and copy level on this machine (no display, no Electron binary); runtime screenshots of those windows arrive with the packaged desktop build.
+
+<a id="dev-note"></a>
+### Dev Note
+
+Keep business behavior in its owning plugins and verify the composed profile.

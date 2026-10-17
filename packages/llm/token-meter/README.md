@@ -72,6 +72,8 @@ Occupancy is a reference figure, not a billing record: nothing in the harness ma
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
+Retry history is typed through `@deepseek-ai/dsh-agent/types`; measuring usage does not depend on or activate a retry policy implementation.
+
 <details>
 <summary>Implementation internals — click to expand</summary>
 

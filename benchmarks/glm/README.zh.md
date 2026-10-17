@@ -23,3 +23,5 @@ corepack pnpm exec tsx benchmarks/glm/run-gh-baseline.ts run --fixture-root <fre
 每次 `run` 产出 `memory.csv`(逐 tick 逐 pid 行)、`scenarios.json`(汇总、逐 tick 树总量、退出码、启动时长、采样驱动自身 CPU)与 `summary.md`(表格)。采样驱动自身的 CPU 按场景报告,让它的开销与其产出的数字并排可见。
 
 计划中提到的 ZCode 基线不由本驱动运行:构建固定的 ZCode 修订需要 Node ≥ 24,本机未安装。将其记录为"未运行"并注明该原因与解锁步骤(安装 Node 24);不得替换成其他修订。
+
+2026-10-17 审查修复了 /proc 数字目录过滤：此前会漏掉以 9 开头的多位 PID。旧 GH-002/004 结果只作历史记录，必须重测后才能给出 MEM 结论。不可读或短命进程仍可能缺席单个 tick；这些采样不能证明全覆盖或已处理 PID 复用。

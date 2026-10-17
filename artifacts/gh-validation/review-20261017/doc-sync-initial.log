@@ -1,0 +1,332 @@
+$ tsx scripts/run-gates.ts doc-sync
+run-gates: doc-sync running 43 gate(s) with 8 worker(s) from 12 local default worker(s) of 14 CPU(s), doc-sync cap 8.
+run-gates: start doc-typecheck
+run-gates: start documentation build
+run-gates: start doc graphs
+run-gates: start CLI help reference
+run-gates: start markdown links
+run-gates: start type equivalence
+run-gates: start cordis catalog
+run-gates: start Cordis inspect catalog
+run-gates: PASS CLI help reference (4.86s)
+run-gates: start workflow guest source
+run-gates: PASS type equivalence (5.75s)
+run-gates: start verify-mermaid
+run-gates: PASS workflow guest source (1.23s)
+run-gates: start translation pairing
+run-gates: PASS Cordis inspect catalog (9.27s)
+run-gates: start markdown wrap
+run-gates: PASS cordis catalog (14.62s)
+run-gates: start client catalog
+
+== FAILED markdown links (17.82s) ==
+command: pnpm run verify-md-links
+outcome: exit 1
+$ tsx scripts/verify-md-links.ts
+verify-md-links: broken relative cross-links found:
+  docs/user/guide/index.md:5  ../../../README.md#run  (no such anchor in target)
+  docs/user/guide/index.zh.md:5  ../../../README.zh.md#run  (no such anchor in target)
+  docs/user/guide/providers.md:5  ../../../README.md#run  (no such anchor in target)
+  docs/user/guide/providers.zh.md:5  ../../../README.zh.md#run  (no such anchor in target)
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start export jsdoc
+
+== FAILED client catalog (5.42s) ==
+command: pnpm run verify-client-catalog
+outcome: exit 1
+$ tsx scripts/gen-client-catalog.ts --check
+gen-client-catalog: stale — packages/extensions/cordis-client-runner/src/client/slot-catalog.ts. Run `pnpm run gen-client-catalog` and commit the result.
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start tool catalog
+run-gates: PASS tool catalog (2.14s)
+run-gates: start config catalog
+run-gates: PASS markdown wrap (14.38s)
+run-gates: start skill plugin package list
+run-gates: PASS verify-mermaid (17.91s)
+run-gates: start npm dependency catalog
+
+== FAILED config catalog (2.09s) ==
+command: pnpm run verify-config-catalog
+outcome: exit 1
+$ tsx scripts/gen-config-catalog.ts --check
+/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:108
+  throw new Error(
+        ^
+
+Error: gen-config-catalog: 4 violation(s):
+  config field 'Config.baseURL' (packages/glm/model-glm/src/config.ts:23) has no JSDoc prose.
+  config field 'Config.apiKeyEnv' (packages/glm/model-glm/src/config.ts:24) has no JSDoc prose.
+  config field 'Config.streamIdleTimeoutMs' (packages/glm/model-glm/src/config.ts:25) has no JSDoc prose.
+  config field 'Config.requestTimeoutMs' (packages/glm/model-glm/src/config.ts:26) has no JSDoc prose.
+    at report (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:108:9)
+    at collectConfigCatalog (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:877:3)
+    at computeConfigCatalogOutputs (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:1032:19)
+    at main (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:1056:19)
+    at <anonymous> (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:1073:3)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.2
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start persistence catalog
+run-gates: PASS npm dependency catalog (0.74s)
+run-gates: start persistence type history
+run-gates: PASS translation pairing (18.65s)
+run-gates: start released persistence history
+
+== FAILED export jsdoc (7.62s) ==
+command: pnpm run verify-export-jsdoc
+outcome: exit 1
+$ tsx scripts/verify-export-jsdoc.ts
+verify-export-jsdoc: 7 JSDoc completeness violation(s) (see AGENTS.md):
+  exported function 'chatCompletionsUrl' (packages/glm/model-glm/src/config.ts:113) is missing @param baseURL.
+  exported function 'chatCompletionsUrl' (packages/glm/model-glm/src/config.ts:113) is missing @returns (return type: string).
+  exported function 'thinkingRequest' (packages/glm/model-glm/src/serialize.ts:12) is missing @param reasoningEffort.
+  exported function 'thinkingRequest' (packages/glm/model-glm/src/serialize.ts:12) is missing @param thinkingCapable.
+  exported function 'thinkingRequest' (packages/glm/model-glm/src/serialize.ts:12) is missing @returns (return type: { type: 'enabled' } | { type: 'disabled' } | undefined).
+  exported function 'parseSseFrames' (packages/glm/model-glm/src/sse.ts:24) is missing @returns (return type: AsyncGenerator<SseFrame>).
+  exported function 'translate' (packages/glm/model-glm/src/translate.ts:34) is missing @returns (return type: AsyncGenerator<StreamChunk>).
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start Session format references
+
+== FAILED skill plugin package list (2.43s) ==
+command: pnpm run verify-plugin-packages
+outcome: exit 1
+$ tsx scripts/gen-plugin-packages.ts --check
+/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:108
+  throw new Error(
+        ^
+
+Error: gen-config-catalog: 4 violation(s):
+  config field 'Config.baseURL' (packages/glm/model-glm/src/config.ts:23) has no JSDoc prose.
+  config field 'Config.apiKeyEnv' (packages/glm/model-glm/src/config.ts:24) has no JSDoc prose.
+  config field 'Config.streamIdleTimeoutMs' (packages/glm/model-glm/src/config.ts:25) has no JSDoc prose.
+  config field 'Config.requestTimeoutMs' (packages/glm/model-glm/src/config.ts:26) has no JSDoc prose.
+    at report (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:108:9)
+    at collectConfigCatalog (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-config-catalog.ts:877:3)
+    at main (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-plugin-packages.ts:61:26)
+    at <anonymous> (/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/scripts/gen-plugin-packages.ts:82:3)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.2
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start Session format catalog
+run-gates: PASS Session format catalog (0.90s)
+run-gates: start public repository links
+
+== FAILED doc graphs (27.77s) ==
+command: pnpm run verify-doc-graphs
+outcome: exit 1
+$ tsx scripts/gen-doc-graphs.ts --check
+gen-doc-graphs: stale graph doc(s): docs/event-producer-consumer.md, docs/event-producer-consumer.zh.md. Run `pnpm run gen-doc-graphs` and commit the result.
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start repository references
+run-gates: PASS released persistence history (3.31s)
+run-gates: start concrete terms
+run-gates: PASS doc-typecheck (28.36s)
+run-gates: start doc refs
+run-gates: PASS doc refs (1.14s)
+run-gates: start subsystem pages
+run-gates: PASS concrete terms (1.73s)
+run-gates: start package paths
+run-gates: PASS public repository links (3.54s)
+run-gates: start tsconfig paths
+
+== FAILED subsystem pages (1.18s) ==
+command: pnpm run verify-subsystem-pages
+outcome: exit 1
+$ tsx scripts/verify-subsystem-pages.ts
+verify-subsystem-pages: package-group documentation violations found:
+  packages/glm/README.md: package group has no group README declaring subsystem ownership
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start config source ownership
+run-gates: PASS Session format references (5.46s)
+run-gates: start package README Summaries
+
+== FAILED package paths (1.33s) ==
+command: pnpm run verify-package-paths
+outcome: exit 1
+$ tsx scripts/verify-package-paths.ts
+verify-package-paths: broken packages/* references found (target does not exist):
+  packages/glm/brand/README.md:60  packages/grok/brand
+  packages/glm/brand/README.zh.md:60  packages/grok/brand
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start package README model experience
+run-gates: PASS tsconfig paths (0.76s)
+run-gates: start agent note classification
+run-gates: PASS config source ownership (0.71s)
+run-gates: start agent note format
+
+== FAILED package README Summaries (0.77s) ==
+command: pnpm run verify-package-readme-summaries
+outcome: exit 1
+$ tsx scripts/verify-package-readme-summaries.ts
+verify-package-readme-summaries: violations found:
+  packages/core/agent/README.md: Summary has 125 words; the limit is 100. Read .agents/skills/dsh-doc/SKILL.md and .agents/skills/dsh-doc/templates/package-reference.md before rewriting it.
+  packages/glm/base/README.md: Summary has 121 words; the limit is 100. Read .agents/skills/dsh-doc/SKILL.md and .agents/skills/dsh-doc/templates/package-bundle.md before rewriting it.
+  packages/glm/model-glm/README.md: missing `## Summary`
+  packages/llm/token-meter/README.md: Summary has 114 words; the limit is 100. Read .agents/skills/dsh-doc/SKILL.md and .agents/skills/dsh-doc/templates/package-reference.md before rewriting it.
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start archived agent notes
+run-gates: PASS agent note classification (0.82s)
+run-gates: start skill invocation metadata
+run-gates: PASS agent note format (0.76s)
+run-gates: start translation prompt
+run-gates: PASS archived agent notes (0.93s)
+run-gates: start doc budgets
+run-gates: PASS skill invocation metadata (0.81s)
+run-gates: start upgrade guides
+run-gates: PASS translation prompt (0.78s)
+run-gates: start documentation standard tests
+run-gates: PASS doc budgets (0.85s)
+run-gates: start documentation site checks
+
+== FAILED repository references (5.72s) ==
+command: pnpm run verify-repository-references
+outcome: exit 1
+$ tsx scripts/verify-repository-references.ts
+verify-repository-references: use release tags or maintained repository links:
+  README.md:22 commit-hash
+  README.zh.md:22 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:8 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:14 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/summary.md:7 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:28 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:29 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:47 commit-hash
+  artifacts/gh-validation/gh003-20261017-184634/run.json:25 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:9 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:10 commit-hash
+  docs/glm/delivery-status.json:7 commit-hash
+  python/sdk/uv.lock:113 commit-hash
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start package README limitations
+run-gates: PASS upgrade guides (0.90s)
+
+== FAILED package README model experience (3.51s) ==
+command: pnpm run verify-package-readme-model-experience
+outcome: exit 1
+$ tsx scripts/verify-package-readme-model-experience.ts
+verify-package-readme-model-experience failed:
+  packages/glm/base/README.md: missing ## Model Experience
+  packages/glm/brand/README.md: missing ## Model Experience
+  packages/glm/desktop/README.md: missing ## Model Experience
+  packages/glm/model-glm/README.md: must contain one or more complete model-context entries
+[ELIFECYCLE] Command failed with exit code 1.
+
+== FAILED documentation standard tests (1.75s) ==
+command: pnpm exec vitest run scripts/doc-standard.spec.ts
+outcome: exit 1
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+ ❯ |thread-safe| scripts/doc-standard.spec.ts (22 tests | 2 failed) 243ms
+     × maps package README kinds to their documentation standards 127ms
+     × keeps every package README on the summary, contents, and Dev Note skeleton 51ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |thread-safe| scripts/doc-standard.spec.ts > dsh-doc skill consolidation > maps package README kinds to their documentation standards
+AssertionError: packages/glm/model-glm/README.md: YAML frontmatter: expected null not to be null
+ ❯ readFrontmatter scripts/doc-standard.spec.ts:113:50
+    111|   const source = readFileSync(resolve(root, file), 'utf8')
+    112|   const match = /^---\n([\s\S]*?)\n---\n/u.exec(source)
+    113|   expect(match, `${file}: YAML frontmatter`).not.toBeNull()
+       |                                                  ^
+    114|   const metadata = load(match?.[1] ?? '')
+    115|   expect(metadata, `${file}: frontmatter object`).toBeTypeOf('object')
+ ❯ scripts/doc-standard.spec.ts:353:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |thread-safe| scripts/doc-standard.spec.ts > dsh-doc skill consolidation > keeps every package README on the summary, contents, and Dev Note skeleton
+AssertionError: packages/glm/base/README.md: expected [ 'missing Dev Note' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "missing Dev Note",
++ ]
+
+ ❯ scripts/doc-standard.spec.ts:404:64
+    402|     for (const file of packageReadmes().filter(file => file.split('/')…
+    403|       const source = readFileSync(resolve(root, file), 'utf8')
+    404|       expect(packageReadmeStructureErrors(file, source), file).toEqual…
+       |                                                                ^
+    405|     }
+    406|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 20 passed (22)
+   Start at  21:26:38
+   Duration  531ms (transform 105ms, setup 82ms, import 71ms, tests 243ms, environment 0ms)
+
+
+== FAILED package README limitations (3.88s) ==
+command: pnpm run verify-package-readme-limitations
+outcome: exit 1
+$ tsx scripts/verify-package-readme-limitations.ts
+verify-package-readme-limitations: violations found:
+  packages/glm/model-glm/README.md:27: the `## Known Limitations and Deferred Work` section has no top-level `- ` bullet — state the limitations, or whitelist the package if there are genuinely none
+[ELIFECYCLE] Command failed with exit code 1.
+
+== FAILED persistence type history (14.11s) ==
+command: pnpm run verify-persistence-changes
+outcome: exit 1
+$ tsx scripts/persistence-changes.ts --check
+docs/persistence-schema.json is stale; regenerate the persistence catalog
+[ELIFECYCLE] Command failed with exit code 1.
+
+== FAILED persistence catalog (17.03s) ==
+command: pnpm run verify-persistence-catalog
+outcome: exit 1
+$ tsx scripts/gen-persistence-catalog.ts --check
+gen-persistence-catalog: docs/persistence-catalog.md, docs/persistence-catalog.zh.md, docs/persistence-catalog.i18n.yaml, docs/persistence-schema.json stale. Run `pnpm run gen-persistence-catalog` and commit the result.
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: PASS documentation site checks (9.32s)
+run-gates: PASS documentation build (53.83s)
+
+run-gates: 28 passed, 15 failed, 0 skipped in 53.83s.
+run-gates: unsuccessful gates:
+  - FAILED doc graphs (27.77s, exit 1)
+    pnpm run verify-doc-graphs
+  - FAILED markdown links (17.82s, exit 1)
+    pnpm run verify-md-links
+  - FAILED client catalog (5.42s, exit 1)
+    pnpm run verify-client-catalog
+  - FAILED export jsdoc (7.62s, exit 1)
+    pnpm run verify-export-jsdoc
+  - FAILED config catalog (2.09s, exit 1)
+    pnpm run verify-config-catalog
+  - FAILED skill plugin package list (2.43s, exit 1)
+    pnpm run verify-plugin-packages
+  - FAILED persistence catalog (17.03s, exit 1)
+    pnpm run verify-persistence-catalog
+  - FAILED persistence type history (14.11s, exit 1)
+    pnpm run verify-persistence-changes
+  - FAILED repository references (5.72s, exit 1)
+    pnpm run verify-repository-references
+  - FAILED subsystem pages (1.18s, exit 1)
+    pnpm run verify-subsystem-pages
+  - FAILED package paths (1.33s, exit 1)
+    pnpm run verify-package-paths
+  - FAILED package README Summaries (0.77s, exit 1)
+    pnpm run verify-package-readme-summaries
+  - FAILED package README model experience (3.51s, exit 1)
+    pnpm run verify-package-readme-model-experience
+  - FAILED documentation standard tests (1.75s, exit 1)
+    pnpm exec vitest run scripts/doc-standard.spec.ts
+  - FAILED package README limitations (3.88s, exit 1)
+    pnpm run verify-package-readme-limitations
+[ELIFECYCLE] Command failed with exit code 1.

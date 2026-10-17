@@ -20,6 +20,7 @@ export interface SseFrame {
  * @param activity - watchdog pulse, called once per comment line and per
  * dispatched frame so heartbeats and events both reset idle timers.
  * @yields complete frames in arrival order; a torn final line is dropped.
+ * @returns the asynchronous frame iterator.
  */
 export async function* parseSseFrames(
   body: ReadableStream<Uint8Array>,

@@ -10,10 +10,10 @@
   zh: 73b501591dde4f2a
 /glm-harness-gh-brand/summary:
   en: 906b2f5de487f581
-  zh: cb2e1f9bb7c258d1
+  zh: e3a623c4f0e3e874
 /glm-harness-gh-brand/table-of-contents:
-  en: 5db0ae01d50cb0e4
-  zh: e5a8221553ee3d19
+  en: b563e4ec4727d0de
+  zh: d0228da978238e05
 /glm-harness-gh-brand/use-this-package:
   en: f5bb8efde9e366bf
   zh: 60602be19a7a799b
@@ -33,8 +33,26 @@
   en: 7a0c028394c4e18b
   zh: 83b8537d69732977
 /glm-harness-gh-brand/further-exploration:
-  en: a7f03af77579c4d9
-  zh: 41e48293a6bdd009
+  en: daee7a987bdb02e3
+  zh: 28881cad7910c72e
+/glm-harness-gh-brand/model-experience:
+  en: 215e7ba838619b7b
+  zh: 9504705eabfaca9c
+/glm-harness-gh-brand/model-experience/composition-effects:
+  en: 2a896d9682be069d
+  zh: 7cf57c18a7f8da68
+/glm-harness-gh-brand/model-experience/composition-effects/what-the-model-sees:
+  en: 38240571513dd824
+  zh: 6986bf7687ac71e9
+/glm-harness-gh-brand/model-experience/composition-effects/token-effect:
+  en: 06f06ca43caf5079
+  zh: f8f245820726d54c
+/glm-harness-gh-brand/model-experience/composition-effects/kv-cache-effect:
+  en: ca35b9ac5c475c8e
+  zh: 4b38100fe1f915ce
 /glm-harness-gh-brand/known-limitations-and-deferred-work:
-  en: ccb833b365fe4713
-  zh: d003eb9077ceecd7
+  en: 7c338d35ba0d32d3
+  zh: 844f099ae9102bc0
+/glm-harness-gh-brand/known-limitations-and-deferred-work/dev-note:
+  en: d79d3f1bf3563160
+  zh: a8b22fdaa54c32a8

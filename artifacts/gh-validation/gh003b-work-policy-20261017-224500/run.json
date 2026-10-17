@@ -1,0 +1,36 @@
+{
+  "task": "GH-003-B (slice 1): GLM work policy, bounded retry, truncated-batch boundary",
+  "date": "2026-10-17",
+  "branch": "main",
+  "baseCommit": "1db9ff054f88bcaa831454b1e535070ca41829e1 (worktree carries the RV01-08 review fixes, uncommitted, preserved)",
+  "scope": "keyless fixtures, built gh-headless profile against a synthetic loopback GLM endpoint; no real GLM (D01)",
+  "delivered": [
+    "packages/glm/persona (@glm-harness/gh-persona): glm:identity + glm:work-policy static prompt sections; upstream harness identity replaced at composition level",
+    "packages/glm/model-retry (@glm-harness/gh-model-retry): GH-owned bounded retry executor on agent/request-error; durable llm/retry + llm/retry-started events; llmRetry projection with replayed budgets; cancellable waits; disposal drain; refuses always-mode and over-cap Retry-After",
+    "model-glm: retryPolicy config field (RetryPolicySchema, volatile) resolved per connection generation; GLM default normal/3 retries over RATE_LIMIT, SERVER, TIMEOUT, TRANSPORT, EMPTY_RESPONSE, STREAM_CLOSED; TRUNCATED_TOOL_CALLS terminal code for output-limit-cut tool batches (batch not executed)",
+    "gh-base composition: model-retry + gh-persona rows; system-prompt row documented as surface-overwritten",
+    "gh-init-profiles: GH product layer written into each profile's cordis.patch.yml while pristine (includeHarnessIdentity false, surface persona line kept, pinned toolOrder incl. platform shell; web profiles disable harness-dev-context)",
+    "product smoke: persona/order assertions plus rate-limit-retry (recovers) and rate-limit-exhaust (1+3 attempts then explicit failure)"
+  ],
+  "verification": {
+    "unitAndComposition": "17 files / 313 tests passed (glm persona 5, model-retry 8 via real AgentLoop harness, model-glm 46, brand 3, closure spec, sampler, token-meter, ui-chat retry consumers); final rerun subset 271 passed",
+    "typecheck": "tsc -b tsconfig.host.json and tsconfig.client.json exit 0",
+    "build": "pnpm run build: 9/9 gates, 328 client artifacts",
+    "closure": "check-gh-closure: @glm-harness closures and composed profiles free of banned upstream business packages",
+    "lint": "repo oxlint 0 errors (1 pre-existing warning); GH-scoped 0/0",
+    "constraints": "check-workspace-constraints pass",
+    "persistence": "persistence-changes --check: 65 roots match 15 history records",
+    "docs": "verify-translation-pairing 1018 pairs; doc-sync 42 pass / 1 fail (verify-repository-references, the 11 pre-existing historical commit pins recorded in the diary; untouched)",
+    "smoke": "built gh-headless: tool-round (2 main requests, reasoning preserved), rate-limit-retry (429 once, bounded retry recovers, 3 main requests, exit 0), rate-limit-exhaust (4 main requests = 1+3 retries, exit 1, RATE_LIMIT)",
+    "compositionDump": "gh-web alias --dump-config: system-prompt product layer effective (includeHarnessIdentity false, toolOrder pinned), harness-dev-context disabled, gh-persona/model-retry rows present"
+  },
+  "notRun": [
+    "real GLM endpoint (D01: no BigModel/Z.AI credentials); all model behavior verified against the scripted loopback endpoint",
+    "Electron native run, memory sampling, remote artifacts (later cards)"
+  ],
+  "findings": [
+    "Both shipped surface bundles (dsh-web-app, dsh-headless) re-address the system-prompt row, so bundle-level includeHarnessIdentity/toolOrder never survive; the GH product layer in the profile's own cordis.patch.yml (written by gh-init-profiles while pristine) is the composition-correct owner and stays user-editable",
+    "gh-web/desktop previously exposed the upstream 'DeepSeek Harness implementation checkout' dev-context to the model; now disabled in the product layer until a GH-authored source context exists",
+    "mid-session incident (recovered): an early git checkout of packages/glm/base/package.json momentarily resurrected the RV07-removed dsh-llm-retry dependency; the closure gate caught it and the dependency was removed again; diff against the session-recorded RV07 dependency set confirms no other regression"
+  ]
+}

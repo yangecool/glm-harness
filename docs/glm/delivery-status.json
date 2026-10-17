@@ -1,5 +1,5 @@
 {
-  "note": "GLM Harness 交付进度台账。按 GH/E/F/X/R/MEM ID 关联主计划;由实施者维护,规划台账生成脚本(refresh-planning-inventory)不触碰本文件。",
+  "note": "GH 阶段切片与证据台账。历史 complete 只描述当时切片，不等于 E/F 或真实服务/原生桌面验收；当前开发状态以 currentAssessment 和配套开发日记为准。",
   "repository": {
     "path": "glm-harness/runtime",
     "branch": "main",
@@ -198,6 +198,58 @@
         "dsh bin 名与控制台前缀保持上游(glmh 命名属打包票);启动页平台词标 HARNESS 保留(产品中立,GSH 同款)"
       ],
       "next": "GH-005 远端制品与 SSH 自举;桌面打包票补 Electron 窗运行时视觉验收"
+    },
+    {
+      "id": "GH-003-B1",
+      "title": "GLM 工作策略、GH 自写有界重试与截断工具批次边界(切片一)",
+      "planRefs": [
+        "E02.5",
+        "E02.9 部分",
+        "E02.2 部分",
+        "F05",
+        "F07 部分",
+        "F59 部分",
+        "TOK01 部分",
+        "TOK02 部分",
+        "TOK03 部分",
+        "TOK08 部分"
+      ],
+      "owner": "模型",
+      "status": "complete-slice",
+      "completed": "2026-10-17",
+      "deliverables": [
+        "packages/glm/persona (@glm-harness/gh-persona):glm:identity+glm:work-policy 静态提示段,替换上游 harness identity;字节稳定前缀;卸载无残留",
+        "packages/glm/model-retry (@glm-harness/gh-model-retry):GH 自写有界重试执行器(agent/request-error);llm/retry+llm/retry-started 持久事件、llmRetry 投影重放恢复预算、可取消等待、卸载排水;拒绝 always 模式与超上限 Retry-After",
+        "gh-model-glm:retryPolicy volatile 配置(RetryPolicySchema);GLM 默认 normal/3 次,覆盖 RATE_LIMIT/SERVER/TIMEOUT/TRANSPORT/EMPTY_RESPONSE/STREAM_CLOSED;TRUNCATED_TOOL_CALLS 终态:输出上限截断的工具批次不执行",
+        "组合:gh-base 挂 model-retry/gh-persona 行;gh-init-profiles 写 profile 产品层(includeHarnessIdentity false+表面 persona+固定 toolOrder;web 系禁用 harness-dev-context,消除模型可见 DeepSeek Harness 残留)",
+        "产品 smoke 扩为三场景:tool-round、rate-limit-retry(恢复)、rate-limit-exhaust(1+3 次后显式失败)"
+      ],
+      "verification": {
+        "runIds": [
+          "gh003b-work-policy-20261017-224500"
+        ],
+        "gatesPassed": [
+          "glm+受影响 17 文件 313 测试(含真实 AgentLoop 重试组合 8 项)",
+          "typecheck host+client",
+          "build 9/9+328 制品",
+          "check-gh-closure",
+          "oxlint 0 错误",
+          "constraints",
+          "persistence 65/15",
+          "pairing 1018 对",
+          "doc-sync 42 过/1 既有失败(历史 pin,未触碰)",
+          "smoke 三场景全过",
+          "gh-web 组合 dump 验证产品层生效"
+        ],
+        "compositionEvidence": "gh-web 别名 --dump-config:includeHarnessIdentity false+toolOrder 生效、harness-dev-context disabled、新行在位"
+      },
+      "deviations": [
+        "真实 GLM 未联调(D01 凭据缺失):一切模型行为结论来自脚本化回环端点,不冒充真实联调",
+        "表面 bundle(dsh-web-app/dsh-headless)重写 system-prompt 行,identity/toolOrder 的正确 owner 是 profile 产品层(用户可编辑);旧 GH home 不自动升级,需重建 home 才获得产品层",
+        "purpose 级模型/effort/cap 的个人/项目配置来源仍属后续切片(GH-007/E02.1);标题最低 effort 与 compaction purpose 标记为 DSH 既有行为,本轮未改",
+        "工具轮失败后的会话连续性重放、内存重测、Electron 原生运行不在本切片"
+      ],
+      "next": "GH-008-A:ZCode 三种权限与 Plan(共享真实工具/工作区事实);GH-003-B 其余(purpose 预算/preserved-thinking 全边界)随路由与账号工作推进"
     }
   ],
   "blocked": [
@@ -209,5 +261,49 @@
       "id": "D02",
       "summary": "ZCode 固定修订(aac4755)基线未测:构建需 Node ≥24,本机仅 22.23.2 且无 nvm/fnm/volta;解锁:安装 Node 24"
     }
-  ]
+  ],
+  "currentAssessment": {
+    "updatedAt": "2026-10-17",
+    "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
+    "productBaseline": "ZCode v3.15.1; GSH development reference only",
+    "GH-001": "base implemented; upstream retry closure corrected in review",
+    "GH-002": "sampler/corpus implemented; PID bug fixed; full baselines need remeasurement",
+    "GH-003": "partial: native text/tool protocol and review fixes; real GLM/persona/routing/accounts/multimodal/retry pending",
+    "GH-004": "partial: Web mock workflow; native Electron, full task flow, three ZCode permissions pending",
+    "GH-BRAND": "partial: brand plugin/assets; complete workflow/native visuals pending",
+    "GH-005/GH-006": "not started: complete remote bootstrap/runtime/Supervisor",
+    "next": "GH-003-B GLM task behavior + GH-008-A ZCode permissions, then GH-004-B native desktop flow; remote artifact work may start independently"
+  },
+  "review20261017": {
+    "status": "code fixes validated",
+    "fixed": [
+      "RV01",
+      "RV02",
+      "RV03",
+      "RV04",
+      "RV05",
+      "RV06",
+      "RV07",
+      "RV08"
+    ],
+    "evidence": "artifacts/gh-validation/review-20261017/results.json",
+    "verification": {
+      "regressionFiles": 15,
+      "regressionTests": 297,
+      "buildSteps": 9,
+      "productSmokeCases": 2,
+      "docStandardTests": 22,
+      "dependencyPackages": 84,
+      "docSync": {
+        "passed": 42,
+        "failed": 1,
+        "remaining": "existing repository references / immutable commit pins"
+      }
+    },
+    "limits": [
+      "No real GLM/native/remote/platform or full MEM/TOK acceptance",
+      "GH-owned bounded retry remains unstarted; upstream retry executor removed",
+      "Repository-reference documentation gate has existing commit-pinning conflicts; see diary"
+    ]
+  }
 }
