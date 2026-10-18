@@ -390,6 +390,14 @@ export class SessionCommandController {
       await this.flushAdmission(agent, request.requestId)
       return { accepted: true }
     }
+    // New-admission gate: merge-extensible point where a composed listener may
+    // refuse NEW work (a resident service draining for a version switch) with
+    // a typed error. Reconciled replays above stay answerable; only a prompt
+    // that would newly start work reaches this fire.
+    await this.ctx.waterfall('session/new-prompt', {
+      sessionId: agent.id,
+      requestId: request.requestId,
+    }, () => Promise.resolve())
     const recordedSource: MessageSource = source.kind === 'user' && 'rpcId' in source
       ? { ...source, admissionFingerprint: fingerprint } : source
     await this.placePrompt(agent, request, recordedSource)

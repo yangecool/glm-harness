@@ -1,0 +1,12 @@
+PASS install-sealed: stdout=r-alpha
+PASS install-immutable: exit=69 gh-remote-supervisor: release r-alpha is already installed; releases are immutable
+PASS run-from-current-release: identity.releaseId=r-alpha pid=2804765
+PASS update-switches-release: releaseId=r-beta pid 2804765→2804800
+PASS rollback-returns-previous: releaseId=r-alpha pid 2804800→2804842
+PASS gc-keeps-pinned-releases: removed=["r-extra"] kept={"r-alpha":"live service runs it","r-beta":"rollback target"}
+PASS interrupted-install-diagnosable: status staging=[".staging-r-torn"] gc removed=[".staging-r-torn"]
+PASS uninstall-keeps-data: out=uninstalled (data kept) data=durable
+PASS activity-rpc-idle: activity={"runningAgents":0,"agents":1,"ownedActivity":0}
+PASS update-drains-activity: drain line seen=true noFixtureAbort=true releaseId=r-post updaterErr=gh-remote-supervisor: new admissions closed; activity idle before switch
+
+{"passed":true,"cases":["ok install-sealed","ok install-immutable","ok run-from-current-release","ok update-switches-release","ok rollback-returns-previous","ok gc-keeps-pinned-releases","ok interrupted-install-diagnosable","ok uninstall-keeps-data","ok activity-rpc-idle","ok update-drains-activity"]}

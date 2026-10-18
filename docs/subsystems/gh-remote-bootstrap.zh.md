@@ -12,11 +12,11 @@
 
 ## Bootstrap
 
-`bootstrap.sh` 由 `scripts/gh-remote/bootstrap.ts` 生成为 POSIX sh，在目标机上无 Node 运行：`install` 探测内核/架构/libc，校验归档摘要与解压后的文件清单（awk 从 manifest 解出 `sha256sum` 核对表逐字节核对），在 `flock` 下 staging，把 release 移入 `releases/<时间戳>-<commit>-<唯一后缀>`，原子翻转 `current` 符号链接，并只在首次播种 `home/`。`run`/`start`/`stop`/`status` 通过自带 node 管理运行器；`rollback` 重新校验后回激活上一个 release。每次失败都报出所属阶段并以该阶段的退出码结束（probe 90 …… usage 98），控制器据此定位错误而不是猜（F24）。目前仅支持 Linux glibc 目标；mac/windows 远端随平台资格（E04.6）接入。
+`bootstrap.sh` 由 `scripts/gh-remote/bootstrap.ts` 生成为 POSIX sh，在目标机上无 Node 运行：`install` 探测内核/架构/libc，校验归档摘要与解压后的文件清单（awk 从 manifest 解出 `sha256sum` 核对表逐字节核对），在 `flock` 下 staging，把 release 移入 `releases/<时间戳>-<commit>-<唯一后缀>`，并只在首次播种 `home/`；激活本身委托给自带的 supervisor CLI——其 `commit` 动词在一个生命周期事务内封缄 release 清单并切换 `releases/current.json` 指针（POSIX 层只做解压与校验，一切共享状态变更都归 supervisor）。`run`/`start` 经自带 node 执行常驻 `gh-supervisor` profile，由 supervisor 插件看护服务子进程、其崩溃退避与就绪；`stop` 先杀 runner 再委托 supervisor 停止（排空可能被孤立的 service）。`update` staging 并校验新归档后交给 supervisor 的 `install`+`update` 动词——先经服务的 `ghRemote/admission` RPC 关闭新接纳、等运行中活动归零、停止、切换指针、再从新 release 重新看护；`rollback`、`gc`、`uninstall`、`status` 同样委托。每次失败都报出所属阶段并以该阶段的退出码结束（probe 90 …… usage 98），控制器据此定位错误而不是猜（F24）。目前仅支持 Linux glibc 目标；mac/windows 远端随平台资格（E04.6）接入。
 
 ## 控制器管线
 
-`scripts/gh-remote-deploy.ts` 管理目标、首次指纹确认、探测、上传和安装。当前验证路径是直接 host/port/私钥；完整部署在扫描/上传前拒绝 SSH config alias 与 ProxyJump，其指纹发现和上传尚未实现。密码、agent、交互认证、跳板与独立主机保持未验收。`scripts/gh-remote-verify.ts` 使用真实回环 OpenSSH 与无 Node PATH 监牢验证；`scripts/gh-remote-mem.ts` 测的是一次性 headless 就绪和合成长任务，只是阶段样本，不能算常驻服务 MEM03/04 通过。
+`scripts/gh-remote-deploy.ts` 管理目标、首次指纹确认、探测、上传和安装。当前验证路径是直接 host/port/私钥；完整部署在扫描/上传前拒绝 SSH config alias 与 ProxyJump，其指纹发现和上传尚未实现。密码、agent、交互认证、跳板与独立主机保持未验收。`scripts/gh-remote-verify.ts` 使用真实回环 OpenSSH 与无 Node PATH 监牢验证；`scripts/gh-remote-mem.ts` 对 supervisor 常驻服务采样 MEM03/04（`/proc/*/smaps_rollup` 的进程树 Rss/Pss）——`gh-supervisor` profile 下的就绪保持，以及经 `ssh -L` 隧道以普通 prompt 驱动的合成长任务。
 
 ## 与 SSH helper 的关系
 
@@ -24,4 +24,4 @@
 
 控制器先按已知摘要校验上传归档，再提取安装器。安装拒绝链接/特殊条目，即使带 `--force` 也使用唯一 staging，不覆盖旧 release；rollback 在安装锁内读状态并按实际激活顺序回滚。生命周期参数与 `--set-env KEY=value` 值按字面传递，包括空白和空参数。探测与安装器共用必需工具清单，包含 `mktemp`。
 
-PID/日志 runner 命令属于自举预览，目前尚无独立常驻 runtime、Supervisor、持久命令 ACK、断线/重连保证或可靠进程身份检查，均由 GH-006 继续实现。既有 home 仅首次播种，后续需保留用户修改的产品层迁移。
+常驻 supervisor 是产品接缝：`gh-supervisor` profile（单行 Cordis 组合，[`packages/glm/remote-supervisor-app`](../../packages/glm/remote-supervisor-app/README.zh.md)）认领数据根、铸造持久 runtime id，让恰好一个服务子进程熬过断线与桌面退出；每个变更动词都经 supervisor 的生命周期锁（[`gh-remote-supervisor`](../../packages/glm/remote-supervisor/README.zh.md)）串行化，并发动词相互等待，被中断的事务经 `status` 保持可诊断。PTY/全局 lease 与完整的资源排水覆盖仍属 GH-009；既有 home 仅首次播种，后续仍需保留用户修改的产品层迁移。

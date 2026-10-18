@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/glm/remote-supervisor/README.md
 /:
-  en: d2f94452ef5d797e
-  zh: d94d503c6eee31dd
+  en: a3f31ab8c5cb40d9
+  zh: facad629a8b3efa5
 /glm-harness-gh-remote-supervisor:
   en: ec00ba066000d784
   zh: 1beebfa24329a15c
@@ -24,11 +24,11 @@
   en: e4ad49a5d1265c25
   zh: cd76c526eb22bd3b
 /glm-harness-gh-remote-supervisor/use-this-package/release-lifecycle:
-  en: 89a7435bd34b5586
-  zh: fe45e113fc77fbfd
+  en: e556534ec0d15682
+  zh: ebc8f25defef8346
 /glm-harness-gh-remote-supervisor/understand-the-implementation:
-  en: f3d461ae54a51f2b
-  zh: 396aa5362774483a
+  en: a68dc492bf678e90
+  zh: 5b2181c95b2d2289
 /glm-harness-gh-remote-supervisor/further-exploration:
   en: 2e1ef2864f170f00
   zh: 01db83ad484f6964

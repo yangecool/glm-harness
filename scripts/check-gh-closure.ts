@@ -122,7 +122,11 @@ export function checkComposedProfiles(): string[] {
           errors.push(`profile ${name} did not load bundle ${bundle}`)
         }
       }
-      if (!entries.some(entry => entry.name === '@deepseek-ai/dsh-llm')) {
+      if (!entries.some(entry => entry.name === '@deepseek-ai/dsh-llm')
+        // The supervisor profile is process supervision, not a model surface:
+        // one minimal row (sdk-minimal pattern) that must never grow a model
+        // seam. Every model-facing profile still mounts the LLM seam.
+        && name !== 'gh-supervisor') {
         errors.push(`profile ${name} does not mount the LLM seam`)
       }
     }

@@ -1349,4 +1349,27 @@ Awaited parallel durability checkpoint: every listener runs and the caller await
 Types: [Scoped](scope.zh.md)
 
 Source: [`packages/core/session/src/index.ts`](../../packages/core/session/src/index.ts)
+
+<a id="sessionnew-prompt--waterfall"></a>
+
+#### `session/new-prompt` — waterfall
+
+A prompt passed reconciliation and is about to newly start work: the merge-extensible new-admission gate. A listener that throws denies the prompt with its own typed error (a resident service draining for a version switch refuses new work here); every listener must delegate.
+
+```ts cordis-catalog
+/**
+ * A prompt passed reconciliation and is about to newly start work: the
+ * merge-extensible new-admission gate. A listener that throws denies the
+ * prompt with its own typed error (a resident service draining for a
+ * version switch refuses new work here); every listener must delegate.
+ * @mode waterfall
+ * @param request - the Session and request identity about to be admitted.
+ * @param next - delegates to the remaining chain; the resolved value is unused.
+ */
+'session/new-prompt'(request: { sessionId: SessionId; requestId: SessionRequestId }, next: () => Promise<void>): Promise<void>
+```
+
+Types: [SessionId](core.zh.md)
+
+Source: [`packages/api/session-controller/src/types.ts`](../../packages/api/session-controller/src/types.ts)
 <!-- END GENERATED cordis-surface -->

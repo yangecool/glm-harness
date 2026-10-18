@@ -1,0 +1,11 @@
+# The complete Cordis tree of the `gh-supervisor` profile: one row. This
+# bundle does not layer over dsh-base (the sdk-minimal pattern): the supervisor
+# process mounts no sessions, tools, or model stack — it claims the data root,
+# resolves the current release, and supervises the resident gh-remote service
+# child. Every supervision tunable is the row's validated Config, changeable
+# from the profile patch; the supervised child runs the `gh-remote` profile
+# from the same release.
+
+- insert:
+    - id: gh-supervisor-runner
+      name: '@glm-harness/gh-remote-supervisor-app'

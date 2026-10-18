@@ -1,0 +1,8 @@
+PASS desktop-client-process-exit: client process SIGKILLed mid-turn; turn completed (file written=true, fixture aborted=false)
+PASS supervisor-crash-orphan-finishes-and-takeover-refused: turn completed after supervisor SIGKILL (orphan alive=true); second run exit=69 (gh-remote-supervisor: previous supervisor died but its service (pid 2805173) still runs; r); stop cleared the root (orphan dead=true)
+PASS runtime-crash-restarts-preserves-session: service SIGKILLed mid-turn; supervisor restarted it (pid 2805311→2805344, restarts=1); admission query answered (found=true: the crash hit mid-execution, after the admission had retired into the durable session log); session log kept turn/start; new turn completed
+PASS user-service-restart-preserves-state: systemctl --user restart: service pid 2805395→2805470; session events survived (16/16 records) and a new turn completed after restart
+PASS mem03-idle-service-tree: resident idle tree (supervisor 2805502 + service) PSS median 106 MiB over 12 samples / 60s idle, budget 256 MiB; breakdown 2805502:index.js=9MiB 2805513:bin.js=97MiB
+PASS mem04-task-peak-and-recovery: tool-loop task 11122 durable journal lines (2401 model calls), peak tree PSS 432 MiB (budget 512), post-task idle median 138 MiB vs pre-task 106 MiB (growth 32 MiB over 120s idle)
+PASS openssh-disconnect-matrix: deployed over real OpenSSH (27776 files), service survived its starting session and the tunnel SIGKILL (pid 2865497 stable); a fresh tunnel observed the turn complete with the file written
+PASS openssh-stop-cleans-remote-root: remote stop cleared the identity (gone)

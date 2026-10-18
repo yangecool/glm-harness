@@ -9,10 +9,11 @@
  * sized in rounds; the session log's event count is reported with the peaks.
  * Run: node --import tsx/esm scripts/gh-remote-mem.mjs --archive <path> [--report out.json]
  */
+import { spawn } from 'node:child_process'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { createServer } from 'node:http'
-import { basename, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { makeNodeJail, startFixtureSshd } from './gh-remote/sshd-fixture.ts'
 import { bootstrapLifecycle, deployRuntime, remoteCommand } from './gh-remote/deploy.ts'
@@ -114,17 +115,67 @@ async function main() {
   try {
     await deployRuntime(target, { archive, home: remoteHome, knownHosts, trustFingerprint: true })
     await remoteCommand(target, knownHosts, `mkdir -p "$HOME/${remoteHome}/workspace"`, 30_000)
-    await bootstrapLifecycle(target, knownHosts, remoteHome, 'start', [
-      '--', '--profile', 'gh-headless', 'Run the long scripted task to completion.',
-    ], 60_000, [
+    // The resident service is born under the supervisor profile; the mem task
+    // is a normal prompt over an ssh -L tunnel, never a bare runner.
+    await bootstrapLifecycle(target, knownHosts, remoteHome, 'start', [], 60_000, [
       `PATH=${jail}`,
       'GLM_API_KEY=synthetic-remote-key',
       `GLM_BASE_URL=http://127.0.0.1:${port}`,
       'GH_PERMISSION_MODE=yolo',
     ])
 
-    let alive = true
-    while (alive) {
+    let identity: { readyUrl?: string } | null = null
+    for (let attempt = 0; attempt < 240 && identity?.readyUrl === undefined; attempt += 1) {
+      const raw = await remoteCommand(target, knownHosts, `cat "$HOME/${remoteHome}/run/service.json" 2>/dev/null || true`, 15_000).catch(() => '')
+      try { identity = JSON.parse(raw.trim()) as { readyUrl?: string } } catch { identity = null }
+      await new Promise(resolveSleep => setTimeout(resolveSleep, 1_000))
+    }
+    if (identity?.readyUrl === undefined) throw new Error('resident service never became ready for the mem run')
+    const remotePort = Number(new URL(identity.readyUrl).port)
+    const token = new URL(identity.readyUrl).searchParams.get('token') ?? ''
+    const probeServer = createServer()
+    await new Promise<void>((resolveListen) => { probeServer.listen(0, '127.0.0.1', () => { resolveListen() }) })
+    const localPort = (probeServer.address() as { port: number }).port
+    probeServer.close()
+    const tunnel = spawn('ssh', [
+      '-p', String(target.port),
+      ...(target.user !== undefined ? ['-l', target.user] : []),
+      ...(target.identity !== undefined ? ['-i', target.identity] : []),
+      '-o', 'BatchMode=yes', '-o', `UserKnownHostsFile=${knownHosts}`, '-o', 'StrictHostKeyChecking=yes',
+      '-o', 'ExitOnForwardFailure=yes', '-N', '-L', `${String(localPort)}:127.0.0.1:${String(remotePort)}`,
+      target.host,
+    ], { stdio: 'ignore' })
+    const tunnelUrl = `http://127.0.0.1:${String(localPort)}/?token=${token}`
+    for (let attempt = 0; attempt < 50; attempt += 1) {
+      const probe = await fetch(tunnelUrl, { redirect: 'manual' }).then(response => response.status).catch(() => -1)
+      if (probe > 0) break
+      await new Promise(resolveSleep => setTimeout(resolveSleep, 200))
+    }
+    const exchange = await fetch(tunnelUrl, { redirect: 'manual' })
+    const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
+    const rpc = async (endpoint: string, args: Record<string, unknown>): Promise<unknown> => {
+      const response = await fetch(new URL(`/api/${endpoint}`, `http://127.0.0.1:${String(localPort)}`).href, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie },
+        body: JSON.stringify({ type: 'client-request', rpcId: `mem-${endpoint}`, method: endpoint, payload: { args } }),
+      })
+      const envelope = await response.json() as { result?: { ok?: boolean; value?: unknown; error?: { message?: string } } }
+      if (envelope.result?.ok !== true) throw new Error(`${endpoint}: ${envelope.result?.error?.message ?? 'unknown'}`)
+      return envelope.result.value
+    }
+    const created = await rpc('session/create', { request: { cwd: dirname(turnTarget) } }) as { sessionId?: string }
+    const sessionId = created.sessionId ?? ''
+    if (sessionId === '') throw new Error('session/create returned no sessionId over the tunnel')
+    await rpc('session/prompt', {
+      request: { requestId: `mem-${Date.now()}`, sessionId, mode: 'queue', content: [{ type: 'text', text: 'GH-WARM Run the long scripted task to completion.' }] },
+    })
+    phase = 'task'
+    let taskDone = false
+
+    // Sample the supervisor-rooted tree until the fixture's final round lands;
+    // the resident service keeps running, so the round marker is completion.
+    const deadline = Date.now() + rounds * 2_000 + 300_000
+    for (;;) {
       const tick = await remoteCommand(target, knownHosts, [
         `pid=$(cat "$HOME/${remoteHome}/run/runner.pid" 2>/dev/null || echo 0)`,
         '[ "$pid" -gt 0 ] && kill -0 "$pid" 2>/dev/null || { echo dead; exit 0; }',
@@ -133,7 +184,7 @@ async function main() {
         'for p in $pids; do cat /proc/$p/smaps_rollup 2>/dev/null; done | awk \'/^(Rss|Pss):/ { sum[$1] += $2 } END { print "alive", sum["Rss:"]+0, sum["Pss:"]+0 }\'',
       ].join('\n'), 20_000).catch(() => '')
       const parts = tick.trim().split(/\s+/)
-      if (parts[0] === 'dead') { alive = false; break }
+      if (parts[0] === 'dead') break
       if (parts[0] === 'alive' && (phase === 'ready' || phase === 'task')) {
         const [rss, pss] = [Number(parts[1]), Number(parts[2])]
         if (Number.isFinite(rss) && Number.isFinite(pss)) {
@@ -142,10 +193,16 @@ async function main() {
           bucket.pss.push(pss)
         }
       }
+      const progress = await remoteCommand(target, knownHosts,
+        `grep -o 'round [0-9]*' "$HOME/${remoteHome}/workspace/mem-task.txt" 2>/dev/null | tail -1`, 15_000).catch(() => '')
+      const round = Number.parseInt(/round (\d+)/.exec(progress)?.[1] ?? '0', 10)
+      if (round >= rounds) { taskDone = true; break }
+      if (Date.now() > deadline) break
       await new Promise(resolveSleep => setTimeout(resolveSleep, 1000))
     }
+    tunnel.kill('SIGKILL')
 
-    const logTail = await remoteCommand(target, knownHosts, `tail -5 "$HOME/${remoteHome}/log/runner.log"`, 30_000).catch(() => '')
+    const logTail = await remoteCommand(target, knownHosts, `tail -5 "$HOME/${remoteHome}/log/runner.log" 2>/dev/null; grep -o 'round [0-9]*' "$HOME/${remoteHome}/workspace/mem-task.txt" 2>/dev/null | tail -1`, 30_000).catch(() => '')
     const sessionLog = await remoteCommand(target, knownHosts,
       `ls -t "$HOME/${remoteHome}/home/sessions" 2>/dev/null | head -1`, 30_000).catch(() => '')
     let events = -1
@@ -158,7 +215,7 @@ async function main() {
       scope: 'real loopback OpenSSH, detached gh-headless runner inside the no-Node PATH jail, loopback GLM fixture',
       archive: basename(archive),
       rounds, readySeconds, requestsSeen: requestCount, sessionEvents: events,
-      done: logTail.includes('GH_REMOTE_MEM_DONE'),
+      done: taskDone || logTail.includes('GH_REMOTE_MEM_DONE'),
       ready: { rss: statistics(samples.ready.rss), pss: statistics(samples.ready.pss) },
       task: { rss: statistics(samples.task.rss), pss: statistics(samples.task.pss) },
       logTail: logTail.trim().split('\n').slice(-3),

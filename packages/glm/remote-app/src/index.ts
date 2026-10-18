@@ -19,15 +19,17 @@ import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-workspace'
+import { ensureRuntimeId } from '@glm-harness/gh-remote-supervisor'
 import { GhAccountRpcService } from './account-rpc.ts'
-import type { GhRemoteActivity, GhRemoteIdentity } from './types.ts'
+import { GhRemoteControlService } from './control.ts'
+import type { GhRemoteActivity, GhRemoteAdmissionValue, GhRemoteDescribeValue, GhRemoteIdentity } from './types.ts'
 
 /** Identity facts fixed for the process lifetime. */
 const STARTED_AT = new Date().toISOString()
 
 /** The `ghRemote` Remote namespace: what a connecting client asks before attaching. */
 export class GhRemoteIdentityService extends TypertRemoteService {
-  static inject = ['agents']
+  static inject = ['agents', 'ghRemoteControl']
 
   constructor(ctx: Context) {
     super(ctx, 'ghRemoteIdentity', { namespace: 'ghRemote' })
@@ -68,6 +70,45 @@ export class GhRemoteIdentityService extends TypertRemoteService {
       ownedActivity: activity.reduce((total, count) => total + count, 0),
     }
   }
+
+  /**
+   * The protocol/capability handshake: the data root's persistent runtime id,
+   * the release this service runs from, the admission posture, the capability
+   * list clients gate on, and the workspaces the service knows.
+   * @returns handshake facts; ids are null when no supervisor launched this process.
+   */
+  @Remote
+  async describe(): Promise<GhRemoteDescribeValue> {
+    const root = process.env.GH_REMOTE_ROOT
+    const runtimeId = root !== undefined && root !== '' ? await ensureRuntimeId(root).catch(() => null) : null
+    const capabilities = ['activity-drain', 'durable-admission', 'admission-close']
+    if (runtimeId !== null) capabilities.push('runtime-id')
+    const registry = this.ctx.get('workspaceRegistry')
+    return {
+      runtimeId,
+      releaseId: process.env.GH_REMOTE_RELEASE_ID ?? null,
+      admission: this.ctx.ghRemoteControl.admissionState(),
+      capabilities,
+      workspaces: registry === undefined ? [] : registry.list().map(workspace => ({
+        id: workspace.id, path: workspace.path, title: workspace.title,
+      })),
+    }
+  }
+
+  /**
+   * Change or query the admission posture. A supervisor closes new admissions
+   * before waiting for a drain; only NEW prompts are refused — in-flight turns
+   * finish and reconciled replays keep answering.
+   * @param request - the action: `open`, `close`, or `query`.
+   * @returns the posture now in force.
+   */
+  @Remote
+  admission(request: { action: 'open' | 'close' | 'query' }): GhRemoteAdmissionValue {
+    if (request.action === 'open' || request.action === 'close') {
+      this.ctx.ghRemoteControl.setAdmission(request.action === 'close' ? 'closed' : 'open')
+    }
+    return { admission: this.ctx.ghRemoteControl.admissionState() }
+  }
 }
 
 /** The bundle plugin's configuration. */
@@ -91,6 +132,7 @@ export class GhRemoteApp extends Service {
   constructor(ctx: Context, config: Config) {
     super(ctx, 'ghRemoteApp')
     this.printUrl = config.printUrl
+    this.ctx.plugin(GhRemoteControlService)
     this.ctx.plugin(GhRemoteIdentityService)
     this.ctx.plugin(GhAccountRpcService)
     // The disabled web-runtime row leaves the webserver fallback seat and the

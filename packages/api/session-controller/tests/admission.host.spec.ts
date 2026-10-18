@@ -94,6 +94,28 @@ describe('Durable prompt admission', () => {
     expect(followup).toHaveBeenCalledOnce()
   })
 
+  it('refuses NEW prompts a session/new-prompt listener denies, while replays stay answerable', async () => {
+    const { ctx, controller, followup } = await admissionHarness()
+    const denial = async (_request: unknown, next: () => Promise<void>): Promise<void> => {
+      if (closed) {
+        throw new Error('admission closed for drain')
+      }
+      await next()
+    }
+    let closed = true
+    ctx.on('session/new-prompt', denial)
+    const request = promptRequest([{ type: 'text', text: 'first' }])
+    await expect(controller.prompt(request, USER_SOURCE)).rejects.toThrow('admission closed for drain')
+    expect(followup).not.toHaveBeenCalled()
+    // The same request later admitted (gate reopened) still places exactly once.
+    closed = false
+    await expect(controller.prompt(request, USER_SOURCE)).resolves.toEqual({ accepted: true })
+    expect(followup).toHaveBeenCalledOnce()
+    // A reconciled replay passes the gate again without re-placement.
+    await expect(controller.prompt(request, USER_SOURCE)).resolves.toEqual({ accepted: true })
+    expect(followup).toHaveBeenCalledOnce()
+  })
+
   it('acknowledges a retry after a lost ACK without re-placing the message', async () => {
     const { controller, followup } = await admissionHarness()
     const request = promptRequest([{ type: 'text', text: 'once' }])

@@ -4684,7 +4684,7 @@ export interface PermissionRule {
 ## `@glm-harness/gh-remote-app`
 
 - `inject`: `webServer` · `connection`
-- `source`: [`packages/glm/remote-app/src/index.ts:74`](../packages/glm/remote-app/src/index.ts)
+- `source`: [`packages/glm/remote-app/src/index.ts:115`](../packages/glm/remote-app/src/index.ts)
 
 ```ts config-catalog
 /** The bundle plugin's configuration. */
@@ -4694,6 +4694,43 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@glm-harness/gh-remote-app -->
+
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-remote-supervisor-app -->
+<a id="glm-harnessgh-remote-supervisor-app"></a>
+
+## `@glm-harness/gh-remote-supervisor-app`
+
+- `inject`: `appExit`
+- `source`: [`packages/glm/remote-supervisor-app/src/index.ts:30`](../packages/glm/remote-supervisor-app/src/index.ts)
+
+```ts config-catalog
+/** The plugin's live configuration. */
+export interface Config {
+  /** Data root to supervise; empty reads GH_REMOTE_ROOT, then ~/.glmh-remote. */
+  root: string
+  /** DSH_HOME for the supervised child; empty uses `<root>/home` when present. */
+  home: string
+  /** Profile the supervised child boots. */
+  childProfile: string
+  /** Bind host the child's web transport listens on. */
+  host: string
+  /** Bind port the child's web transport listens on; `0` picks a free one. */
+  port: string
+  /** Wall-clock budget from spawn to the child's ready line. */
+  readyTimeoutMs: number
+  /** First crash backoff; doubles per restart up to {@link Config.maxBackoffMs}. */
+  baseBackoffMs: number
+  /** Backoff ceiling. */
+  maxBackoffMs: number
+  /** Grace period between SIGTERM and SIGKILL while draining the child. */
+  drainTimeoutMs: number
+  /** Crashes within {@link Config.crashWindowMs} that trip the circuit breaker. */
+  crashThreshold: number
+  /** Window the crash threshold counts over. */
+  crashWindowMs: number
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-remote-supervisor-app -->
 
 ## 无配置的可加载插件
 

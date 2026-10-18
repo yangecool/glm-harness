@@ -1,0 +1,16 @@
+== GH-006-G gates 2026-10-18T22:43:35+08:00
+-- unit specs
+remote-supervisor+remote-app: 43/43 (4 files)
+bootstrap+session-controller: 1023/1023 (45 files)
+lifecycle.spec: 7/7
+-- drivers
+product-verify: 10/10 (acceptance.log)
+lifecycle-verify: 10/10 (lifecycle-verify.log)
+joint-verify: 8/8 incl MEM03 106MiB / MEM04 peak 432MiB (joint-verify.log)
+bootstrap matrix: 13/13 (bootstrap-matrix.log)
+-- statics
+typecheck: host=0 client=0
+oxlint: 0 errors
+runtime-closure: closed (184 packages)
+gh-closure: clean (gh-supervisor exempt from LLM seam: process-supervision surface)
+doc-sync: 43/43

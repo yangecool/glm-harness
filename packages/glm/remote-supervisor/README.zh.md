@@ -1,5 +1,5 @@
 ---
-description: "GH 远端进程监护：一个数据根、一个常驻服务——lock 目录单实例声明、identity 文件、stdout 就绪契约、带断路器的有界崩溃退避，以及 SIGTERM 到 SIGKILL 的排水阶梯；纯 Node、零依赖。"
+description: "GH 远端进程监护：一个数据根、一个常驻服务——串行 install/update/rollback/gc/uninstall/stop 的生命周期事务、lock 目录单实例声明、identity 文件、stdout 就绪契约、版本切换前关闭接纳的排水、持久 runtime id、带断路器的有界崩溃退避，以及 SIGTERM 到 SIGKILL 的排水阶梯；纯 Node、零依赖。"
 kind: "package-library"
 ---
 
@@ -52,7 +52,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` 使用独享暂存目录并拒绝不安全的 release 名。`update` 和 `rollback` 必须取得完整有效的活动查询，等待运行回合、pending inbox 和 Workspace 插件报告的活动；超时、鉴权失败或缺少计数都拒绝切换。完整停止接纳、PTY/全局 lease 与串行生命周期事务仍未完成，一次空闲采样不提供这些保证。损坏的 current 指针拒绝变更，重复选择同一 release 保留回滚目标。`gc` 保留 current、回滚与存活服务钉住的版本。`uninstall` 先停止监护再移除运行时状态；仅显式 `--purge` 删除数据。
+`install` 使用独享暂存目录并拒绝不安全的 release 名。每个变更动词——install、commit、use、update、rollback、gc、uninstall、stop、restart——都运行在一个生命周期事务内：以原子 `link()` 创建的 `<root>/locks/lifecycle.lock` 声明，携带动词、持有者 pid 与受保护 release；存活的外部持有者被等待，已死持有者的声明被回收，被中断的事务保持可查询（`status` 点名动词并标记 interrupted）直到下一个动词回收它。`update` 与 `rollback` 切换前先排水：经服务的 `ghRemote/admission` RPC 关闭新接纳，再等待运行回合、pending inbox 和 Workspace 插件报告的活动归零；超时、鉴权失败或缺少计数都拒绝切换。数据根还携带持久 `runtimeId`（`ensureRuntimeId` 一次铸造并修复损坏），服务身份因此熬过崩溃与版本切换。损坏的 current 指针拒绝变更，重复选择同一 release 保留回滚目标。`gc` 保留 current、回滚、存活服务钉住与生命周期事务保护的版本。`uninstall` 先停止监护再移除运行时状态；仅显式 `--purge` 删除数据。
 
 -----
 
@@ -66,10 +66,13 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | 锁、identity、就绪、退避、断路器、排水阶梯、CLI 动词、activity 排水 |
+| [`src/index.ts`](src/index.ts) | 锁、identity、就绪、退避、断路器、排水阶梯、CLI 动词、关闭接纳的 activity 排水 |
 | [`src/releases.ts`](src/releases.ts) | 不可变 release 安装、原子 current 指针、gc 钉住、卸载分离 |
+| [`src/lifecycle-lock.ts`](src/lifecycle-lock.ts) | 生命周期事务：原子声明、死持有者回收、受保护 release 载荷、中断诊断 |
+| [`src/runtime-id.ts`](src/runtime-id.ts) | 持久 runtime id：一次铸造、校验、修复损坏 |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | 锁竞争、identity 生命周期、就绪行边界、退避封顶、断路、排水升级、CLI 动词 |
 | [`tests/releases.spec.ts`](tests/releases.spec.ts) | 安装不可变、指针链、暂存诊断、gc 钉住、卸载数据保留 |
+| [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) | 外部持有者等待、重入拒绝、死锁回收、commit 事务、中断动词诊断、runtime id 稳定性 |
 
 </details>
 

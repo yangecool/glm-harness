@@ -86,7 +86,12 @@ async function main(): Promise<void> {
     const deployed = await deployRuntime(target, { archive, home: remoteHome, knownHosts, trustFingerprint: true })
     note('deploy-probe-target', deployed.probe.target === 'linux-x64', `target=${deployed.probe.target} libc=${deployed.probe.getconfLine}`)
     note('deploy-install-activated', deployed.installLog.includes('activated'), deployed.installLog.split('\n').at(-1) ?? '')
-    note('deploy-status-release', deployed.releaseSummary.includes('version='), deployed.releaseSummary.split('\n').filter(line => line.startsWith('version=') || line.startsWith('release=') || line.startsWith('node=')).join(' '))
+    // The delegated supervisor answers status as JSON; the active release it
+    // names must be the release this deployment activated.
+    const statusNow = JSON.parse(deployed.releaseSummary) as { current?: { releaseId?: string } }
+    const activated = /activated (\S+)/.exec(deployed.installLog)?.[1] ?? ''
+    note('deploy-status-release', statusNow.current?.releaseId === activated && activated !== '',
+      `current=${statusNow.current?.releaseId ?? 'none'} activated=${activated === '' ? 'none' : activated}`)
 
     const jailCheck = await remoteCommand(target, knownHosts, `PATH="${jail}" sh -c "command -v node && echo node-present || echo node-absent"`, 30_000)
     note('target-jail-has-no-node', jailCheck.trim() === 'node-absent', jailCheck.trim())
@@ -94,18 +99,26 @@ async function main(): Promise<void> {
     const workspace = `${remoteHome}/workspace`
     await mkdir(fixture, { recursive: true })
     await remoteCommand(target, knownHosts, `mkdir -p ${shellLiteral(workspace)}`, 30_000)
-    const turnOutput = await bootstrapLifecycle(target, knownHosts, remoteHome, 'run', [
-      '--', '--profile', 'gh-headless', 'Write the verify file and finish.',
-    ], 300_000, [
+    // The unified bootstrap supervises the resident service; the resident
+    // matrix (turns over a tunnel, drains, switches) belongs to
+    // gh-remote-product-verify.ts. Here the no-Node contract is the supervisor
+    // profile itself: start, publish identity, stop — never a bare runner.
+    await bootstrapLifecycle(target, knownHosts, remoteHome, 'start', [], 60_000, [
       `PATH=${jail}`,
       'GLM_API_KEY=synthetic-remote-key',
       `GLM_BASE_URL=http://127.0.0.1:${port}`,
       'GH_PERMISSION_MODE=yolo',
     ])
-    note('remote-turn-no-node', turnOutput.includes('GH_REMOTE_VERIFY_DONE'), turnOutput.trim().split('\n').at(-1) ?? '')
-
-    const written = await remoteCommand(target, knownHosts, `cat '${turnTarget}' 2>/dev/null || echo missing`, 30_000)
-    note('remote-turn-file', written.trim() === 'GH remote verify turn', written.trim())
+    let residentReady = ''
+    for (let attempt = 0; attempt < 90 && residentReady === ''; attempt += 1) {
+      residentReady = await remoteCommand(target, knownHosts,
+        `cat ${shellLiteral(join(remoteHome, 'run', 'service.json'))} 2>/dev/null | grep -o '"readyUrl": "[^"]*"' | head -1`, 15_000).catch(() => '')
+      if (residentReady === '') await new Promise(resolveSleep => setTimeout(resolveSleep, 1_000))
+    }
+    note('supervisor-resident-no-node', residentReady.includes('gh-remote ready') || residentReady.includes('"readyUrl"'), residentReady.trim())
+    await bootstrapLifecycle(target, knownHosts, remoteHome, 'stop', [], 90_000).catch(() => undefined)
+    const gone = await remoteCommand(target, knownHosts, `cat ${shellLiteral(join(remoteHome, 'run', 'service.json'))} 2>/dev/null || echo gone`, 30_000)
+    note('resident-stop-cleans', gone.trim() === 'gone', gone.trim())
 
     // R07: a corrupted archive refuses at the digest stage on the target itself.
     const corruptName = `corrupt-${basename(archive)}`
@@ -126,16 +139,26 @@ async function main(): Promise<void> {
     const concurrentCodes = concurrent.map(outcome => outcome.status === 'fulfilled' ? 'ok' : `stage=${outcome.reason instanceof StageError ? outcome.reason.stage : 'error'}`)
     note('concurrent-installs-serialize', concurrentCodes.every(code => code === 'ok'), concurrentCodes.join(' + '))
 
+    const pointer = await remoteCommand(target, knownHosts, `cat ${shellLiteral(join(remoteHome, 'releases', 'current.json'))} 2>/dev/null`, 30_000)
+    let currentReleaseId = ''
+    try {
+      currentReleaseId = (JSON.parse(pointer) as { releaseId: string }).releaseId
+    } catch { /* noted below */ }
+    note('pointer-shape', currentReleaseId !== '' && !currentReleaseId.startsWith('.'), currentReleaseId || pointer.trim().slice(0, 60))
     const releases = await remoteCommand(target, knownHosts, `ls -1 ${shellLiteral(join(remoteHome, 'releases'))} | sort -r | head -3`, 30_000)
     const releaseList = releases.trim().split('\n').filter(line => line.length > 0)
     note('two-releases-present', releaseList.length >= 2, releaseList.join(' '))
     if (releaseList.length >= 2) {
-      const rollback = await bootstrapLifecycle(target, knownHosts, remoteHome, 'rollback', [], 120_000)
-      note('rollback-activates-previous', rollback.includes('rolled back'), rollback.trim())
+      // Delegated rollback drains (no live service here) and switches; the
+      // supervise loop ends in the crash circuit against this no-fixture boot.
+      const rollback = await bootstrapLifecycle(target, knownHosts, remoteHome, 'rollback', [], 120_000).catch((error: unknown) => String(error))
+      const pointerAfter = await remoteCommand(target, knownHosts, `cat ${shellLiteral(join(remoteHome, 'releases', 'current.json'))} 2>/dev/null`, 30_000)
+      const rolled = pointerAfter !== pointer
+      note('rollback-activates-previous', rolled, `${rollback.trim().slice(0, 80)} | pointer moved=${String(rolled)}`)
     }
 
     const finalStatus = await bootstrapLifecycle(target, knownHosts, remoteHome, 'status', [], 30_000)
-    note('status-after-all', finalStatus.includes('release='), finalStatus.trim().split('\n').slice(0, 3).join(' '))
+    note('status-after-all', finalStatus.includes('"runtimeId"') && finalStatus.includes('"current"'), finalStatus.trim().split('\n').slice(0, 3).join(' '))
   } finally {
     turn.server.close()
     turn.server.closeAllConnections()

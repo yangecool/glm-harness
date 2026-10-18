@@ -506,6 +506,12 @@ importers:
       '@glm-harness/gh-remote-app':
         specifier: workspace:*
         version: link:../../packages/glm/remote-app
+      '@glm-harness/gh-remote-supervisor':
+        specifier: workspace:*
+        version: link:../../packages/glm/remote-supervisor
+      '@glm-harness/gh-remote-supervisor-app':
+        specifier: workspace:*
+        version: link:../../packages/glm/remote-supervisor-app
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -10681,6 +10687,9 @@ importers:
       '@deepseek-ai/dsh-agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@deepseek-ai/dsh-api-session-controller':
+        specifier: workspace:*
+        version: link:../../api/session-controller
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:*
         version: link:../../boot/app-boot
@@ -10699,8 +10708,24 @@ importers:
       '@glm-harness/gh-account':
         specifier: workspace:*
         version: link:../account
+      '@glm-harness/gh-remote-supervisor':
+        specifier: workspace:*
+        version: link:../remote-supervisor
 
   packages/glm/remote-supervisor:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
+  packages/glm/remote-supervisor-app:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      '@glm-harness/gh-remote-supervisor':
+        specifier: workspace:*
+        version: link:../remote-supervisor
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~

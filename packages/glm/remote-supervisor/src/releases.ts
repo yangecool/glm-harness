@@ -136,13 +136,30 @@ export type InstallResult =
   | { readonly ok: false; readonly reason: string }
 
 /**
+ * Resolve the runtime entry inside a release directory. Two accepted shapes:
+ * the product archive layout (`runtime/lib/bin.js` with `bin/node` beside) and
+ * the flat layout a directory-copy install produces (`lib/bin.js` at the root).
+ * @param releaseDir - an installed release directory.
+ * @returns the `lib/bin.js` path, or null when neither shape is present.
+ */
+export const releaseEntry = async (releaseDir: string): Promise<string | null> => {
+  for (const candidate of [join(releaseDir, 'runtime', 'lib', 'bin.js'), join(releaseDir, 'lib', 'bin.js')]) {
+    try {
+      await lstat(candidate)
+      return candidate
+    } catch { /* try the next shape */ }
+  }
+  return null
+}
+
+/**
  * Install one release: copy the source runtime into a staging directory,
  * seal it with a manifest, then rename it into place. The rename is the
  * commit point, so an installed release is complete and immutable — a second
  * install under the same id is refused, and any interrupted attempt leaves
  * only a staging leftover the report surfaces.
  * @param root - the supervisor data root.
- * @param from - the extracted runtime directory to install.
+ * @param from - the extracted runtime directory to install (either release shape).
  * @param options - explicit id or install note; id defaults to a unique generated one.
  * @returns the installed release id, or the refusal reason.
  */
@@ -151,9 +168,7 @@ export const installRelease = async (
   from: string,
   options: { id?: string; note?: string; now?: () => number } = {},
 ): Promise<InstallResult> => {
-  try {
-    await lstat(join(from, 'lib', 'bin.js'))
-  } catch {
+  if (await releaseEntry(from) === null) {
     return { ok: false, reason: `install source has no lib/bin.js runtime entry: ${from}` }
   }
   const releaseId = options.id ?? `r-${(options.now ?? Date.now)()}-${randomUUID().slice(0, 8)}`
@@ -234,15 +249,19 @@ export const launcherFor = async (releaseDir: string): Promise<string> => {
 
 /**
  * The conventional service command inside one release: the release's launcher
- * running `lib/bin.js` under the `gh-remote` resident profile.
+ * running its runtime entry under the `gh-remote` resident profile. Works for
+ * both release shapes — the archive layout keeps the entry at
+ * `runtime/lib/bin.js`, the flat layout at `lib/bin.js`.
  * @param releaseDir - the installed release directory.
  * @returns the command a `run` from the current release spawns.
  */
 export const serviceCommandFor = async (releaseDir: string): Promise<{ command: string; args: string[] }> => {
   const launcher = await launcherFor(releaseDir)
+  const entry = await releaseEntry(releaseDir)
+  if (entry === null) throw new Error(`release ${releaseDir} has no runtime entry`)
   return {
     command: launcher,
-    args: [join(releaseDir, 'lib', 'bin.js'), '--profile', 'gh-remote', '--no-open', '--host', '127.0.0.1', '--port', '0'],
+    args: [entry, '--profile', 'gh-remote', '--no-open', '--host', '127.0.0.1', '--port', '0'],
   }
 }
 

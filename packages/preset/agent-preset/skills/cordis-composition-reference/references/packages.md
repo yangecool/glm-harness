@@ -254,6 +254,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@glm-harness/gh-permissions` | yes | GLM Harness ZCode-aligned permission modes (full access, autonomous, confirm-before-changes) with an independent plan gate, a structured dangerous-command grammar, and executor-level enforcement in the tools pre-execute waterfall |
 | `@glm-harness/gh-persona` | no | GLM Harness model identity and work policy as system-prompt sections: goal-driven execution, locate before modifying, self-verification, and honest reporting, promising nothing the composed tool catalog does not grant |
 | `@glm-harness/gh-remote-app` | yes | The GH resident remote-service surface over the dsh web transport: no browser payload, no static client, no inherited telemetry or account rows; owns the readiness announce line and the ghRemote identity RPC |
+| `@glm-harness/gh-remote-supervisor-app` | yes | The gh-supervisor profile surface: one Cordis plugin that claims a data root, resolves the current release, and supervises the resident gh-remote service child with configurable tunables — the complete profile tree, layered over nothing |
 | `@glm-harness/gh-ui-permissions` | no | GLM Harness composer permission control: the three ZCode-aligned modes (full access, autonomous, confirm-before-changes) with an independent plan toggle, reading the ghPermissions and plan session projections and writing through the /permission and /plan commands |
 
 ## goal

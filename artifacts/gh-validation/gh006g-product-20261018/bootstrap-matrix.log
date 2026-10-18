@@ -1,0 +1,14 @@
+PASS tofu-refuses-untrusted: stage=connect
+PASS deploy-probe-target: target=linux-x64 libc=glibc 2.39
+PASS deploy-install-activated: gh-remote: activated 20261018T143844Z-1d8c39be-krVcJ7xV
+PASS deploy-status-release: current=20261018T143844Z-1d8c39be-krVcJ7xV activated=20261018T143844Z-1d8c39be-krVcJ7xV
+PASS target-jail-has-no-node: node-absent
+PASS supervisor-resident-no-node: "readyUrl": "http://127.0.0.1:45971/?token=8MNRSocU-ajDIsEfSXiVahN2HNLm7KFVuFaSIz1VpFs"
+PASS resident-stop-cleans: gone
+PASS tamper-refused: stage=verify-archive
+PASS concurrent-installs-serialize: ok + ok
+PASS pointer-shape: 20261018T143949Z-1d8c39be-nFilAFIl
+PASS two-releases-present: current.json 20261018T143949Z-1d8c39be-nFilAFIl 20261018T143919Z-1d8c39be-WwEsUlpH
+PASS rollback-activates-previous: StageError: gh-remote: stage=runner: ssh exited SIGKILL: gh-remote-supervisor: n | pointer moved=true
+PASS status-after-all: {"identity":{"kind":"gh-remote-supervisor-identity","pid":3301326,"processIdentity":"78004227-3618-48de-82c5-0fc860f2f511:48150554","nonce":"b0ed9ff9-7d82-4bff-b30a-4352bc67d59b","startedAt":1792334420275,"readyAt":1792334420901,"restarts":0,"circuitOpen":false,"readyUrl":"http://127.0.0.1:41905/?token=Hk1BMe4ILjKbqs6MYnQeZRP5zvL3_qWcM1ZtHbuO22A","releaseId":"20261018T143919Z-1d8c39be-WwEsUlpH","command":["/tmp/gh-remote-verify-4G60cG/remote-home/releases/20261018T143919Z-1d8c39be-WwEsUlpH/bin/node","/tmp/gh-remote-verify-4G60cG/remote-home/releases/20261018T143919Z-1d8c39be-WwEsUlpH/runtime/lib/bin.js","--profile","gh-remote","--no-open","--host","127.0.0.1","--port","0"]},"current":{"kind":"gh-remote-current-release","releaseId":"20261018T143919Z-1d8c39be-WwEsUlpH","switchedAt":1792334420273,"previousReleaseId":"20261018T143949Z-1d8c39be-nFilAFIl"},"releases":["20261018T143844Z-1d8c39be-krVcJ7xV","20261018T143919Z-1d8c39be-WwEsUlpH","20261018T143949Z-1d8c39be-nFilAFIl"],"staging":[],"liveReleaseHeld":"20261018T143919Z-1d8c39be-WwEsUlpH","runtimeId":"39f36bfa-0c36-4ec9-995d-17c31fbead80","runtimeIdPath":"/tmp/gh-remote-verify-4G60cG/remote-home/runtime-id","lifecycle":null}
+{"passed":true,"cases":["ok tofu-refuses-untrusted","ok deploy-probe-target","ok deploy-install-activated","ok deploy-status-release","ok target-jail-has-no-node","ok supervisor-resident-no-node","ok resident-stop-cleans","ok tamper-refused","ok concurrent-installs-serialize","ok pointer-shape","ok two-releases-present","ok rollback-activates-previous","ok status-after-all"]}

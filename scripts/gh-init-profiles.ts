@@ -36,6 +36,10 @@ export const GH_PROFILES: Readonly<Record<string, readonly string[]>> = {
   // The resident remote service: the web transport's server half with the
   // browser payload stripped; boots headless (`--no-open --host --port`).
   'gh-remote': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-remote-app'],
+  // The resident service's supervisor: a one-row profile tree (the sdk-minimal
+  // pattern — no dsh-base layers) that claims the data root and supervises the
+  // gh-remote child; `bootstrap start` launches this, never a raw runner.
+  'gh-supervisor': ['@glm-harness/gh-remote-supervisor-app'],
   desktop: ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-brand', '@glm-harness/gh-desktop'],
 }
 

@@ -7,7 +7,7 @@
  *   node --import tsx/esm scripts/gh-remote-deploy.ts --list
  *   node --import tsx/esm scripts/gh-remote-deploy.ts --target lab --archive <archive.tar.gz> --trust-fingerprint
  *   node --import tsx/esm scripts/gh-remote-deploy.ts --target lab --status
- *   node --import tsx/esm scripts/gh-remote-deploy.ts --target lab --run -- --profile gh-headless "Do the thing."
+ *   node --import tsx/esm scripts/gh-remote-deploy.ts --target lab --start   # supervised resident service
  */
 import { basename } from 'node:path'
 import { resolve } from 'node:path'
@@ -99,12 +99,15 @@ async function main(): Promise<void> {
     return
   }
   if (values.run === true || values.start === true) {
-    const delimiter = process.argv.indexOf('--')
-    const positional = delimiter < 0 ? [] : process.argv.slice(delimiter + 1)
-    if (positional.length === 0) throw new Error('pass runner arguments after -- (e.g. -- --profile gh-headless "prompt")')
+    // The unified bootstrap runs the gh-supervisor profile only; the resident
+    // service it supervises is the product surface (prompts go over its RPC).
     const envAssignments = values['set-env'] ?? []
-    const output = await bootstrapLifecycle(target, knownHosts, home, values.start === true ? 'start' : 'run',
-      ['--', ...positional], 3_600_000, envAssignments)
+    if (values.start === true) {
+      const output = await bootstrapLifecycle(target, knownHosts, home, 'start', [], 3_600_000, envAssignments)
+      console.log(output.trim())
+      return
+    }
+    const output = await bootstrapLifecycle(target, knownHosts, home, 'run', [], 3_600_000, envAssignments)
     console.log(output.trim())
     return
   }

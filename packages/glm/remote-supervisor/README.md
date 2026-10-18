@@ -1,5 +1,5 @@
 ---
-description: "GH remote process supervision: one data root, one resident service — lock-directory single-instance claims, identity files, a stdout readiness contract, bounded crash backoff with a circuit breaker, and a SIGTERM-then-SIGKILL drain ladder, all plain Node with zero dependencies."
+description: "GH remote process supervision: one data root, one resident service — lifecycle transactions that serialize install/update/rollback/gc/uninstall/stop, lock-directory single-instance claims, identity files, a stdout readiness contract, admission-closing drains before version switches, a persistent runtime id, bounded crash backoff with a circuit breaker, and a SIGTERM-then-SIGKILL drain ladder, all plain Node with zero dependencies."
 kind: "package-library"
 ---
 
@@ -52,7 +52,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` uses a unique staging directory and refuses unsafe release names. `update` and `rollback` require a successful, complete activity query and wait for running turns, pending inboxes, and activity reported by composed Workspace providers. Timeout, authentication failure, and missing counts refuse the switch. Full admission freeze, PTY/global leases, and serialized lifecycle transactions remain unfinished; an idle observation does not supply those guarantees. A corrupt current pointer refuses mutation, and selecting the same release preserves its rollback target. `gc` keeps current, rollback, and live-pinned releases. `uninstall` stops the supervisor before removing runtime state and preserves data unless `--purge` is explicit.
+`install` uses a unique staging directory and refuses unsafe release names. Every mutating verb — install, commit, use, update, rollback, gc, uninstall, stop, restart — runs inside one lifecycle transaction: a `<root>/locks/lifecycle.lock` claim created by atomic `link()`, carrying the verb, holder pid, and protected releases; a live foreign holder is waited for, a dead holder's claim is reclaimed, and an interrupted transaction stays queryable (`status` names the verb and marks it interrupted) until the next verb reclaims it. `update` and `rollback` drain before switching: they close new admissions through the service's `ghRemote/admission` RPC, then wait for running turns, pending inboxes, and activity reported by composed Workspace providers to reach zero; timeout, authentication failure, and missing counts refuse the switch. The root also carries a persistent `runtimeId` (`ensureRuntimeId` mints it once and repairs corruption), so the service identity survives crashes and version switches. A corrupt current pointer refuses mutation, and selecting the same release preserves its rollback target. `gc` keeps current, rollback, live-pinned, and lifecycle-protected releases. `uninstall` stops the supervisor before removing runtime state and preserves data unless `--purge` is explicit.
 
 -----
 
@@ -66,10 +66,13 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Lock, identity, readiness, backoff, circuit breaker, drain ladder, CLI verbs, activity drain |
+| [`src/index.ts`](src/index.ts) | Lock, identity, readiness, backoff, circuit breaker, drain ladder, CLI verbs, admission-closing activity drain |
 | [`src/releases.ts`](src/releases.ts) | Immutable release installs, atomic current pointer, gc pinning, uninstall split |
+| [`src/lifecycle-lock.ts`](src/lifecycle-lock.ts) | Lifecycle transactions: atomic claims, stale-holder reclaim, protected-release payloads, interrupted-holder diagnosis |
+| [`src/runtime-id.ts`](src/runtime-id.ts) | Persistent runtime id: mint once, validate, repair corruption |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | Lock races, identity lifecycle, ready-line edge cases, backoff caps, circuit, drain escalation, CLI verbs |
 | [`tests/releases.spec.ts`](tests/releases.spec.ts) | Install immutability, pointer chaining, staging diagnosis, gc pins, uninstall data retention |
+| [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) | Foreign-holder waits, reentrancy refusals, stale reclaims, commit transactions, interrupted-verb diagnosis, runtime-id stability |
 
 </details>
 

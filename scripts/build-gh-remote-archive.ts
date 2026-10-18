@@ -8,7 +8,7 @@
  * Run after `pnpm run build`:
  *   node --import tsx/esm scripts/build-gh-remote-archive.ts [--output dist-exe/gh-remote] [--skip-smoke]
  */
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, globSync } from 'node:fs'
 import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
@@ -158,13 +158,107 @@ async function smokeStagedClosure(staging: string, home: string): Promise<void> 
 }
 
 /**
+ * Boot the staged closure's `gh-supervisor` profile against a scratch release
+ * store: the supervisor profile runner must spawn the resident service from
+ * the staged runtime, publish its identity, and answer the capability
+ * handshake — the closure guarantee the archive ships.
+ * @param staging - staged runtime root (lib/bin.js + node_modules).
+ * @param home - fixture GH home with initialized profiles.
+ */
+/** The ghRemote/describe envelope the supervisor smoke handshake reads. */
+interface SmokeDescribe {
+  result?: { ok?: boolean; value?: { runtimeId?: string | null; releaseId?: string | null; admission?: string } }
+}
+
+async function smokeSupervisorProfile(staging: string, home: string): Promise<void> {
+  // The smoke's release is a fresh multi-gigabyte copy; a cold boot can outrun
+  // the default ready budget. Overriding the tunable through the profile patch
+  // is itself the configurability guarantee this smoke carries.
+  await writeFile(join(home, 'profiles', 'gh-supervisor', 'cordis.patch.yml'), [
+    '# supervisor smoke: a cold first boot from a fresh release copy.',
+    '- id: gh-supervisor-runner',
+    '  config:',
+    '    readyTimeoutMs: 240000',
+    '    baseBackoffMs: 250',
+    '',
+  ].join('\n'))
+  const root = join(home, 'supervisor-smoke-root')
+  const supervisorCli = join(staging, 'node_modules', '@glm-harness', 'gh-remote-supervisor', 'lib', 'index.js')
+  const installed = spawnSync(process.execPath, [supervisorCli, '--root', root, 'install', '--from', staging], { encoding: 'utf8' })
+  if (installed.status !== 0) throw new Error(`gh-remote build: supervisor smoke install failed: ${installed.stderr}`)
+  const used = spawnSync(process.execPath, [supervisorCli, '--root', root, 'use', installed.stdout.trim()], { encoding: 'utf8' })
+  if (used.status !== 0) throw new Error(`gh-remote build: supervisor smoke use failed: ${used.stderr}`)
+  const runner = spawn(process.execPath, [join(staging, 'lib', 'bin.js'), '--profile', 'gh-supervisor', '--no-open', '--host', '127.0.0.1', '--port', '0'], {
+    cwd: home,
+    env: {
+      ...process.env,
+      DSH_HOME: home,
+      GH_REMOTE_ROOT: root,
+      GLM_API_KEY: 'synthetic-smoke-key',
+      GH_PERMISSION_MODE: 'yolo',
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  let supervisorErr = ''
+  let supervisorOut = ''
+  runner.stderr.setEncoding('utf8').on('data', (chunk: string) => { supervisorErr += chunk })
+  runner.stdout.setEncoding('utf8').on('data', (chunk: string) => { supervisorOut += chunk })
+  try {
+    const identityPath = join(root, 'run', 'service.json')
+    let identity: { pid?: number; readyUrl?: string; releaseId?: string | null } | null = null
+    for (let attempt = 0; attempt < 240 && identity === null; attempt += 1) {
+      identity = await readFile(identityPath, 'utf8').then(raw => JSON.parse(raw) as typeof identity).catch(() => null)
+      if (identity?.readyUrl === undefined || identity.readyUrl === '') identity = null
+      if (runner.exitCode !== null && identity === null) break
+      await new Promise(resolveSleep => setTimeout(resolveSleep, 1_000))
+    }
+    if (identity?.readyUrl === undefined) {
+      const currentPointer = JSON.parse(await readFile(join(root, 'releases', 'current.json'), 'utf8')) as { releaseId: string }
+      const releaseDir = join(root, 'releases', currentPointer.releaseId)
+      const dump = JSON.stringify({
+        stderrHead: supervisorErr.slice(0, 800),
+        stderrTail: supervisorErr.slice(-400),
+        stdout: supervisorOut,
+        identity: await readFile(identityPath, 'utf8').catch(() => null),
+        releaseTop: await readdir(releaseDir).catch(() => null),
+        releaseRuntime: await readdir(join(releaseDir, 'runtime')).catch(() => null),
+        entryExists: await readFile(join(releaseDir, 'runtime', 'lib', 'bin.js'), 'utf8').then(() => true,
+          () => readFile(join(releaseDir, 'lib', 'bin.js'), 'utf8').then(() => true, () => false)),
+      }, null, 2)
+      throw new Error(`gh-remote build: supervisor smoke never became ready: ${dump}`)
+    }
+    // The capability handshake answers over the service's own transport.
+    const exchange = await fetch(identity.readyUrl, { redirect: 'manual' })
+    const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
+    const described = await fetch(new URL('/api/ghRemote/describe', new URL(identity.readyUrl).origin), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie },
+      body: JSON.stringify({ type: 'client-request', rpcId: 'smoke-describe', method: 'ghRemote/describe', payload: { args: {} } }),
+    }).then(response => response.json() as Promise<SmokeDescribe>)
+    if (described.result?.ok !== true || described.result.value?.releaseId === null || described.result.value?.releaseId === undefined) {
+      throw new Error(`gh-remote build: supervisor smoke handshake failed: ${JSON.stringify(described).slice(0, 200)}`)
+    }
+  } finally {
+    runner.kill('SIGTERM')
+    await Promise.race([once(runner, 'close'), new Promise(resolveKill => setTimeout(resolveKill, 15_000))])
+    await new Promise<void>((resolveStop) => {
+      const stop = spawnSync(process.execPath, [supervisorCli, '--root', root, 'stop'], { encoding: 'utf8' })
+      void stop
+      resolveStop()
+    })
+  }
+}
+
+/**
  * Build the selected target's relocatable runtime archive.
  * @param argv - command-line arguments, excluding the interpreter and script.
  */
 export async function buildGhRemoteArchive(argv: string[]): Promise<void> {
   const { values } = parseArgs({ args: argv, options: {
     target: { type: 'string' }, output: { type: 'string' }, 'skip-smoke': { type: 'boolean', default: false },
+    variant: { type: 'string' },
   } })
+  const variant = values.variant
   const host = `${process.platform}-${process.arch}`
   const selected = (values.target ?? host) as GhRemoteTarget
   if (!GH_REMOTE_TARGETS.some(target => target === selected)) throw new Error(`Unsupported GH remote target: ${selected}`)
@@ -189,7 +283,10 @@ export async function buildGhRemoteArchive(argv: string[]): Promise<void> {
 
     const home = join(temporary, 'smoke-home')
     initGhProfiles(home)
-    if (!values['skip-smoke']) await smokeStagedClosure(staging, home)
+    if (!values['skip-smoke']) {
+      await smokeStagedClosure(staging, home)
+      await smokeSupervisorProfile(staging, home)
+    }
 
     const product = join(temporary, 'gh-remote')
     await mkdir(join(product, 'bin'), { recursive: true })
@@ -205,6 +302,7 @@ export async function buildGhRemoteArchive(argv: string[]): Promise<void> {
       format: 1, product: 'gh-remote-runtime', version: definition.version, target: selected,
       commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
       dirty: execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim() !== '',
+      ...(variant === undefined ? {} : { variant }),
       nodeVersion: process.version,
       entry: 'bootstrap.sh',
       files: await Promise.all((await payloadFiles(product)).map(async path => ({
@@ -215,7 +313,7 @@ export async function buildGhRemoteArchive(argv: string[]): Promise<void> {
     await verifyPayload(product)
 
     await mkdir(output, { recursive: true })
-    const archive = join(output, `gh-remote-${definition.version}-${selected}.tar.gz`)
+    const archive = join(output, `gh-remote-${definition.version}-${selected}${variant === undefined ? '' : `-${variant}`}.tar.gz`)
     await createTar({ cwd: temporary, file: archive, gzip: true, portable: true }, ['gh-remote'])
     await writeFile(`${archive}.sha256`, `${await fileDigest(archive)}  ${basename(archive)}\n`)
     const size = (await lstat(archive)).size

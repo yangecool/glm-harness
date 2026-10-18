@@ -23,6 +23,8 @@ export const artifactManifestSchema = z.object({
   target: z.enum(GH_REMOTE_TARGETS),
   nodeVersion: z.string().regex(/^v\d+\./),
   entry: z.literal('bootstrap.sh'),
+  /** Distinguishes otherwise-identical builds of the same commit (acceptance variants). */
+  variant: z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/).optional(),
   files: z.array(z.object({
     path: payloadPath, sha256: z.string().regex(/^[a-f0-9]{64}$/), mode: z.number().int().min(0).max(0o777),
   }).strict()).min(1),
@@ -72,7 +74,13 @@ export async function verifyPayload(directory: string): Promise<ArtifactManifest
   if (new Set(declared).size !== declared.length) {
     throw new Error('GH remote payload file inventory differs from manifest.json')
   }
-  for (const required of ['bootstrap.sh', 'bin/node', 'runtime/lib/bin.js', 'home-template/profiles/gh-headless/package.json']) {
+  for (const required of [
+    'bootstrap.sh', 'bin/node', 'runtime/lib/bin.js',
+    'runtime/node_modules/@glm-harness/gh-remote-supervisor/lib/index.js',
+    'runtime/node_modules/@glm-harness/gh-remote-supervisor-app/lib/index.js',
+    'home-template/profiles/gh-headless/package.json',
+    'home-template/profiles/gh-supervisor/package.json',
+  ]) {
     if (!declared.includes(required)) throw new Error(`GH remote payload omits required runtime files: ${required}`)
   }
   const actual = await payloadFiles(directory)

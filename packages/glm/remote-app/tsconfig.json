@@ -26,6 +26,12 @@
     },
     {
       "path": "../../glm/account"
+    },
+    {
+      "path": "../../glm/remote-supervisor"
+    },
+    {
+      "path": "../../api/session-controller/tsconfig.host.json"
     }
   ]
 }

@@ -108,6 +108,8 @@
     "@glm-harness/gh-desktop": "workspace:*",
     "@glm-harness/gh-model-glm": "workspace:*",
     "@glm-harness/gh-remote-app": "workspace:*",
+    "@glm-harness/gh-remote-supervisor": "workspace:*",
+    "@glm-harness/gh-remote-supervisor-app": "workspace:*",
     "commander": "^15.0.0",
     "js-yaml": "^4.3.2",
     "node-addon-require-builtin": "^0.1.9"

@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/remote-supervisor-app/README.md
+/:
+  en: f27a4ff81c31bff9
+  zh: 9693ae37d2b20e7a
+/glm-harness-gh-remote-supervisor-app:
+  en: a82ff66635f5680c
+  zh: 4abe49ab2efae88b
+/glm-harness-gh-remote-supervisor-app/summary:
+  en: 6ac90ebd7e9687d9
+  zh: 93754c53dece2fe6
+/glm-harness-gh-remote-supervisor-app/table-of-contents:
+  en: 80b31a934611cb4a
+  zh: f3762c0cd2ffea51
+/glm-harness-gh-remote-supervisor-app/use-this-package:
+  en: 35f2d41981074c4a
+  zh: 73f2c1f3e2bebcf7
+/glm-harness-gh-remote-supervisor-app/use-this-package/when-to-choose-it:
+  en: 55038068a7a904bf
+  zh: c3ab18d3138bfeb2
+/glm-harness-gh-remote-supervisor-app/use-this-package/minimal-configuration:
+  en: 0ec9de2fcf130e42
+  zh: 0a1e40cb5124cd2c
+/glm-harness-gh-remote-supervisor-app/understand-the-implementation:
+  en: 502ce837051db7f2
+  zh: 1ce30d286071791b
+/glm-harness-gh-remote-supervisor-app/further-exploration:
+  en: 7757fed84d9affb7
+  zh: 41ea5dc1a2ccbf03
+/glm-harness-gh-remote-supervisor-app/known-limitations-and-deferred-work:
+  en: 970ea1ca8291bb55
+  zh: 9f146ded419cd769
+/glm-harness-gh-remote-supervisor-app/known-limitations-and-deferred-work/dev-note:
+  en: 28a9c75b1d87353c
+  zh: 11af376011a237a7

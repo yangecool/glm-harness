@@ -17,7 +17,7 @@ export interface FixtureSshd {
   stop: () => Promise<void>
 }
 
-const JAIL_TOOLS = ['sh', 'tar', 'sha256sum', 'flock', 'awk', 'find', 'sort', 'mv', 'ln', 'chmod', 'cp', 'cmp', 'sed', 'mktemp', 'grep', 'cut', 'cat', 'mkdir', 'rm', 'sleep', 'kill', 'date', 'uname', 'getconf', 'df', 'env', 'basename', 'dirname', 'readlink', 'ls', 'head', 'tail'] as const
+const JAIL_TOOLS = ['sh', 'tar', 'gzip', 'sha256sum', 'flock', 'awk', 'find', 'sort', 'mv', 'ln', 'chmod', 'cp', 'cmp', 'sed', 'mktemp', 'grep', 'cut', 'cat', 'mkdir', 'rm', 'sleep', 'kill', 'date', 'uname', 'getconf', 'df', 'env', 'basename', 'dirname', 'readlink', 'ls', 'head', 'tail'] as const
 
 /**
  * Start a fixture sshd on a random loopback port with a freshly generated

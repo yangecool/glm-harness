@@ -1,0 +1,61 @@
+{
+  "scope": "GH-006-G product entry: real archives over fixture OpenSSH into a no-Node jail; supervisor-profile resident service; unified bootstrap verbs; capability handshake; admission-closing drains",
+  "cases": [
+    {
+      "name": "from-zero-install-layout",
+      "passed": true,
+      "detail": "real archive (27914 files) installed from zero; checks={\"current\":true,\"singleRelease\":true,\"runtimeId\":true,\"profiles\":true,\"bundledNode\":true}"
+    },
+    {
+      "name": "resident-supervisor-profile-and-handshake",
+      "passed": true,
+      "detail": "bootstrap start launched the gh-supervisor profile (supervisor pid 2747135); ghRemote/describe answered runtimeId=5d8f8f75, releaseId=vTDQAWQv, admission=open, capabilities=activity-drain+durable-admission+admission-close+runtime-id"
+    },
+    {
+      "name": "tunnel-disconnect-survival",
+      "passed": true,
+      "detail": "the tunnel SIGKILL mid-turn changed nothing: service pid 2747152 stable, a fresh tunnel observed the clean turn end, and the fixture file was written"
+    },
+    {
+      "name": "runtime-id-survives-crash-restart",
+      "passed": true,
+      "detail": "service SIGKILL: the supervisor restarted it (pid 2747152→2747253, restarts=1) and the handshake runtime id stayed 5d8f8f75"
+    },
+    {
+      "name": "upgrade-drain-switch-and-data",
+      "passed": true,
+      "detail": "bootstrap update staged release B, the drain closed admissions (live=false supervisor-report=true), waited the in-flight turn out, and switched (releaseId …JT5qaPuH, new pid 2803914); the home marker survived and the fresh service reopened admissions with the same runtime id"
+    },
+    {
+      "name": "rollback-to-previous-release",
+      "passed": true,
+      "detail": "bootstrap rollback drained and switched back to release A (releaseId …vTDQAWQv) with home data intact"
+    },
+    {
+      "name": "gc-pins-and-drops",
+      "passed": true,
+      "detail": "gc removed the junk release (r-junk) and kept the current, rollback target, and live-pinned releases (vTDQAWQv,JT5qaPuH)"
+    },
+    {
+      "name": "concurrent-verbs-serialized",
+      "passed": true,
+      "detail": "two concurrent use transactions never interleaved: the valid one won (use-ok=0 use-bad=64), the pointer stayed on a real release"
+    },
+    {
+      "name": "interrupted-transaction-diagnosis",
+      "passed": true,
+      "detail": "status named the dead holder's verb (update, interrupted=true); the next verb reclaimed the claim and ran"
+    },
+    {
+      "name": "uninstall-preserves-data",
+      "passed": true,
+      "detail": "uninstall removed the runtimes and supervision state while every other byte of the data root (home, marker, sessions layout) survived"
+    }
+  ],
+  "boundaries": [
+    "the second release is the same tree rebuilt with a variant marker, not a different product version; release identity is the installed release id",
+    "machine reboot remains un-simulated (no container privileges); service crash-restart and supervisor-managed switches are real",
+    "the resident composition owns no PTY/global leases; its full owned-activity set (running agents + pending inbox) is what the drain waits out — broader resource leases are GH-009"
+  ],
+  "passed": true
+}

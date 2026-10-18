@@ -1,0 +1,12 @@
+PASS from-zero-install-layout: real archive (27914 files) installed from zero; checks={"current":true,"singleRelease":true,"runtimeId":true,"profiles":true,"bundledNode":true}
+PASS resident-supervisor-profile-and-handshake: bootstrap start launched the gh-supervisor profile (supervisor pid 2747135); ghRemote/describe answered runtimeId=5d8f8f75, releaseId=vTDQAWQv, admission=open, capabilities=activity-drain+durable-admission+admission-close+runtime-id
+session/create raw: {"sessionId":"session-394cfcca-0bb1-489b-bf7d-9d7a47622ad3","agentPreset":"standard"}
+PASS tunnel-disconnect-survival: the tunnel SIGKILL mid-turn changed nothing: service pid 2747152 stable, a fresh tunnel observed the clean turn end, and the fixture file was written
+PASS runtime-id-survives-crash-restart: service SIGKILL: the supervisor restarted it (pid 2747152→2747253, restarts=1) and the handshake runtime id stayed 5d8f8f75
+PASS upgrade-drain-switch-and-data: bootstrap update staged release B, the drain closed admissions (live=false supervisor-report=true), waited the in-flight turn out, and switched (releaseId …JT5qaPuH, new pid 2803914); the home marker survived and the fresh service reopened admissions with the same runtime id
+PASS rollback-to-previous-release: bootstrap rollback drained and switched back to release A (releaseId …vTDQAWQv) with home data intact
+PASS gc-pins-and-drops: gc removed the junk release (r-junk) and kept the current, rollback target, and live-pinned releases (vTDQAWQv,JT5qaPuH)
+PASS concurrent-verbs-serialized: two concurrent use transactions never interleaved: the valid one won (use-ok=0 use-bad=64), the pointer stayed on a real release
+PASS interrupted-transaction-diagnosis: status named the dead holder's verb (update, interrupted=true); the next verb reclaimed the claim and ran
+PASS uninstall-preserves-data: uninstall removed the runtimes and supervision state while every other byte of the data root (home, marker, sessions layout) survived
+{"passed":true,"cases":["ok from-zero-install-layout","ok resident-supervisor-profile-and-handshake","ok tunnel-disconnect-survival","ok runtime-id-survives-crash-restart","ok upgrade-drain-switch-and-data","ok rollback-to-previous-release","ok gc-pins-and-drops","ok concurrent-verbs-serialized","ok interrupted-transaction-diagnosis","ok uninstall-preserves-data"]}

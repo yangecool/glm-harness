@@ -631,6 +631,16 @@ export type SessionControlFrame =
 declare module '@deepseek-ai/cordis' {
   interface Events {
     /**
+     * A prompt passed reconciliation and is about to newly start work: the
+     * merge-extensible new-admission gate. A listener that throws denies the
+     * prompt with its own typed error (a resident service draining for a
+     * version switch refuses new work here); every listener must delegate.
+     * @mode waterfall
+     * @param request - the Session and request identity about to be admitted.
+     * @param next - delegates to the remaining chain; the resolved value is unused.
+     */
+    'session/new-prompt'(request: { sessionId: SessionId; requestId: SessionRequestId }, next: () => Promise<void>): Promise<void>
+    /**
      * A Session became visible or its Agent was created or disposed.
      * Consumers upsert the summary and replace its current running and availability state.
      * @mode emit

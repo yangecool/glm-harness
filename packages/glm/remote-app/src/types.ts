@@ -41,3 +41,33 @@ export interface GhAccountStatusValue {
     readonly accessExpiresAt: number
   }>
 }
+
+/** One workspace the resident service knows, as `ghRemote/describe` reports it. */
+export interface GhRemoteWorkspaceValue {
+  /** The workspace registry's stable id. */
+  readonly id: string
+  /** The workspace's canonical directory. */
+  readonly path: string
+  /** The workspace's display title. */
+  readonly title: string
+}
+
+/** The protocol/capability handshake `ghRemote/describe` answers. */
+export interface GhRemoteDescribeValue {
+  /** The data root's persistent runtime id; null when no root is configured. */
+  readonly runtimeId: string | null
+  /** The release the supervisor launched this service from; null when unsupervised. */
+  readonly releaseId: string | null
+  /** The current admission posture. */
+  readonly admission: 'open' | 'closed'
+  /** Capabilities this release advertises; clients gate on these before use. */
+  readonly capabilities: readonly string[]
+  /** Workspaces the service currently knows. */
+  readonly workspaces: readonly GhRemoteWorkspaceValue[]
+}
+
+/** The posture answer `ghRemote/admission` returns. */
+export interface GhRemoteAdmissionValue {
+  /** The admission posture now in force. */
+  readonly admission: 'open' | 'closed'
+}

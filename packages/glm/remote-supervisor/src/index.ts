@@ -14,12 +14,25 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { ChildProcess } from 'node:child_process'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import {
   gcReleases, installRelease, listReleases, listStaging, readCurrent,
-  serviceCommandFor, uninstallRoot, useRelease,
+  releaseEntry, serviceCommandFor, STAGING_PREFIX, uninstallRoot, useRelease,
 } from './releases.ts'
+import {
+  acquireLifecycleLock, LifecycleLockBusy, lifecycleProtectedReleases, probeLifecycleLock,
+  type LifecycleTransaction,
+} from './lifecycle-lock.ts'
+import { ensureRuntimeId, runtimeIdPath } from './runtime-id.ts'
+
+export {
+  acquireLifecycleLock, LifecycleLockBusy, lifecycleProtectedReleases, probeLifecycleLock,
+} from './lifecycle-lock.ts'
+export type { LifecycleLockPayload, LifecycleLockProbe, LifecycleTransaction } from './lifecycle-lock.ts'
+export { ensureRuntimeId, runtimeIdPath } from './runtime-id.ts'
+export * from './releases.ts'
 
 /** Layout inside a data root owned by {@link GhRemoteSupervisor}. */
 export interface SupervisorPaths {
@@ -627,8 +640,9 @@ export class GhRemoteSupervisor {
  */
 export const supervisorCli = async (argv: string[]): Promise<number> => {
   const usage = 'usage: gh-remote-supervisor [--root DIR] (run [-- CMD [ARGS…]] | stop | restart | status'
-    + ' | install --from DIR [--id ID] [--note NOTE] | use ID | update --from DIR [--drain-timeout MS]'
-    + ' | rollback [--drain-timeout MS] | gc | uninstall [--purge])'
+    + ' | install --from DIR [--id ID] [--note NOTE] | commit --id ID [--note NOTE] | use ID'
+    + ' | update (--from DIR | --release ID) [--drain-timeout MS] | rollback [--drain-timeout MS]'
+    + ' | gc | uninstall [--purge])'
   const readRoot = (args: string[]): { root: string; rest: string[] } | { error: string } => {
     const [flag, root] = args
     if (args.length < 2 || flag !== '--root' || root === undefined) return { error: usage }
@@ -681,171 +695,133 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
     const parsed = Number(raw?.replaceAll('_', ''))
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
   }
-  /** Drain via the live service's activity RPC before a version switch. */
-  const drainActivity = async (timeoutMs: number): Promise<{ ok: boolean; detail: string }> => {
+  /**
+   * The supervised child's environment: the supervisor's own environment plus
+   * the shared home (when the root has one), the root address for the
+   * handshake RPCs, and the release the child runs from.
+   */
+  const childEnvironment = (releaseId: string | null): NodeJS.ProcessEnv => {
+    const env = { ...process.env }
+    const home = join(root, 'home')
+    if (env.DSH_HOME === undefined && existsSync(home)) env.DSH_HOME = home
+    env.GH_REMOTE_ROOT = root
+    if (releaseId !== null) env.GH_REMOTE_RELEASE_ID = releaseId
+    return env
+  }
+  /**
+   * Run one verb body under the root's lifecycle transaction lock: mutating
+   * verbs never interleave, and a failure maps to its exit code with the
+   * transaction always released.
+   */
+  const runLifecycle = async <T>(
+    verb: string,
+    options: { protectedReleases?: readonly string[] },
+    body: () => Promise<T>,
+  ): Promise<{ ok: true; value: T } | { ok: false; code: number }> => {
+    let tx: LifecycleTransaction
+    try {
+      tx = await acquireLifecycleLock(root, verb, options)
+    } catch (error) {
+      process.stderr.write(`gh-remote-supervisor: ${error instanceof Error ? error.message : String(error)}\n`)
+      return { ok: false, code: error instanceof LifecycleLockBusy ? 69 : 74 }
+    }
+    try {
+      return { ok: true, value: await body() }
+    } catch (error) {
+      process.stderr.write(`gh-remote-supervisor: ${verb} failed: ${error instanceof Error ? error.message : String(error)}\n`)
+      return { ok: false, code: 74 }
+    } finally {
+      await tx.release()
+    }
+  }
+  /** The live service's RPC session: an authenticated cookie over its URL. */
+  const serviceSession = async (timeoutMs: number): Promise<{ origin: string; cookie: string } | { error: string }> => {
     const identity = await readIdentity(paths)
     const readyUrl = identity?.readyUrl ?? null
-    if (identity === null || !isPidAlive(identity.pid)) return { ok: true, detail: 'no live service to drain' }
-    if (readyUrl === null) return { ok: false, detail: 'live service is not ready; refusing version switch' }
+    if (identity === null || !isPidAlive(identity.pid)) return { error: 'no live service to drain' }
+    if (readyUrl === null) return { error: 'live service is not ready; refusing version switch' }
     try {
-      const deadline = Date.now() + timeoutMs
       const signal = AbortSignal.timeout(Math.max(1, timeoutMs))
       const exchange = await fetch(readyUrl, { redirect: 'manual', signal })
-      if (!exchange.ok && exchange.status !== 302 && exchange.status !== 303) return { ok: false, detail: 'service authentication failed; refusing version switch' }
+      if (!exchange.ok && exchange.status !== 302 && exchange.status !== 303) {
+        return { error: 'service authentication failed; refusing version switch' }
+      }
       const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
-      let last = -1
-      while (Date.now() < deadline) {
-        const response = await fetch(new URL('/api/ghRemote/activity', new URL(readyUrl).origin), {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', cookie },
-          body: JSON.stringify({ type: 'client-request', rpcId: `drain-${randomUUID()}`, method: 'ghRemote/activity', payload: { args: {} } }),
-          signal,
-        })
-        const envelope = await response.json() as {
-          result?: { ok?: boolean; value?: { runningAgents?: number; ownedActivity?: number }; error?: { message?: string } }
-        }
-        const counts = envelope.result?.value
-        const values = [counts?.runningAgents, counts?.ownedActivity]
-        if (envelope.result?.ok !== true || values.some(value => value === undefined || !Number.isSafeInteger(value) || value < 0)) {
-          return { ok: false, detail: 'activity query failed or omitted owned work; refusing version switch' }
-        }
-        last = values.reduce<number>((total, value) => total + (value ?? 0), 0)
-        if (last === 0) break
-        await new Promise((resolve) => { setTimeout(resolve, 500) })
-      }
-      return last === 0 ? { ok: true, detail: 'activity idle before switch' }
-        : { ok: false, detail: `activity still busy (${String(last)} resources) after ${String(timeoutMs)}ms; refusing version switch` }
+      return { origin: new URL(readyUrl).origin, cookie }
     } catch (error) {
-      return { ok: false, detail: `activity drain unavailable (${(error as Error).message}); refusing version switch` }
+      return { error: `service session unavailable (${(error as Error).message}); refusing version switch` }
     }
   }
-  if (verb === 'install') {
-    const { flags } = readFlags(verbArgs)
-    const from = flags.get('from')
-    if (from === undefined) {
-      process.stderr.write('install requires --from DIR\n')
-      return 64
-    }
-    const id = flags.get('id')
-    const note = flags.get('note')
-    const result = await installRelease(root, from, {
-      ...(id === undefined ? {} : { id }),
-      ...(note === undefined ? {} : { note }),
-    })
-    if (!result.ok) {
-      process.stderr.write(`gh-remote-supervisor: ${result.reason}\n`)
-      return 69
-    }
-    process.stdout.write(`${result.releaseId}\n`)
-    return 0
-  }
-  if (verb === 'use') {
-    const [releaseId] = verbArgs
-    if (releaseId === undefined) {
-      process.stderr.write('use requires a release id\n')
-      return 64
-    }
-    const result = await useRelease(root, releaseId)
-    if (!result.ok) {
-      process.stderr.write(`gh-remote-supervisor: ${result.reason}\n`)
-      return 64
-    }
-    process.stdout.write(`${JSON.stringify(result)}\n`)
-    return 0
-  }
-  if (verb === 'gc') {
-    const protect = new Map<string, string>()
-    const identity = await readIdentity(paths)
-    if (identity?.releaseId !== null && identity?.releaseId !== undefined && isPidAlive(identity.pid)) {
-      protect.set(identity.releaseId, 'live service runs it')
-    }
-    const result = await gcReleases(root, protect)
-    process.stdout.write(`${JSON.stringify(result)}\n`)
-    return 0
-  }
-  if (verb === 'uninstall') {
-    const purge = verbArgs.includes('--purge')
-    const stopped = await performStop(root)
-    if (stopped !== 0) return stopped
-    await uninstallRoot(root, purge)
-    process.stdout.write(purge ? 'uninstalled (root purged)\n' : 'uninstalled (data kept)\n')
-    return 0
-  }
-  if (verb === 'run' || verb === 'restart' || verb === 'update' || verb === 'rollback') {
-    let later: { command: SupervisorCommand; releaseId: string | null } | { error: string }
-    if (verb === 'run') {
-      later = await commandOrRelease(verbArgs)
-    } else if (verb === 'restart') {
-      const identity = await readIdentity(paths)
-      const [head, ...tail] = identity?.command ?? []
-      later = identity !== null && head !== undefined && isPidAlive(identity.pid)
-        ? { command: { command: head, args: tail }, releaseId: identity.releaseId ?? null }
-        : { error: `no live supervised service at ${root}` }
-    } else if (verb === 'update') {
-      const { flags } = readFlags(verbArgs)
-      const from = flags.get('from')
-      if (from === undefined) {
-        process.stderr.write('update requires --from DIR\n')
-        return 64
-      }
-      const id = flags.get('id')
-      const note = flags.get('note')
-      const installed = await installRelease(root, from, {
-        ...(id === undefined ? {} : { id }),
-        ...(note === undefined ? {} : { note }),
+  /** One authenticated ghRemote RPC exchange; the envelope shape the gateway serves. */
+  const ghRemoteCall = async <V>(
+    session: { origin: string; cookie: string },
+    method: string,
+    payload: unknown,
+    timeoutMs: number,
+  ): Promise<V | { error: string }> => {
+    try {
+      const response = await fetch(new URL(`/api/${method}`, session.origin), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie: session.cookie },
+        body: JSON.stringify({ type: 'client-request', rpcId: `supervisor-${randomUUID()}`, method, payload: { args: payload } }),
+        signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
       })
-      if (!installed.ok) {
-        process.stderr.write(`gh-remote-supervisor: ${installed.reason}\n`)
-        return 69
+      const envelope = await response.json() as { result?: { ok?: boolean; value?: unknown; error?: { message?: string } } }
+      if (envelope.result?.ok !== true) {
+        return { error: `rpc ${method} failed: ${envelope.result?.error?.message ?? response.status}` }
       }
-      const drain = await drainActivity(readMillis(flags.get('drain-timeout'), 30_000))
-      process.stderr.write(`gh-remote-supervisor: ${drain.detail}\n`)
-      if (!drain.ok) return 69
-      const stopped = await performStop(root)
-      if (stopped !== 0) return stopped
-      const switched = await useRelease(root, installed.releaseId)
-      if (!switched.ok) {
-        process.stderr.write(`gh-remote-supervisor: ${switched.reason}\n`)
-        return 64
-      }
-      later = await commandOrRelease([])
-      if ('error' in later) {
-        process.stderr.write(`${later.error}\n`)
-        return 64
-      }
-    } else {
-      const { flags } = readFlags(verbArgs)
-      const current = await readCurrent(root)
-      if (current === null || current.previousReleaseId === null) {
-        process.stderr.write(`gh-remote-supervisor: no previous release to roll back to at ${root}\n`)
-        return 64
-      }
-      const rollbackTarget = current.previousReleaseId
-      const drain = await drainActivity(readMillis(flags.get('drain-timeout'), 30_000))
-      process.stderr.write(`gh-remote-supervisor: ${drain.detail}\n`)
-      if (!drain.ok) return 69
-      const stopped = await performStop(root)
-      if (stopped !== 0) return stopped
-      const switched = await useRelease(root, rollbackTarget)
-      if (!switched.ok) {
-        process.stderr.write(`gh-remote-supervisor: ${switched.reason}\n`)
-        return 64
-      }
-      later = await commandOrRelease([])
-      if ('error' in later) {
-        process.stderr.write(`${later.error}\n`)
-        return 64
-      }
+      return envelope.result.value as V
+    } catch (error) {
+      return { error: `rpc ${method} unavailable (${(error as Error).message})` }
     }
-    if ('error' in later) {
-      process.stderr.write(`${later.error}\n`)
-      return 64
+  }
+  /**
+   * Drain the live service before a version switch: close new admissions
+   * (when the running release advertises the capability), then wait for the
+   * activity the service owns to reach zero. Unknown results refuse the
+   * switch; a closed drain that stays busy refuses it too.
+   */
+  const drainActivity = async (timeoutMs: number): Promise<{ ok: boolean; detail: string }> => {
+    const session = await serviceSession(timeoutMs)
+    if ('error' in session) {
+      // No live service: nothing to close or drain; the switch is safe.
+      return { ok: true, detail: session.error }
     }
-    if (verb === 'restart') {
-      const stopped = await performStop(root)
-      if (stopped !== 0) return stopped
+    const describe = await ghRemoteCall<{ capabilities?: string[]; admission?: string }>(session, 'ghRemote/describe', {}, timeoutMs)
+    if ('error' in describe) {
+      return { ok: false, detail: `${describe.error}; refusing version switch` }
     }
-    const supervisor = new GhRemoteSupervisor(root, later.command, undefined, later.releaseId)
+    let closedNote = 'admission close unavailable on this release'
+    if (describe.capabilities?.includes('admission-close') === true) {
+      const closed = await ghRemoteCall<{ admission: string }>(session, 'ghRemote/admission', { request: { action: 'close' } }, timeoutMs)
+      if ('error' in closed || closed.admission !== 'closed') {
+        return { ok: false, detail: 'admission close failed; refusing version switch' }
+      }
+      closedNote = 'new admissions closed'
+    }
+    const deadline = Date.now() + timeoutMs
+    const signal = AbortSignal.timeout(Math.max(1, timeoutMs))
+    let last = -1
+    while (Date.now() < deadline) {
+      const counts = await ghRemoteCall<{ runningAgents?: number; ownedActivity?: number }>(session, 'ghRemote/activity', {}, 5_000)
+      if ('error' in counts
+        || counts.runningAgents === undefined || counts.ownedActivity === undefined
+        || !Number.isSafeInteger(counts.runningAgents) || !Number.isSafeInteger(counts.ownedActivity)
+        || counts.runningAgents < 0 || counts.ownedActivity < 0) {
+        return { ok: false, detail: 'activity query failed or omitted owned work; refusing version switch' }
+      }
+      last = counts.runningAgents + counts.ownedActivity
+      if (last === 0) break
+      await new Promise((resolve) => { setTimeout(resolve, 500) })
+    }
+    void signal
+    return last === 0
+      ? { ok: true, detail: `${closedNote}; activity idle before switch` }
+      : { ok: false, detail: `activity still busy (${String(last)} resources) after ${String(timeoutMs)}ms; refusing version switch` }
+  }
+  /** The supervision loop behind run-style verbs, ending in a process exit code. */
+  const supervise = async (command: SupervisorCommand, releaseId: string | null): Promise<number> => {
+    const supervisor = new GhRemoteSupervisor(root, command, undefined, releaseId)
     const signaled = { signal: null as NodeJS.Signals | null }
     const onSignal = (signal: NodeJS.Signals): void => {
       signaled.signal = signal
@@ -871,10 +847,187 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
     if (signaled.signal !== null) process.stderr.write(`gh-remote-supervisor: drained on ${signaled.signal}\n`)
     return 0
   }
-  if (verb === 'stop') return await performStop(root)
+  if (verb === 'install') {
+    const { flags } = readFlags(verbArgs)
+    const from = flags.get('from')
+    if (from === undefined) {
+      process.stderr.write('install requires --from DIR\n')
+      return 64
+    }
+    const id = flags.get('id') ?? `r-${Date.now()}-${randomUUID().slice(0, 8)}`
+    const note = flags.get('note')
+    const result = await runLifecycle('install', { protectedReleases: [id] }, async () => installRelease(root, from, {
+      id,
+      ...(note === undefined ? {} : { note }),
+    }))
+    if (!result.ok) return result.code
+    if (!result.value.ok) {
+      process.stderr.write(`gh-remote-supervisor: ${result.value.reason}\n`)
+      return 69
+    }
+    process.stdout.write(`${result.value.releaseId}\n`)
+    return 0
+  }
+  if (verb === 'commit') {
+    const { flags } = readFlags(verbArgs)
+    const id = flags.get('id')
+    if (id === undefined) {
+      process.stderr.write('commit requires --id ID (the staging release bootstrap extracted)\n')
+      return 64
+    }
+    const note = flags.get('note')
+    const result = await runLifecycle('commit', { protectedReleases: [id] }, async (): Promise<string> => {
+      const final = join(root, 'releases', id)
+      try {
+        await readFile(join(final, 'gh-release.json'), 'utf8')
+        throw new Error(`release ${id} is already installed; releases are immutable`)
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+      }
+      const staged = join(root, 'releases', `${STAGING_PREFIX}${id}`)
+      if (await releaseEntry(staged) === null) {
+        throw new Error(`no staged release at ${staged}; bootstrap extracts there before committing`)
+      }
+      await readFile(join(staged, 'gh-release.json'), 'utf8')
+      await rename(staged, final)
+      const switched = await useRelease(root, id)
+      if (!switched.ok) throw new Error(switched.reason)
+      if (note !== undefined) {
+        const manifest = join(final, 'gh-release.json')
+        const parsed = JSON.parse(await readFile(manifest, 'utf8')) as Record<string, unknown>
+        await writeFile(manifest, `${JSON.stringify({ ...parsed, note }, null, 2)}\n`)
+      }
+      return id
+    })
+    if (!result.ok) return result.code
+    process.stdout.write(`${result.value}\n`)
+    return 0
+  }
+  if (verb === 'use') {
+    const [releaseId] = verbArgs
+    if (releaseId === undefined) {
+      process.stderr.write('use requires a release id\n')
+      return 64
+    }
+    const result = await runLifecycle('use', {}, async () => useRelease(root, releaseId))
+    if (!result.ok) return result.code
+    if (!result.value.ok) {
+      process.stderr.write(`gh-remote-supervisor: ${result.value.reason}\n`)
+      return 64
+    }
+    process.stdout.write(`${JSON.stringify(result.value)}\n`)
+    return 0
+  }
+  if (verb === 'gc') {
+    const protect = new Map<string, string>()
+    const identity = await readIdentity(paths)
+    if (identity?.releaseId !== null && identity?.releaseId !== undefined && isPidAlive(identity.pid)) {
+      protect.set(identity.releaseId, 'live service runs it')
+    }
+    for (const [id, reason] of await lifecycleProtectedReleases(root)) protect.set(id, reason)
+    const result = await runLifecycle('gc', {}, async () => gcReleases(root, protect))
+    if (!result.ok) return result.code
+    process.stdout.write(`${JSON.stringify(result.value)}\n`)
+    return 0
+  }
+  if (verb === 'uninstall') {
+    const purge = verbArgs.includes('--purge')
+    const result = await runLifecycle('uninstall', {}, async (): Promise<number> => {
+      const stopped = await performStop(root)
+      if (stopped !== 0) return stopped
+      await uninstallRoot(root, purge)
+      return 0
+    })
+    if (!result.ok) return result.code
+    if (result.value !== 0) return result.value
+    process.stdout.write(purge ? 'uninstalled (root purged)\n' : 'uninstalled (data kept)\n')
+    return 0
+  }
+  if (verb === 'update' || verb === 'rollback') {
+    const { flags } = readFlags(verbArgs)
+    let targetId: string
+    if (verb === 'update') {
+      const from = flags.get('from')
+      const release = flags.get('release')
+      if (from !== undefined && from !== flags.get('release')) {
+        const id = flags.get('id') ?? `r-${Date.now()}-${randomUUID().slice(0, 8)}`
+        const note = flags.get('note')
+        const installed = await runLifecycle('update-install', { protectedReleases: [id] }, async () => installRelease(root, from, {
+          id,
+          ...(note === undefined ? {} : { note }),
+        }))
+        if (!installed.ok) return installed.code
+        if (!installed.value.ok) {
+          process.stderr.write(`gh-remote-supervisor: ${installed.value.reason}\n`)
+          return 69
+        }
+        targetId = installed.value.releaseId
+      } else if (release !== undefined) {
+        targetId = release
+      } else {
+        process.stderr.write('update requires --from DIR or --release ID\n')
+        return 64
+      }
+    } else {
+      const current = await readCurrent(root)
+      if (current === null || current.previousReleaseId === null) {
+        process.stderr.write(`gh-remote-supervisor: no previous release to roll back to at ${root}\n`)
+        return 64
+      }
+      targetId = current.previousReleaseId
+    }
+    const switched = await runLifecycle(verb, { protectedReleases: [targetId] }, async () => {
+      const drain = await drainActivity(readMillis(flags.get('drain-timeout'), 30_000))
+      process.stderr.write(`gh-remote-supervisor: ${drain.detail}\n`)
+      if (!drain.ok) return 69
+      const stopped = await performStop(root)
+      if (stopped !== 0) return stopped
+      const used = await useRelease(root, targetId)
+      if (!used.ok) return 64
+      return 0
+    })
+    if (!switched.ok) return switched.code
+    if (switched.value !== 0) return switched.value
+    const later = await commandOrRelease([])
+    if ('error' in later) {
+      process.stderr.write(`${later.error}\n`)
+      return 64
+    }
+    await ensureRuntimeId(root)
+    return await supervise({ ...later.command, env: childEnvironment(later.releaseId) }, later.releaseId)
+  }
+  if (verb === 'run' || verb === 'restart') {
+    let later: { command: SupervisorCommand; releaseId: string | null } | { error: string }
+    if (verb === 'run') {
+      later = await commandOrRelease(verbArgs)
+    } else {
+      const identity = await readIdentity(paths)
+      const [head, ...tail] = identity?.command ?? []
+      later = identity !== null && head !== undefined && isPidAlive(identity.pid)
+        ? { command: { command: head, args: tail }, releaseId: identity.releaseId ?? null }
+        : { error: `no live supervised service at ${root}` }
+      if (!('error' in later)) {
+        const stopped = await runLifecycle('restart', {}, async () => performStop(root))
+        if (!stopped.ok) return stopped.code
+        if (stopped.value !== 0) return stopped.value
+      }
+    }
+    if ('error' in later) {
+      process.stderr.write(`${later.error}\n`)
+      return 64
+    }
+    await ensureRuntimeId(root)
+    return await supervise({ ...later.command, env: childEnvironment(later.releaseId) }, later.releaseId)
+  }
+  if (verb === 'stop') {
+    const stopped = await runLifecycle('stop', {}, async () => performStop(root))
+    return stopped.ok ? stopped.value : stopped.code
+  }
   if (verb === 'status') {
     const identity = await readIdentity(paths)
     const current = await readCurrent(root)
+    const lock = await probeLifecycleLock(root)
+    const runtimeId = await ensureRuntimeId(root).catch(() => null)
     process.stdout.write(`${JSON.stringify({
       identity,
       current,
@@ -883,6 +1036,11 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
       liveReleaseHeld: identity?.releaseId !== null && identity?.releaseId !== undefined && isPidAlive(identity.pid)
         ? identity.releaseId
         : null,
+      runtimeId,
+      runtimeIdPath: runtimeIdPath(root),
+      lifecycle: lock.lock === null
+        ? null
+        : { ...lock.lock, holderAlive: lock.holderAlive, interrupted: !lock.holderAlive },
     })}\n`)
     return 0
   }

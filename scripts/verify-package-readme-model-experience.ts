@@ -38,6 +38,7 @@ const NO_MODEL_EXPERIENCE_SECTION: Readonly<Record<string, string>> = {
   'packages/util/values': 'The package only validates, snapshots, compares, freezes, or rejects caller-owned values; consumers own every model-facing use.',
   'packages/util/code-language': 'The package only maps a filename suffix to a syntax-highlighting language id; the read consumer owns the persisted hint.',
   'packages/glm/remote-supervisor': 'The supervisor spawns, restarts, and drains a child process; it registers no prompt, schema, or session event, and never touches a model request.',
+  'packages/glm/remote-supervisor-app': 'The profile plugin only wires the supervision library into a Cordis row and maps its outcome to a process exit code; it registers no prompt, schema, or session event, and never touches a model request.',
   'packages/glm/account': 'The owner resolves OAuth grants and short-term project tokens into the model route bearer header; it registers no prompt, schema, or session event, and no token ever reaches model input.',
 }
 
