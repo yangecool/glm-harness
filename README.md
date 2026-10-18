@@ -114,6 +114,8 @@ pnpm run verify-translation-pairing
 
 Main pushes and manual runs build [Windows x64 unsigned previews](.github/workflows/gh-windows-x64.yml) and [Linux runtime archives](.github/workflows/gh-remote-release.yml). Windows previews use an explicit standalone application ID without local release-account files. Only `gh-v*` tags attach artifacts to GitHub Releases; signed installation and auto-update qualification remain separate. The inherited real-DeepSeek suite runs in upstream or when `DSH_ENABLE_REAL_API_E2E=true` is explicitly configured; enabled runs still require their API secret.
 
+Desktop packing includes the private workspace plugins reachable from the runtime roots as local tarballs. This keeps GH plugins private while supplying the complete local package set; unrelated plugins are excluded. Failed Windows packaging retains its diagnostic journal and reports the final log lines in the check annotations.
+
 <a id="license"></a>
 
 ## License

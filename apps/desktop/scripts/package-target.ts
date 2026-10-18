@@ -3,6 +3,7 @@
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
+import { privateDesktopPluginDirectories } from './private-plugin-packages.ts'
 import { join, resolve } from 'node:path'
 import {
   desktopBuildRecordFilename,
@@ -487,6 +488,9 @@ export async function packageTarget(
   }
   await execute(['run', 'build:official'], buildEnv, REPOSITORY_ROOT)
   await execute(['run', 'release:pack', '--family', 'dsh', '--out', buildPaths.packedDsh, ...packArguments], buildEnv, REPOSITORY_ROOT)
+  for (const directory of privateDesktopPluginDirectories(REPOSITORY_ROOT)) {
+    await execute(['--dir', directory, 'pack', '--pack-destination', buildPaths.packedDsh], buildEnv, REPOSITORY_ROOT)
+  }
   await execute([
     '--dir',
     'apps/desktop-host',

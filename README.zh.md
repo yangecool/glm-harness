@@ -114,6 +114,8 @@ pnpm run verify-translation-pairing
 
 主分支推送和手动运行会构建 [Windows x64 未签名预览包](.github/workflows/gh-windows-x64.yml)与 [Linux 运行时归档](.github/workflows/gh-remote-release.yml)。Windows 预览包显式指定独立应用 ID，不需要本地发行账号文件。只有 `gh-v*` tag 才向 GitHub Releases 附加制品；签名安装与自动更新资格单独验收。继承的真实 DeepSeek 测试仅在上游仓库或显式配置 `DSH_ENABLE_REAL_API_E2E=true` 时执行；启用后仍必须提供其 API 密钥。
 
+桌面打包将运行时入口所需的私有工作区插件一起打成本地 tarball，既保留 GH 插件的私有属性，也补齐本地包集合；无关插件不进入集合。Windows 打包失败会保留诊断日志，并在检查注释中显示最后的日志内容。
+
 <a id="license"></a>
 
 ## 许可证
