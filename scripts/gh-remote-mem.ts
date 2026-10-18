@@ -110,14 +110,14 @@ async function main() {
     server.listen(0, '127.0.0.1', () => { resolvePort((server.address() as { port: number }).port) })
   })
   const port = await portPromise
-  const samples = { ready: { rss: [], pss: [] }, task: { rss: [], pss: [] } }
+  const samples: Record<'ready' | 'task', { rss: number[]; pss: number[] }> = { ready: { rss: [], pss: [] }, task: { rss: [], pss: [] } }
   try {
     await deployRuntime(target, { archive, home: remoteHome, knownHosts, trustFingerprint: true })
     await remoteCommand(target, knownHosts, `mkdir -p "$HOME/${remoteHome}/workspace"`, 30_000)
     await bootstrapLifecycle(target, knownHosts, remoteHome, 'start', [
       '--', '--profile', 'gh-headless', 'Run the long scripted task to completion.',
     ], 60_000, [
-      `PATH='${jail}'`,
+      `PATH=${jail}`,
       'GLM_API_KEY=synthetic-remote-key',
       `GLM_BASE_URL=http://127.0.0.1:${port}`,
       'GH_PERMISSION_MODE=yolo',

@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-18",
+  "note": "Structured results and probes are versioned. Raw logs accompany the outer development documents; no archive binary is committed.",
+  "files": [
+    {
+      "file": "archive-build.log",
+      "bytes": 4676,
+      "sha256": "32f1348e1d3bc213ff19fdec29d85e458ea2b41b517de3e040c1c04434862410"
+    },
+    {
+      "file": "build-artifacts.log",
+      "bytes": 739,
+      "sha256": "01bcb2b04942a78e19814afd5c0e37cda2bfd41d7c57c3bc21dd59a26931add0"
+    },
+    {
+      "file": "build-check.log",
+      "bytes": 365,
+      "sha256": "da21938c64a3488c539f76cb2163d9d9db3b979c401df226f28a6d7a8cae61e9"
+    },
+    {
+      "file": "build-final.log",
+      "bytes": 881,
+      "sha256": "7ea00496d3bfe0a27ef6e510f41fcf6866aff67d7834030df020275bb64e1daa"
+    },
+    {
+      "file": "closure.log",
+      "bytes": 102,
+      "sha256": "0158370cc70302fc3713db914b1e38822d0ff961d1147aed9434ebc541bccd1a"
+    },
+    {
+      "file": "constraints.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "doc-sync.log",
+      "bytes": 6695,
+      "sha256": "925ceea38b645bbe4635f7bbcf3937d07e47241c47c2a08e75241106c58f0293"
+    },
+    {
+      "file": "final-references.log",
+      "bytes": 2697,
+      "sha256": "5a7bb71ca2f389f526100c3442e3932e06ed91f106efebcc0bf88ec8c9dffd57"
+    },
+    {
+      "file": "lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "openssh.json",
+      "bytes": 1920,
+      "sha256": "0928b76570f3bc2426df7fd5d2444d3a3651418aefdc1b9bd2ebb958aaafd206"
+    },
+    {
+      "file": "openssh.log",
+      "bytes": 1284,
+      "sha256": "9bef5d6d44782ab1f65bd580dc4a111c7c0f0c9a98268cc98429e38cf8d949ab"
+    },
+    {
+      "file": "pairing.log",
+      "bytes": 169,
+      "sha256": "f190ece9e00fcbef465a9c2b8f320bc0b709b578f7ba4800e3f6dded291d2c33"
+    },
+    {
+      "file": "pre-fix-tests.log",
+      "bytes": 950,
+      "sha256": "a7ccd8178d57f7dd17af11be7eedd53a5870909312c46388353b152fe38c5c6b"
+    },
+    {
+      "file": "product-smoke.json",
+      "bytes": 62084,
+      "sha256": "946f3d48fb62487a939bc245d2e21b833f8d255fda18f724cac1157c4753fa54"
+    },
+    {
+      "file": "product-smoke.log",
+      "bytes": 397,
+      "sha256": "6322509aeb6b6813d80f46a072182a69035ce079a97fcf0d59a04d211a5c2dd4"
+    },
+    {
+      "file": "tests.log",
+      "bytes": 951,
+      "sha256": "26820e965f2c5c9d30eb164c1ed07ee348eb5ba45384287e262949579f890827"
+    },
+    {
+      "file": "upload-lint.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "upload-regression.log",
+      "bytes": 940,
+      "sha256": "1d1e251d7e15f17d0b2745ee4ed4dd9446004674cc551703195be0a60de7e5d4"
+    }
+  ],
+  "rawDirectory": "../../../../docs/planning/evidence/review-20261018"
+}

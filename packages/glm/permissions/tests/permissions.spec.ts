@@ -67,6 +67,9 @@ async function harness(options: HarnessOptions = {}): Promise<{ ctx: Context; an
     ['write', { file_path: { type: 'string', required: true }, content: { type: 'string', required: true } }],
     ['bash', { command: { type: 'string', required: true }, description: { type: 'string', required: true } }],
     ['deploy', { target: { type: 'string', required: true } }],
+    ['subagent', { prompt: { type: 'string', required: true } }],
+    ['subagent_fork', { prompt: { type: 'string', required: true } }],
+    ['send_message', { prompt: { type: 'string', required: true } }],
   ] as const) {
     ctx.tools.register(defineContentToolFixture({
       name,
@@ -175,6 +178,25 @@ describe('shell analysis: dangerous grammar', () => {
   })
 })
 
+const mutatingCommands = [
+  'sort -o result.txt input.txt',
+  'sort --out=result.txt input.txt',
+  "sed -n '1w result.txt' input.txt",
+  'sed --sandbox $FLAGS s/a/b/ input.txt',
+  'find . -fprint result.txt',
+  'find . -exec touch result.txt \\;',
+  'rg --pre ./preprocessor needle input.txt',
+  'git diff --output=result.txt',
+  "env -S 'touch result.txt'",
+  'uniq input.txt result.txt',
+  'yq -i . file.yml',
+  'tree -o result.txt',
+  'time -o result.txt cat input.txt',
+  'echo $(touch result.txt)',
+  'cat `touch result.txt`',
+  'git -c core.pager=./helper --paginate diff',
+]
+
 describe('shell analysis: read-only classification', () => {
   type Case = readonly [string, boolean]
   const cases: readonly Case[] = [
@@ -183,7 +205,12 @@ describe('shell analysis: read-only classification', () => {
     ['grep -r needle .', true],
     ['echo hi > out.txt', false],
     ['sed -i s/a/b/ file.txt', false],
-    ['sed -n 5p file.txt', true],
+    ['sed -n 5p file.txt', false],
+    ['sed --sandbox -n 5p file.txt', true],
+    ['sort input.txt', true],
+    ['uniq -c input.txt', true],
+    ['rg -n needle .', true],
+    ['tree -L 2', true],
     ['git status', true],
     ['git branch new-name', false],
     ['git push', false],
@@ -196,6 +223,10 @@ describe('shell analysis: read-only classification', () => {
 
   it.each(cases)('%s → read-only %s', (command, expected) => {
     expect(isReadOnlyPosixCommand(command)).toBe(expected)
+  })
+
+  it.each(mutatingCommands)('withholds a read-only claim for %s', (command) => {
+    expect(isReadOnlyPosixCommand(command)).toBe(false)
   })
 })
 
@@ -294,6 +325,30 @@ describe('executor gate', () => {
     const build = await call(ctx, agent, 'bash', { command: 'npm install', description: 'install deps' })
     expect(build.isError).toBe(true)
     expect(textOf(build)).toContain('the user rejected')
+  })
+
+  it.each(mutatingCommands)('build asks and Plan denies before dispatch: %s', async (command) => {
+    const { ctx, answerer } = await harness({ answerer: 'rejected' })
+    const agent = agentFor(ctx)
+    openTurn(agent)
+    const result = await call(ctx, agent, 'bash', { command, description: 'review regression' })
+    expect(result.isError).toBe(true)
+    expect(textOf(result)).not.toContain('ran bash')
+    expect(answerer.asked).toHaveLength(1)
+    agent.session.append('plan/mode', { active: true })
+    const planned = await call(ctx, agent, 'bash', { command, description: 'review regression' })
+    expect(planned.isError).toBe(true)
+    expect(textOf(planned)).toContain('Plan mode restricts execution')
+    expect(answerer.asked).toHaveLength(1)
+  })
+
+  it.each(['subagent', 'subagent_fork', 'send_message'])('Plan denies changes to another agent via %s', async (name) => {
+    const { ctx } = await harness({ mode: 'yolo' })
+    const agent = agentFor(ctx)
+    agent.session.append('plan/mode', { active: true })
+    const result = await call(ctx, agent, name, { prompt: 'edit a file' })
+    expect(result.isError).toBe(true)
+    expect(textOf(result)).toContain('Plan mode restricts execution')
   })
 
   it('yolo: general tools run directly, but the plan restriction still denies writes', async () => {

@@ -50,14 +50,36 @@ function controlOptions(knownHosts: string): string[] {
   return ['-o', 'BatchMode=yes', '-o', `UserKnownHostsFile=${knownHosts}`, '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=15']
 }
 
+/**
+ * Quote one literal shell word, including whitespace and expansion characters.
+ * @param value - one argument or environment value.
+ * @returns POSIX shell source for that single literal value.
+ */
+export function shellLiteral(value: string): string {
+  if (value.includes('\0')) throw new StageError('usage', 'shell arguments cannot contain NUL')
+  return `'${value.replaceAll("'", "'\\''")}'`
+}
+
+/** Render literal KEY=value inputs without accepting shell source. */
+function environmentLiteral(assignments: readonly string[]): string {
+  return assignments.map((assignment) => {
+    const equals = assignment.indexOf('=')
+    const key = assignment.slice(0, equals)
+    if (equals < 1 || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) {
+      throw new StageError('usage', 'environment assignments must use KEY=value')
+    }
+    return `${key}=${shellLiteral(assignment.slice(equals + 1))}`
+  }).join(' ')
+}
+
 /** Expand a remote home reference: absolute paths stay, relative ones sit under the target user's $HOME. */
 function remoteHomeLiteral(home: string): string {
-  return home.startsWith('/') ? home : `"$HOME/${home}"`
+  return home.startsWith('/') ? shellLiteral(home) : `"$HOME"/${shellLiteral(home)}`
 }
 
 /** The shell-quoted upload area inside a remote home. */
 function uploadLiteral(home: string): string {
-  return home.startsWith('/') ? `"${home}/upload"` : `"$HOME/${home}/upload"`
+  return remoteHomeLiteral(`${home}/upload`)
 }
 
 /**
@@ -68,11 +90,14 @@ function uploadLiteral(home: string): string {
  * @returns whether a new key was pinned; a changed key on a known host rejects at connect time.
  */
 export async function ensureHostKey(target: RemoteTarget, knownHosts: string, options: Pick<DeployOptions, 'trustFingerprint' | 'confirmFingerprint'> = {}): Promise<boolean> {
+  if (target.sshConfigAlias !== undefined || target.proxyJump !== undefined) {
+    throw new StageError('connect', 'full deployment currently requires a direct host and port; SSH alias and ProxyJump host-key discovery/upload are not implemented')
+  }
   if (!existsSync(knownHosts)) await writeFile(knownHosts, '')
   const existing = await readFile(knownHosts, 'utf8')
-  const hostToken = target.sshConfigAlias ?? (target.port === 22 ? target.host : `[${target.host}]:${target.port}`)
+  const hostToken = target.port === 22 ? target.host : `[${target.host}]:${target.port}`
   if (existing.includes(`${hostToken} `)) return false
-  const scanArgs = target.sshConfigAlias !== undefined ? [target.sshConfigAlias] : ['-p', String(target.port), '-t', 'ed25519', '-T', '20', target.host]
+  const scanArgs = ['-p', String(target.port), '-t', 'ed25519', '-T', '20', target.host]
   let scanned: string
   try {
     scanned = (await run('ssh-keyscan', [...scanArgs], { timeout: 30_000, maxBuffer: 1024 * 1024 })).stdout
@@ -132,7 +157,6 @@ export async function readArchiveManifest(archive: string): Promise<ArtifactMani
  * Run one bootstrap command on the target and map its stage exit code.
  * @param target - deployed target.
  * @param knownHosts - controller-owned known_hosts path.
- * @param home - remote install root expression.
  * @param script - shell lines to run; set `home` the way `remoteHomeLiteral` renders it.
  * @param timeoutMs - hard deadline.
  * @returns captured stdout.
@@ -160,8 +184,9 @@ export async function remoteCommand(target: RemoteTarget, knownHosts: string, sc
  * @returns the completed deployment record.
  */
 export async function deployRuntime(target: RemoteTarget, options: DeployOptions): Promise<DeployRecord> {
+  const envPrefix = environmentLiteral(options.envAssignments ?? [])
   const fingerprintPinned = await ensureHostKey(target, options.knownHosts, options)
-  await verifyLocalArchive(options.archive)
+  const archiveDigest = await verifyLocalArchive(options.archive)
   const manifest = await readArchiveManifest(options.archive)
   const probe = await probeRemote(target, { knownHosts: options.knownHosts })
   if (probe.target !== manifest.target) {
@@ -182,11 +207,12 @@ export async function deployRuntime(target: RemoteTarget, options: DeployOptions
     ...(target.identity === undefined ? [] : ['-i', target.identity]),
     options.archive, `${options.archive}.sha256`, scpDestination,
   ], { timeout: 600_000 })
-  const envPrefix = (options.envAssignments ?? []).join(' ')
   const installLog = await remoteCommand(target, options.knownHosts, [
+    'set -eu',
     `cd ${upload}`,
-    `tar -xzf '${archiveName}' --strip-components=1 gh-remote/bootstrap.sh`,
-    `${envPrefix === '' ? '' : `${envPrefix} `}GH_REMOTE_HOME=${homeLiteral} sh ./bootstrap.sh install './${archiveName}' --force`,
+    `printf '%s  %s\\n' ${shellLiteral(archiveDigest)} ${shellLiteral(`./${archiveName}`)} | sha256sum -c - >/dev/null || { echo 'gh-remote: stage=verify-archive: uploaded archive digest mismatch' >&2; exit 91; }`,
+    `tar -xzf ${shellLiteral(archiveName)} --strip-components=1 gh-remote/bootstrap.sh`,
+    `${envPrefix === '' ? '' : `${envPrefix} `}GH_REMOTE_HOME=${homeLiteral} sh ./bootstrap.sh install ${shellLiteral(`./${archiveName}`)} --force`,
   ].join('\n'), 1_200_000)
   const status = await bootstrapLifecycle(target, options.knownHosts, home, 'status', [], 60_000)
   return {
@@ -219,7 +245,8 @@ export async function bootstrapLifecycle(
   args: readonly string[], timeoutMs: number, envAssignments: readonly string[] = [],
 ): Promise<string> {
   const homeLiteral = remoteHomeLiteral(home)
-  const bootstrap = home.startsWith('/') ? `"${home}/upload/bootstrap.sh"` : `"$HOME/${home}/upload/bootstrap.sh"`
-  const prefix = envAssignments.length === 0 ? '' : `${envAssignments.join(' ')} `
-  return remoteCommand(target, knownHosts, `GH_REMOTE_HOME=${homeLiteral} ${prefix}sh ${bootstrap} ${command} ${args.join(' ')}`, timeoutMs)
+  const bootstrap = remoteHomeLiteral(`${home}/upload/bootstrap.sh`)
+  const environment = environmentLiteral(envAssignments)
+  const prefix = environment === '' ? '' : `${environment} `
+  return remoteCommand(target, knownHosts, `${prefix}GH_REMOTE_HOME=${homeLiteral} sh ${bootstrap} ${[command, ...args].map(shellLiteral).join(' ')}`, timeoutMs)
 }

@@ -388,7 +388,29 @@
         "R06 磁盘满/只读目录未模拟(需 root);仅 linux-x64",
         "E04.3(用户级服务/卸载/更新 GC/崩溃预算/断线不杀)归 GH-006;MEM03 口径为一次性 gh-headless 运行器,本机无同载体 ZCode Server 基线"
       ],
-      "next": "GH-006 Supervisor 与持续执行(E04.3/4、F09/24/28/29);GH-007 账号/PAT"
+      "next": "GH-006 Supervisor 与持续执行(E04.3/4、F09/24/28/29);GH-007 账号/PAT",
+      "deviations": []
+    },
+    {
+      "id": "GH-006",
+      "title": "常驻远端服务、Supervisor 与持续执行",
+      "status": "not-started",
+      "planRefs": [
+        "E04.3",
+        "E04.4",
+        "E03.1",
+        "E12"
+      ],
+      "readiness": "upstream resident/task/connection investigation complete; existing APIs and gaps recorded in development plan 11.8",
+      "requiredBehavior": [
+        "service survives desktop exit and SSH disconnect",
+        "durable command receipt/query and idempotent admission",
+        "independent Supervisor with process identity/readiness/crash budget",
+        "same-task reattach, explicit cancellation, multiwindow",
+        "safe leases/drain/update/rollback/uninstall",
+        "resident server process-tree memory acceptance"
+      ],
+      "next": "GH-006-A minimal service composition, then B-F"
     }
   ],
   "blocked": [
@@ -398,20 +420,24 @@
     },
     {
       "id": "D02",
-      "summary": "ZCode 固定修订(aac4755)基线未测:构建需 Node ≥24,本机仅 22.23.2 且无 nvm/fnm/volta;解锁:安装 Node 24"
+      "summary": "ZCode 固定基线未测；源码构建要求 Node ≥24，当前验收进程为 22.23.2。可隔离准备 Node 24，无需修改系统或要求 nvm；仍待真实基线测试。"
     }
   ],
   "currentAssessment": {
-    "updatedAt": "2026-10-17",
+    "updatedAt": "2026-10-18",
     "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
-    "productBaseline": "ZCode v3.15.1; GSH development reference only",
-    "GH-001": "base implemented; upstream retry closure corrected in review",
-    "GH-002": "sampler/corpus implemented; PID bug fixed; full baselines need remeasurement",
-    "GH-003": "partial: native text/tool protocol and review fixes; real GLM/persona/routing/accounts/multimodal/retry pending",
-    "GH-004": "partial: Web mock workflow; native Electron, full task flow, three ZCode permissions pending",
-    "GH-BRAND": "partial: brand plugin/assets; complete workflow/native visuals pending",
-    "GH-005/GH-006": "not started: complete remote bootstrap/runtime/Supervisor",
-    "next": "GH-003-B GLM task behavior + GH-008-A ZCode permissions, then GH-004-B native desktop flow; remote artifact work may start independently"
+    "productBaseline": "ZCode v3.15.1; GSH selective development reference only",
+    "review": "all 10 GH commits after the DSH import reviewed; fixes included with this record; outer review metadata contains commit identities",
+    "GH-001": "base/profile/closure implemented; existing-home product-layer migration pending",
+    "GH-002": "sampler and corpus implemented; complete ZCode/native/resident baselines pending",
+    "GH-003": "native text/tools, reasoning replay, persona, stable tool order, bounded GH retry and truncation rejection implemented; real GLM/purpose routing/personal rules/accounts/PAT/multimodal/TOK pending",
+    "GH-004": "Web and actual Electron fixture workflow implemented; real GLM, locked-store UI error, full workbench/visuals/packaging pending",
+    "GH-008-A": "local yolo/guarded/build plus independent Plan and Composer controls implemented; readonly/delegation bypasses fixed; full PER05/06/07/09/10 and plan-file/child/Windows paths pending",
+    "GH-BRAND": "brand and existing workbench visuals partial; full workflow replacement remains required",
+    "GH-005": "complete runtime archive and direct SSH loopback bootstrap slice implemented and hardened; no resident server yet; alias/ProxyJump deployment explicitly unsupported; independent hosts/download/auth/platform cases pending",
+    "GH-006": "required, NOT STARTED: resident remote service with independent Supervisor, durable admission, continuous tasks and reattach; upstream facilities audited",
+    "memory": "Electron idle ~1155 MiB and post-turn ~1038 MiB not within candidate; 102/354 MiB headless samples not resident-service acceptance",
+    "next": "GH-006-A minimal resident service profiles, then B-F as development plan 11.8; continue unblocked local/PER/TOK/VIS/MEM work without claiming real-service acceptance"
   },
   "review20261017": {
     "status": "code fixes validated",
@@ -444,5 +470,34 @@
       "GH-owned bounded retry remains unstarted; upstream retry executor removed",
       "Repository-reference documentation gate has existing commit-pinning conflicts; see diary"
     ]
+  },
+  "review20261018": {
+    "status": "fixes validated; committed together with this record",
+    "fixed": [
+      "RV09",
+      "RV10",
+      "RV11",
+      "RV12",
+      "RV13",
+      "RV14",
+      "RV15"
+    ],
+    "limitedCapabilities": [
+      "RV16 alias/ProxyJump full deployment"
+    ],
+    "evidence": "artifacts/gh-validation/review-20261018/results.json",
+    "next": "GH-006-A required resident service; no service completion claimed",
+    "verification": {
+      "regressionFiles": 18,
+      "regressionTests": 235,
+      "buildGates": 9,
+      "productSmokeCases": 5,
+      "opensshLoopbackCases": 12,
+      "docSync": {
+        "passed": 42,
+        "failed": 1,
+        "existingReferenceFindings": 33
+      }
+    }
   }
 }

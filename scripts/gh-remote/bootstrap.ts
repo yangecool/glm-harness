@@ -14,6 +14,9 @@ export const BOOTSTRAP_STAGE_CODES = {
   probe: 90, 'verify-archive': 91, extract: 92, 'verify-payload': 93, activate: 94, home: 95, lock: 96, runner: 97, usage: 98,
 } as const
 
+/** Commands checked by the controller probe and by the target installer. */
+export const BOOTSTRAP_REQUIRED_TOOLS = ['tar', 'sha256sum', 'flock', 'awk', 'find', 'sort', 'mv', 'ln', 'chmod', 'cp', 'cmp', 'sed', 'mktemp', 'readlink', 'date', 'grep', 'cut', 'cat', 'mkdir', 'rm', 'uname', 'basename', 'ls'] as const
+
 /**
  * Render the installer script for an archive payload.
  * @returns complete POSIX sh source; identical for every release (state comes from manifest.json).
@@ -22,14 +25,14 @@ export function renderBootstrapScript(): string {
   return String.raw`#!/bin/sh
 # GH remote runtime bootstrap: install, activate, roll back, and run a GH
 # runtime release without Node preinstalled on this host. Linux only for now.
-set -eu
+set -e
 
 PROGRAM=gh-remote
 ARCHIVE_TOP=gh-remote
 ROOT=$GH_REMOTE_HOME
 [ -n "$ROOT" ] || ROOT=$HOME/.glmh-remote
+set -u
 LOCK_TIMEOUT=300
-FORCE=no
 
 die() { stage=$1; code=$2; shift 2; echo "$PROGRAM: stage=$stage: $*" >&2; exit "$code"; }
 usage() {
@@ -47,7 +50,7 @@ USAGE
 
 need_tools() {
   missing=""
-  for tool in tar sha256sum flock awk find sort mv ln chmod cp cmp sed; do
+  for tool in ${BOOTSTRAP_REQUIRED_TOOLS.join(' ')}; do
     command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
   done
   [ -z "$missing" ] || die probe 90 "required tools missing:$missing"
@@ -102,6 +105,9 @@ manifest_modes() {
 verify_release_dir() {
   dir=$1
   [ -f "$dir/manifest.json" ] || die verify-payload 93 "release $dir has no manifest.json"
+  if find "$dir" ! -type d ! -type f -print | grep -q .; then
+    die verify-payload 93 "release contains links or special files"
+  fi
   scratch="$ROOT/staging/.verify-scratch"
   rm -rf "$scratch"
   mkdir -p "$scratch" || die verify-payload 93 "cannot create scratch $scratch"
@@ -139,7 +145,7 @@ cmd_install() {
   shift
   while [ $# -gt 0 ]; do
     case $1 in
-      --force) FORCE=yes ;;
+      --force) : ;; # Compatibility flag; every install still creates an immutable release.
       --lock-timeout) shift; if [ $# -lt 1 ]; then usage; fi; LOCK_TIMEOUT=$1 ;;
       *) usage ;;
     esac
@@ -174,6 +180,9 @@ cmd_install() {
   if tar -tzf "$archive" | grep -Eq '(^|/)(\.\.)(/|$)'; then
     die extract 92 "archive contains parent-directory escapes"
   fi
+  if ! tar -tvzf "$archive" | awk 'substr($0, 1, 1) != "d" && substr($0, 1, 1) != "-" { bad = 1 } END { exit bad }'; then
+    die extract 92 "archive contains links or special files"
+  fi
 
   mkdir -p "$ROOT/releases" "$ROOT/locks" "$ROOT/log" "$ROOT/run" "$ROOT/staging" \
     || die activate 94 "cannot create install root $ROOT"
@@ -182,12 +191,9 @@ cmd_install() {
 
   version=$(printf '%s\n' "$payload_manifest" | manifest_field version)
   commit=$(printf '%s\n' "$payload_manifest" | manifest_field commit)
-  id="$(date -u +%Y%m%dT%H%M%SZ)-$(printf '%s' "$commit" | cut -c1-8)"
-  stage="$ROOT/staging/$id"
-  rm -rf "$stage"
-  mkdir -p "$stage" || die extract 92 "cannot create staging $stage"
-  # A killed install leaves an incomplete staging directory behind; the next
-  # attempt of the same id re-extracts over it completely.
+  prefix="$(date -u +%Y%m%dT%H%M%SZ)-$(printf '%s' "$commit" | cut -c1-8)"
+  stage=$(mktemp -d "$ROOT/staging/$prefix-XXXXXX") || die extract 92 "cannot create staging"
+  id=$(basename "$stage")
   if ! tar -xzf "$archive" --strip-components=1 -C "$stage"; then
     rm -rf "$stage"
     die extract 92 "extraction failed"
@@ -195,9 +201,7 @@ cmd_install() {
   verify_release_dir "$stage"
 
   release_dir="$ROOT/releases/$id"
-  if [ -d "$release_dir" ]; then
-    if [ "$FORCE" = yes ]; then rm -rf "$release_dir"; else die activate 94 "release $id already installed (use --force)"; fi
-  fi
+  [ ! -e "$release_dir" ] || die activate 94 "release $id already installed"
   if ! mv "$stage" "$release_dir"; then
     rm -rf "$stage"
     die activate 94 "cannot move staging into releases"
@@ -208,9 +212,14 @@ cmd_install() {
     cp -a "$release_dir/home-template/." "$ROOT/home/" || die home 95 "cannot seed home from template"
   fi
 
+  prior=$(current_release)
   ln -sfn "releases/$id" "$ROOT/.current.new"
   if ! mv -T "$ROOT/.current.new" "$ROOT/current"; then
     die activate 94 "cannot activate release $id"
+  fi
+  if [ -n "$prior" ]; then
+    ln -sfn "$prior" "$ROOT/.previous.new"
+    mv -T "$ROOT/.previous.new" "$ROOT/previous" || die activate 94 "cannot record previous release"
   fi
   echo "$PROGRAM: activated $id (version $version, target $want_target)"
 }
@@ -298,16 +307,23 @@ STATUS
 cmd_rollback() {
   need_tools
   mkdir -p "$ROOT/releases" "$ROOT/locks" "$ROOT/staging" || die activate 94 "no releases installed"
-  current=$(basename "$(current_release)")
-  previous=$(ls -1 "$ROOT/releases" | sort -r | awk -v cur="$current" '$0 != cur { print; exit }')
-  [ -n "$previous" ] || die activate 94 "no previous release to roll back to"
   exec 9>"$ROOT/locks/install.lock"
   flock -w "$LOCK_TIMEOUT" 9 || die lock 96 "another install holds the lock"
+  current=$(basename "$(current_release)")
+  prior=$(readlink "$ROOT/previous" 2>/dev/null || true)
+  previous=$(basename "$prior")
+  # Older installs did not persist activation order.
+  if [ -z "$prior" ]; then
+    previous=$(ls -1 "$ROOT/releases" | sort -r | awk -v cur="$current" '$0 != cur { print; exit }')
+  fi
+  [ -n "$previous" ] || die activate 94 "no previous release to roll back to"
   verify_release_dir "$ROOT/releases/$previous"
   ln -sfn "releases/$previous" "$ROOT/.current.new"
   if ! mv -T "$ROOT/.current.new" "$ROOT/current"; then
     die activate 94 "cannot reactivate release $previous"
   fi
+  ln -sfn "releases/$current" "$ROOT/.previous.new"
+  mv -T "$ROOT/.previous.new" "$ROOT/previous" || die activate 94 "cannot record previous release"
   echo "$PROGRAM: rolled back to $previous (was $current)"
 }
 

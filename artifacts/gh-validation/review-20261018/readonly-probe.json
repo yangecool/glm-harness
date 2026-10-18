@@ -1,0 +1,50 @@
+{
+  "scope": "pure classification only; no command strings executed",
+  "rows": [
+    {
+      "command": "sort -o result.txt input.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "sed -n '1w result.txt' input.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "find . -fprint result.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "find . -exec touch result.txt \\;",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "rg --pre ./preprocessor needle input.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "git diff --output=result.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "env -S 'touch result.txt'",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "uniq input.txt result.txt",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    },
+    {
+      "command": "yq -i . file.yml",
+      "beforeReadOnly": true,
+      "afterReadOnly": false
+    }
+  ]
+}

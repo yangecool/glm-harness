@@ -1,0 +1,204 @@
+{
+  "findings": [
+    {
+      "file": "artifacts/gh-validation/gh001-20261017-171001/run.json",
+      "line": 8,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh001-20261017-171001/run.json",
+      "line": 14,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh001-20261017-171001/summary.md",
+      "line": 7,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+      "line": 28,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+      "line": 29,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh002-20261017-180858/run.json",
+      "line": 47,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh003-20261017-184634/run.json",
+      "line": 25,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh003b-work-policy-20261017-224500/run.json",
+      "line": 5,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh003b-work-policy-20261017-224500/summary.md",
+      "line": 3,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh004-20261017-200400/run.json",
+      "line": 9,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh004-20261017-200400/run.json",
+      "line": 10,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh004b-desktop-20261018-074222/gates.log",
+      "line": 1,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh004b-desktop-20261018-074222/run.json",
+      "line": 4,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh004b-desktop-20261018-074222/summary.md",
+      "line": 25,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/acceptance/gh-verify-report.json",
+      "line": 18,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/acceptance/gh-verify-report.json",
+      "line": 23,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/acceptance/gh-verify-report.json",
+      "line": 53,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/acceptance/gh-verify-report.json",
+      "line": 58,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/acceptance/gh-verify-report.json",
+      "line": 63,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/cases.json",
+      "line": 26,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/cases.json",
+      "line": 32,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/cases.json",
+      "line": 68,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/cases.json",
+      "line": 74,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/cases.json",
+      "line": 80,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh005-remote-20261018-011344/run.json",
+      "line": 6,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh008a-permissions-20261018-001059/cases.json",
+      "line": 13,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh008a-permissions-20261018-001059/gates.log",
+      "line": 1,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh008a-permissions-20261018-001059/gates.log",
+      "line": 12,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh008a-permissions-20261018-001059/run.json",
+      "line": 7,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "artifacts/gh-validation/gh008a-permissions-20261018-001059/summary.md",
+      "line": 3,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "docs/glm/delivery-status.json",
+      "line": 7,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "docs/glm/delivery-status.json",
+      "line": 304,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    },
+    {
+      "file": "python/sdk/uv.lock",
+      "line": 113,
+      "kind": "commit-hash",
+      "existsUnchangedAtReviewedHead": true
+    }
+  ],
+  "count": 33,
+  "allPreExisting": true
+}

@@ -34,6 +34,13 @@ function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/** A validated RPC rejection retains the code used by optional-service handling. */
+class WelcomeRpcError extends Error {
+  constructor(readonly code: string | undefined, readonly endpoint: string, message: string) {
+    super(`desktop welcome: Web RPC failed (${endpoint}): ${message}`)
+  }
+}
+
 /**
  * Authenticate the native HTTP client through the Web application's launch URL.
  * @param authenticatedUrl - URL supplied by the running Desktop Host.
@@ -64,11 +71,13 @@ export async function connectDesktopWelcome(
     const envelope: unknown = await response.json()
     if (!record(envelope) || envelope.type !== 'server-response' || envelope.rpcId !== rpcId
       || !record(envelope.result) || envelope.result.ok !== true) {
-      const failure = record(envelope) && record(envelope.result) && envelope.result.ok === false
-        && record(envelope.result.error) && typeof envelope.result.error.message === 'string'
-        ? `: ${envelope.result.error.message}`
-        : ''
-      throw new Error(`desktop welcome: Web RPC failed (${method})${failure}`)
+      const failure = record(envelope) && envelope.type === 'server-response' && envelope.rpcId === rpcId
+        && record(envelope.result) && envelope.result.ok === false && record(envelope.result.error)
+        ? envelope.result.error : undefined
+      throw new WelcomeRpcError(
+        typeof failure?.code === 'string' ? failure.code : undefined, method,
+        typeof failure?.message === 'string' ? failure.message : 'invalid response',
+      )
     }
     return envelope.result.value
   }
@@ -76,12 +85,30 @@ export async function connectDesktopWelcome(
   const settingsAndReference = async () => {
     const settings = await invoke({ namespace: 'settings', method: 'describe', args: {} })
     if (!record(settings) || !Array.isArray(settings.namespaces)) throw new Error('desktop welcome: missing settings namespaces')
-    const official: unknown = settings.namespaces.find((item: unknown) => record(item) && item.ns === 'llm-deepseek')
-    if (official === undefined) return { settings: { namespaces: settings.namespaces }, ref: undefined }
-    if (!record(official) || !record(official.value) || typeof official.value.apiKeyEnv !== 'string') {
-      throw new Error('desktop welcome: missing official DeepSeek credential reference')
+    const providers = await invoke({ namespace: 'llm', method: 'listConfigurableProviders', args: {} })
+    if (!Array.isArray(providers)) throw new Error('desktop welcome: invalid provider directory')
+    const refs: string[] = []
+    let ref: string | undefined
+    const directory: readonly unknown[] = providers
+    for (const provider of directory) {
+      if (!record(provider) || typeof provider.provider !== 'string'
+        || typeof provider.settingsNs !== 'string' || !Array.isArray(provider.settingsPath)) {
+        throw new Error('desktop welcome: invalid provider settings address')
+      }
+      const namespace: unknown = settings.namespaces.find((item: unknown) => record(item) && item.ns === provider.settingsNs)
+      let value: unknown = record(namespace) ? namespace.value : undefined
+      for (const key of provider.settingsPath as unknown[]) {
+        if (typeof key !== 'string') throw new Error('desktop welcome: invalid provider settings path')
+        value = record(value) ? value[key] : undefined
+      }
+      if (record(value) && typeof value.apiKeyEnv === 'string') {
+        refs.push(value.apiKeyEnv)
+        if (provider.provider === 'glm') ref = value.apiKeyEnv
+      } else if (provider.provider === 'glm') {
+        throw new Error('desktop welcome: missing GLM credential reference')
+      }
     }
-    return { settings: { namespaces: settings.namespaces }, ref: official.value.apiKeyEnv }
+    return { settings: { namespaces: settings.namespaces }, ref, refs }
   }
   const localePreference = (namespaces: unknown[]): string | null => {
     const locale: unknown = namespaces.find((item: unknown) => record(item) && item.ns === 'locale')
@@ -92,22 +119,8 @@ export async function connectDesktopWelcome(
     return locale.value.preference ?? null
   }
   const read = async (): Promise<WelcomeState> => {
-    const { settings, ref } = await settingsAndReference()
-    const providers = await invoke({ namespace: 'llm', method: 'listConfigurableProviders', args: {} })
-    if (!Array.isArray(providers)) throw new Error('desktop welcome: invalid provider directory')
+    const { settings, ref, refs } = await settingsAndReference()
     const namespaces = settings.namespaces
-    const refs = providers.flatMap((provider: unknown) => {
-      if (!record(provider) || typeof provider.settingsNs !== 'string' || !Array.isArray(provider.settingsPath)) {
-        throw new Error('desktop welcome: invalid provider settings address')
-      }
-      const namespace: unknown = namespaces.find((item: unknown) => record(item) && item.ns === provider.settingsNs)
-      let value: unknown = record(namespace) ? namespace.value : undefined
-      for (const key of provider.settingsPath as unknown[]) {
-        if (typeof key !== 'string') throw new Error('desktop welcome: invalid provider settings path')
-        value = record(value) ? value[key] : undefined
-      }
-      return record(value) && typeof value.apiKeyEnv === 'string' ? [value.apiKeyEnv] : []
-    })
     const unique = [...new Set([...(ref === undefined ? [] : [ref]), ...refs])]
     const states: Record<string, unknown> = {}
     // credentials.describe accepts at most 64 references per request.
@@ -124,7 +137,8 @@ export async function connectDesktopWelcome(
     try {
       loggedIn = (await account.state()).status === 'credential-stored'
     } catch (error) {
-      if (!/account|namespace|method/iu.test(error instanceof Error ? error.message : String(error))) throw error
+      if (!(error instanceof WelcomeRpcError) || error.code !== 'gateway/invocation-unavailable'
+        || error.endpoint !== 'account/getState') throw error
       loggedIn = false
     }
     return {

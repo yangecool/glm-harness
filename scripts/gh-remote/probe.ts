@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process'
 import { z } from 'zod'
 import type { RemoteTarget } from './targets.ts'
+import { BOOTSTRAP_REQUIRED_TOOLS } from './bootstrap.ts'
 
 /**
  * Run one remote shell script over ssh and capture stdout.
@@ -80,7 +81,7 @@ const PROBE_SCRIPT = `set -eu
 echo "kernel=$(uname -s)"
 echo "machine=$(uname -m)"
 echo "getconf=$(getconf GNU_LIBC_VERSION 2>/dev/null || echo none)"
-for tool in tar sha256sum flock awk; do
+for tool in ${BOOTSTRAP_REQUIRED_TOOLS.join(' ')}; do
   if command -v "$tool" >/dev/null 2>&1; then echo "tool-$tool=yes"; else echo "tool-$tool=no"; fi
 done
 if command -v node >/dev/null 2>&1; then echo "node=$(command -v node)"; else echo "node=absent"; fi
@@ -120,12 +121,7 @@ export async function probeRemote(
     arch,
     target: kernel === 'Linux' && (arch === 'x64' || arch === 'arm64') ? `linux-${arch}` : 'unsupported',
     libc: fields.get('getconf') ?? 'none',
-    tools: {
-      tar: fields.get('tool-tar') === 'yes',
-      sha256sum: fields.get('tool-sha256sum') === 'yes',
-      flock: fields.get('tool-flock') === 'yes',
-      awk: fields.get('tool-awk') === 'yes',
-    },
+    tools: Object.fromEntries(BOOTSTRAP_REQUIRED_TOOLS.map(tool => [tool, fields.get(`tool-${tool}`) === 'yes'])),
     nodeOnTarget: fields.get('node') !== 'absent' && fields.get('node') !== undefined,
     homeFreeKb: Number.parseInt(fields.get('free') ?? '0', 10) || 0,
     getconfLine: fields.get('getconf') ?? 'none',

@@ -99,7 +99,8 @@ async function main(): Promise<void> {
     return
   }
   if (values.run === true || values.start === true) {
-    const positional = process.argv.slice(process.argv.indexOf('--') + 1).filter(argument => argument !== '--')
+    const delimiter = process.argv.indexOf('--')
+    const positional = delimiter < 0 ? [] : process.argv.slice(delimiter + 1)
     if (positional.length === 0) throw new Error('pass runner arguments after -- (e.g. -- --profile gh-headless "prompt")')
     const envAssignments = values['set-env'] ?? []
     const output = await bootstrapLifecycle(target, knownHosts, home, values.start === true ? 'start' : 'run',

@@ -11,12 +11,13 @@
  *   node --import tsx/esm scripts/gh-remote-verify.ts --archive <path> [--report out.json]
  */
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { createServer } from 'node:http'
 import { basename, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { StageError } from './gh-remote/probe.ts'
-import { bootstrapLifecycle, deployRuntime, remoteCommand } from './gh-remote/deploy.ts'
+import { bootstrapLifecycle, deployRuntime, remoteCommand, shellLiteral } from './gh-remote/deploy.ts'
 import { remoteTargetSchema } from './gh-remote/targets.ts'
 import { makeNodeJail, startFixtureSshd } from './gh-remote/sshd-fixture.ts'
 
@@ -63,12 +64,13 @@ async function main(): Promise<void> {
     cases.push({ name, passed, detail })
     console.log(`${passed ? 'PASS' : 'FAIL'} ${name}: ${detail}`)
   }
-  const remoteHome = values.home ?? `.gh-remote-verify-${Date.now()}`
+  const remoteHome = resolve(values.home ?? join(fixture, 'remote-home'))
+  if (existsSync(remoteHome)) throw new Error('remote verification requires an unused install directory')
   const sshd = await startFixtureSshd()
   const jail = await makeNodeJail(join(fixture, 'jail-bin'))
   const knownHosts = join(fixture, 'known_hosts')
   const target = remoteTargetSchema.parse({ name: 'fixture-sshd', host: '127.0.0.1', port: sshd.port, user: process.env.USER, identity: sshd.identity })
-  const turnTarget = join(process.env.HOME ?? '.', remoteHome, 'workspace', 'verify-turn.txt')
+  const turnTarget = join(remoteHome, 'workspace', 'verify-turn.txt')
   const turn = loopbackFixture(turnTarget)
   const port = await turn.portPromise
   try {
@@ -91,11 +93,11 @@ async function main(): Promise<void> {
 
     const workspace = `${remoteHome}/workspace`
     await mkdir(fixture, { recursive: true })
-    await remoteCommand(target, knownHosts, `mkdir -p "$HOME/${workspace}"`, 30_000)
+    await remoteCommand(target, knownHosts, `mkdir -p ${shellLiteral(workspace)}`, 30_000)
     const turnOutput = await bootstrapLifecycle(target, knownHosts, remoteHome, 'run', [
       '--', '--profile', 'gh-headless', 'Write the verify file and finish.',
     ], 300_000, [
-      `PATH="${jail}"`,
+      `PATH=${jail}`,
       'GLM_API_KEY=synthetic-remote-key',
       `GLM_BASE_URL=http://127.0.0.1:${port}`,
       'GH_PERMISSION_MODE=yolo',
@@ -107,9 +109,11 @@ async function main(): Promise<void> {
 
     // R07: a corrupted archive refuses at the digest stage on the target itself.
     const corruptName = `corrupt-${basename(archive)}`
-    await remoteCommand(target, knownHosts, `cp "$HOME/${remoteHome}/upload/${basename(archive)}" "$HOME/${remoteHome}/upload/${corruptName}" && printf X >> "$HOME/${remoteHome}/upload/${corruptName}" && cp "$HOME/${remoteHome}/upload/${basename(archive)}.sha256" "$HOME/${remoteHome}/upload/${corruptName}.sha256"`, 60_000)
+    const uploaded = shellLiteral(join(remoteHome, 'upload', basename(archive)))
+    const corrupt = shellLiteral(join(remoteHome, 'upload', corruptName))
+    await remoteCommand(target, knownHosts, `cp ${uploaded} ${corrupt} && printf X >> ${corrupt} && cp ${uploaded}.sha256 ${corrupt}.sha256`, 60_000)
     try {
-      await remoteCommand(target, knownHosts, `cd "$HOME/${remoteHome}/upload" && GH_REMOTE_HOME="$HOME/${remoteHome}" sh ./bootstrap.sh install "./${corruptName}"`, 120_000)
+      await remoteCommand(target, knownHosts, `cd ${shellLiteral(join(remoteHome, 'upload'))} && GH_REMOTE_HOME=${shellLiteral(remoteHome)} sh ./bootstrap.sh install ${shellLiteral(`./${corruptName}`)}`, 120_000)
       note('tamper-refused', false, 'corrupted archive was installed')
     } catch (error) {
       const stage = error instanceof StageError ? error.stage : 'none'
@@ -118,11 +122,11 @@ async function main(): Promise<void> {
 
     // R08 front: two concurrent installs of the same release serialize through the lock.
     const concurrent = await Promise.allSettled([0, 1].map(() =>
-      remoteCommand(target, knownHosts, `cd "$HOME/${remoteHome}/upload" && GH_REMOTE_HOME="$HOME/${remoteHome}" sh ./bootstrap.sh install "./${basename(archive)}" --force`, 300_000)))
+      remoteCommand(target, knownHosts, `cd ${shellLiteral(join(remoteHome, 'upload'))} && GH_REMOTE_HOME=${shellLiteral(remoteHome)} sh ./bootstrap.sh install ${shellLiteral(`./${basename(archive)}`)} --force`, 300_000)))
     const concurrentCodes = concurrent.map(outcome => outcome.status === 'fulfilled' ? 'ok' : `stage=${outcome.reason instanceof StageError ? outcome.reason.stage : 'error'}`)
     note('concurrent-installs-serialize', concurrentCodes.every(code => code === 'ok'), concurrentCodes.join(' + '))
 
-    const releases = await remoteCommand(target, knownHosts, `ls -1 "$HOME/${remoteHome}/releases" | sort -r | head -3`, 30_000)
+    const releases = await remoteCommand(target, knownHosts, `ls -1 ${shellLiteral(join(remoteHome, 'releases'))} | sort -r | head -3`, 30_000)
     const releaseList = releases.trim().split('\n').filter(line => line.length > 0)
     note('two-releases-present', releaseList.length >= 2, releaseList.join(' '))
     if (releaseList.length >= 2) {
@@ -136,7 +140,7 @@ async function main(): Promise<void> {
     turn.server.close()
     turn.server.closeAllConnections()
     await sshd.stop().catch(() => {})
-    await rm(join(process.env.HOME ?? tmpdir(), remoteHome), { recursive: true, force: true }).catch(() => {})
+    await rm(remoteHome, { recursive: true, force: true }).catch(() => {})
     await rm(fixture, { recursive: true, force: true })
     if (values.report !== undefined) {
       const summary = {

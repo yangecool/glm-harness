@@ -518,7 +518,7 @@ function scanRedirection(source: string, start: number, fdWord: unknown, result:
 }
 
 /** Strip leading control keywords, env assignments, and known wrappers. */
-function invocationWords(segment: ShellSegment): readonly ShellWord[] | undefined {
+function invocationWords(segment: ShellSegment, readonlyProof = false): readonly ShellWord[] | undefined {
   let words = segment.words
   while (words.length > 0) {
     const first = words[0]
@@ -534,6 +534,8 @@ function invocationWords(segment: ShellSegment): readonly ShellWord[] | undefine
     const name = commandBasename(first)
     if (name === undefined) return undefined
     if (!(name in WRAPPERS)) return words
+    // time can write its own output; sudo can change process privileges.
+    if (readonlyProof && name !== 'env') return undefined
     const parsed = parseOptions(words.slice(1), WRAPPERS[name as keyof typeof WRAPPERS], WRAPPER_SCAN)
     if (parsed.unsupported) return undefined
     words = parsed.operands
@@ -784,12 +786,12 @@ export function matchDangerousText(command: string): DangerousMatch {
   return unsupported ? { status: 'unsupported' } : { status: 'notMatched' }
 }
 
-/** Search/list commands that never modify state regardless of argument values. */
-const READONLY_SEARCH = new Set(['ag', 'ack', 'egrep', 'fgrep', 'grep', 'locate', 'rg', 'which', 'whereis'])
-/** Text/file readers that never modify state by themselves. */
-const READONLY_READ = new Set(['cat', 'cut', 'file', 'head', 'jq', 'less', 'more', 'sort', 'stat', 'strings', 'tail', 'tr', 'uniq', 'wc', 'yq'])
+/** Search commands without output-file or command-execution options. */
+const READONLY_SEARCH = new Set(['egrep', 'fgrep', 'grep', 'locate', 'which', 'whereis'])
+/** Text/file readers without output-file or command-execution options. */
+const READONLY_READ = new Set(['cat', 'cut', 'head', 'jq', 'stat', 'strings', 'tail', 'tr', 'wc'])
 /** Directory/size listings. */
-const READONLY_LIST = new Set(['du', 'ls', 'tree'])
+const READONLY_LIST = new Set(['du', 'ls'])
 /** Commands with no observable effect on any file or process. */
 const READONLY_NEUTRAL = new Set(['', ':', 'echo', 'false', 'printf', 'true'])
 /** git subcommands that only read. */
@@ -800,31 +802,43 @@ const GIT_LISTING_FLAGS = new Set(['-v', '--verbose', '-a', '--all', '-l', '--li
 /** Whether one segment's invocation is proven read-only; conservative otherwise. */
 function segmentIsReadOnly(segment: ShellSegment): boolean {
   if (segment.hasWriteRedirect) return false
-  const words = invocationWords(segment)
-  if (words === undefined || words.length === 0) return true
+  if (segment.words.some(word => word.dynamic && /\$\(|`/.test(word.value))) return false
+  const words = invocationWords(segment, true)
+  if (words === undefined) return false
+  if (words.length === 0) return true
   const first = words[0]
   if (first === undefined) return true
   const name = commandBasename(first)
   if (name === undefined) return false
   const args = words.slice(1)
   if (name === 'sed') {
-    const parsed = parseOptions(args, optionTable('-n --quiet --silent -e --expression -f --file --help --version', '-i --in-place --separate --follow-symlinks -s --sandbox'), COMMAND_SCAN)
-    return !parsed.flags.some(flag => ['-i', '--in-place'].includes(flag))
+    if (args.some(word => word.dynamic)) return false
+    // Scripts can use w/e even without -i; GNU sandbox disables both.
+    const parsed = parseOptions(args, optionTable('-n --quiet --silent -s --separate --sandbox --help --version', '-e --expression -f --file', '-i --in-place'), COMMAND_SCAN)
+    return !parsed.unsupported && parsed.flags.includes('--sandbox')
+      && !parsed.flags.some(flag => ['-i', '--in-place'].includes(flag))
   }
   if (name === 'find') {
-    // The dangerous grammar already ran for the whole command; a find that
-    // reaches here carried no -delete/-exec, but unknown predicates still
-    // withhold the read-only claim.
+    if (args.some(word => word.dynamic || ['-exec', '-execdir', '-ok', '-okdir', '-fprint', '-fprint0', '-fprintf'].includes(word.value))) return false
     return matchFind(args) === false
+  }
+  if (['rg', 'sort', 'uniq', 'file', 'tree'].includes(name)) {
+    // Expansions can introduce an option the static scan cannot inspect.
+    if (args.some(word => word.dynamic)) return false
+    if (name === 'rg') return !args.some(word => /^--(?:pre|hostname-bin)(?:=|$)/.test(word.value))
+    if (name === 'sort') return !parseOptions(args, optionTable('-b -d -f -g -i -M -h -n -r -V -c -C -s -u -z --reverse --unique --stable --numeric-sort --help --version', '-k --key -t --field-separator'), COMMAND_SCAN).unsupported
+    if (name === 'file') return !parseOptions(args, optionTable('-b -i -L -h -z -0 --brief --mime --mime-type --mime-encoding --dereference --no-dereference --help --version', '-m --magic-file -f --files-from -F --separator -e --exclude'), COMMAND_SCAN).unsupported
+    if (name === 'tree') return !parseOptions(args, optionTable('-a -d -f -l -x -p -s -h -D -F -i -n -N -q -r -t --dirsfirst --noreport --help --version', '-L -P -I --filelimit --charset'), COMMAND_SCAN).unsupported
+    const parsed = parseOptions(args, optionTable('-c --count -d --repeated -D --all-repeated -i --ignore-case -u --unique -z --zero-terminated --help --version', '-f --skip-fields -s --skip-chars -w --check-chars', '--group'), COMMAND_SCAN)
+    return !parsed.unsupported && parsed.operands.length <= 1
   }
   if (name === 'git') {
     const front = parseOptions(args, GIT_FRONT, WRAPPER_SCAN)
-    if (front.unsupported) return false
+    if (front.unsupported || front.flags.some(flag => ['-c', '--config-env', '--exec-path', '-p', '--paginate'].includes(flag))) return false
     const [head, ...rest] = front.operands
     if (head === undefined || head.dynamic) return false
+    if (rest.some(word => word.dynamic || /^--(?:output|ext-diff|textconv|open-files-in-pager)(?:=|$)/.test(word.value))) return false
     if (GIT_READONLY.has(head.value)) {
-      // Every subcommand in this set only reads refs/objects; flags and refs
-      // cannot turn status/log/diff/show/blame/ls-*/cat-file/rev-* into writes.
       return true
     }
     if (head.value === 'branch' || head.value === 'tag' || head.value === 'remote') {
@@ -855,6 +869,6 @@ export function isReadOnlyPosixCommand(command: string): boolean {
   if (command.length > MAX_COMMAND_LENGTH) return false
   if (matchDangerousText(command).status === 'matched') return false
   const analysis = analyzePosixCommand(command)
-  if (analysis.segments.length === 0) return !analysis.unsupported
+  if (analysis.unsupported) return false
   return analysis.segments.every(segmentIsReadOnly)
 }

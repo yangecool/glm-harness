@@ -1,4 +1,4 @@
-import { chmod, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -18,6 +18,7 @@ interface Fixture {
     target?: string
     tamperBytes?: boolean
     extraFile?: boolean
+    extraLink?: boolean
     sidecar?: boolean
   }) => Promise<string>
 }
@@ -32,6 +33,7 @@ async function fixture(nodeBody: string): Promise<Fixture> {
     target?: string
     tamperBytes?: boolean
     extraFile?: boolean
+    extraLink?: boolean
     sidecar?: boolean
   } = {}): Promise<string> => {
     const staging = join(root, `payload-${options.commit ?? 'aaaa'}`)
@@ -54,6 +56,7 @@ async function fixture(nodeBody: string): Promise<Fixture> {
       }))),
     })
     if (options.extraFile === true) await writeFile(join(payload, 'undeclared.txt'), 'stowaway\n')
+    if (options.extraLink === true) await symlink('bin/node', join(payload, 'undeclared-link'))
     await writeFile(join(payload, 'manifest.json'), `${JSON.stringify(metadata, null, 2)}\n`)
     const archive = join(root, `archive-${options.commit ?? 'aaaa'}.tar.gz`)
     await createTar({ cwd: staging, file: archive, gzip: true, portable: true }, ['gh-remote'])
@@ -62,7 +65,9 @@ async function fixture(nodeBody: string): Promise<Fixture> {
     }
     if (options.tamperBytes === true) {
       const raw = await readFile(archive)
-      raw[raw.length - 20] ^= 0xff
+      const byte = raw.at(-20)
+      if (byte === undefined) throw new Error('fixture archive too short to corrupt')
+      raw[raw.length - 20] = byte ^ 0xff
       await writeFile(archive, raw)
     }
     return archive
@@ -73,12 +78,18 @@ async function fixture(nodeBody: string): Promise<Fixture> {
 interface Outcome { code: number; signal: string | null; stdout: string; stderr: string }
 
 async function bootstrap(fixtureHome: string, command: string, ...args: string[]): Promise<Outcome> {
+  return bootstrapWithEnvironment(fixtureHome, {}, command, ...args)
+}
+
+async function bootstrapWithEnvironment(
+  fixtureHome: string, environment: NodeJS.ProcessEnv, command: string, ...args: string[]
+): Promise<Outcome> {
   await mkdir(fixtureHome, { recursive: true })
   const script = join(fixtureHome, 'script.sh')
   await writeFile(script, renderBootstrapScript())
   await chmod(script, 0o755)
   try {
-    const { stdout } = await run('sh', [script, command, ...args], { env: { ...process.env, GH_REMOTE_HOME: fixtureHome }, timeout: 60_000 })
+    const { stdout } = await run('sh', [script, command, ...args], { env: { ...process.env, ...environment, GH_REMOTE_HOME: fixtureHome }, timeout: 60_000 })
     return { code: 0, signal: null, stdout, stderr: '' }
   } catch (error) {
     const failure = error as { code?: number; signal?: string | null; stdout?: string; stderr?: string }
@@ -177,4 +188,41 @@ it('serializes concurrent installs through the lock', async () => {
   expect([one.code, two.code].sort()).toEqual([0, 0])
   const status = await bootstrap(test.home, 'status')
   expect(status.code).toBe(0)
+})
+
+it('keeps releases immutable when the same commit is installed twice in one second with --force', async () => {
+  const test = await fixture('#!/bin/sh\nexit 0\n')
+  const clock = join(test.root, 'clock')
+  await mkdir(clock)
+  await writeFile(join(clock, 'date'), '#!/bin/sh\nprintf "20261018T000000Z\\n"\n', { mode: 0o755 })
+  const environment = { PATH: `${clock}:${process.env.PATH}` }
+  const archive = await test.archive()
+  expect((await bootstrapWithEnvironment(test.home, environment, 'install', archive, '--force')).code).toBe(0)
+  const first = await readlink(join(test.home, 'current'))
+  const original = await readFile(join(test.home, first, 'manifest.json'), 'utf8')
+  expect((await bootstrapWithEnvironment(test.home, environment, 'install', archive, '--force')).code).toBe(0)
+  const second = await readlink(join(test.home, 'current'))
+  expect(second).not.toBe(first)
+  expect(await readFile(join(test.home, first, 'manifest.json'), 'utf8')).toBe(original)
+  expect((await bootstrapWithEnvironment(test.home, environment, 'install', archive, '--force')).code).toBe(0)
+  expect((await bootstrap(test.home, 'rollback')).code).toBe(0)
+  expect(await readlink(join(test.home, 'current'))).toBe(second)
+})
+
+it('uses the documented home when GH_REMOTE_HOME is unset', async () => {
+  const test = await fixture('#!/bin/sh\nexit 0\n')
+  const script = join(test.root, 'bootstrap.sh')
+  await writeFile(script, renderBootstrapScript())
+  const environment: NodeJS.ProcessEnv = { ...process.env, HOME: test.root }
+  delete environment.GH_REMOTE_HOME
+  await run('sh', [script, 'install', await test.archive()], { env: environment, timeout: 60_000 })
+  expect(await readlink(join(test.root, '.glmh-remote', 'current'))).toContain('releases/')
+})
+
+it('refuses undeclared symbolic links before activating a release', async () => {
+  const test = await fixture('#!/bin/sh\nexit 0\n')
+  const result = await bootstrap(test.home, 'install', await test.archive({ extraLink: true }))
+  expect(result.code).toBe(92)
+  expect(result.stderr).toContain('links or special files')
+  await expect(readlink(join(test.home, 'current'))).rejects.toThrow()
 })

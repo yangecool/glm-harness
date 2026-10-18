@@ -34,6 +34,7 @@ async function prepareElectron({ platform, arch }: DesktopTarget): Promise<strin
 }
 
 function prepareCli({ platform, arch }: DesktopTarget): void {
+  if (platform === 'linux') throw new Error('desktop packaging: linux-x64 is a source-development target only')
   cpSync(join(import.meta.dirname, 'node-bin'), join(RUNTIME_ROOT, 'bin'), { recursive: true })
   chmodSync(join(RUNTIME_ROOT, 'bin', 'node'), 0o755)
   const cli = join(RUNTIME_ROOT, 'cli')
@@ -50,7 +51,9 @@ function prepareCli({ platform, arch }: DesktopTarget): void {
 
 async function main(): Promise<void> {
   const { values } = parseArgs({ options: { 'defer-primary-runtime-smoke': { type: 'boolean', default: false } } })
-  const target = desktopTargetPlatform(resolveDesktopBuildTarget())
+  const buildTarget = resolveDesktopBuildTarget()
+  if (buildTarget === 'linux-x64') throw new Error('desktop packaging: linux-x64 is a source-development target only')
+  const target = desktopTargetPlatform(buildTarget)
   rmSync(RUNTIME_ROOT, { recursive: true, force: true })
   mkdirSync(RUNTIME_ROOT, { recursive: true })
   const nodeVersion = await prepareElectron(target)

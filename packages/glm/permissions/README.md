@@ -110,7 +110,7 @@ The mode travels after retained history like the approval-policy statement, so a
 <a id="known-limitations-and-deferred-work"></a>
 
 - The analyzer covers POSIX bash only; `pwsh` arguments never receive a dangerous-match or read-only claim (build asks, guarded runs them unconfirmed like any unparsed command). CMD/Git Bash dialects land with Windows-shell support.
-- The read-only proof is a conservative table: unknown commands, unknown git subcommands, and dynamic-heavy constructs ask in `build` instead of running; ZCode's full read-only policy tables are not ported wholesale.
+- The read-only proof is a conservative table: unknown commands, unknown git subcommands, and dynamic-heavy constructs ask in `build` instead of running; ZCode's full read-only policy tables are not ported wholesale. Output-file/execution options, command substitutions, and unknown wrapper syntax withhold that proof; sed needs explicit `--sandbox`. Plan also denies agent delegation and messaging until inherited read-only delegation is implemented.
 - `build` mode asks are fail-closed in unattended runs by design; a headless confirmation flow (non-interactive defaults or queued approvals) is deferred with the remote work. Delegated subagent children keep the composition default and the upstream `never` approval pin — child approval routing to the user lands with the GH subagent slice.
 - The composer mode control is wired through `@glm-harness/gh-ui-permissions` (three-option menu plus independent plan toggle, verified on the real Electron desktop); PER05/06/07/10 (draft/queue semantics, receipt replay, workspace identity, real-remote end-to-end) remain open acceptance gates.
 

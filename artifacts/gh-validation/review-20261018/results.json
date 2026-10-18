@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-18",
+  "scope": "all 10 GH product commits after the DSH import, final composition and evidence; fixes recorded with this audit",
+  "checks": [
+    {
+      "name": "before-after-readonly-probe",
+      "exitCode": 0,
+      "cases": 9,
+      "commandsExecuted": false,
+      "evidence": "readonly-probe.json"
+    },
+    {
+      "name": "focused-regression",
+      "command": "node node_modules/vitest/vitest.mjs run packages/glm scripts/gh-remote apps/desktop/tests/welcome-host.spec.ts apps/desktop/tests/desktop-build-paths.spec.ts apps/desktop/tests/development-project.spec.ts apps/desktop/tests/retain-desktop-ci.spec.ts apps/desktop/tests/runtime-preparation.spec.ts scripts/check-gh-closure.spec.ts scripts/gh-resource-sampler.spec.ts",
+      "exitCode": 0,
+      "files": 18,
+      "tests": 235,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/tests.log"
+    },
+    {
+      "name": "build-artifacts",
+      "command": "pnpm --config.verifyDepsBeforeRun=false run build:artifacts",
+      "exitCode": 0,
+      "gatesPassed": 7,
+      "clientArtifacts": 330,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/build-final.log"
+    },
+    {
+      "name": "build-check",
+      "command": "pnpm --config.verifyDepsBeforeRun=false run build:check",
+      "exitCode": 0,
+      "gatesPassed": 2,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/build-final.log"
+    },
+    {
+      "name": "built-product-smoke",
+      "command": "node --import tsx/esm scripts/gh-product-smoke.mjs <report>",
+      "exitCode": 0,
+      "cases": 5,
+      "realProvider": false,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/product-smoke.json"
+    },
+    {
+      "name": "rebuilt-remote-archive",
+      "command": "node --import tsx/esm scripts/build-gh-remote-archive.ts --output <temporary-output>",
+      "exitCode": 0,
+      "target": "linux-x64",
+      "nodeVersion": "v22.23.2",
+      "files": 27761,
+      "bytes": 174755546,
+      "sha256": "f1ea28d029daaaaa47cf7d2bfcb2e8bddbd13f81bd6844b58749f9ce699b7d8d",
+      "evidence": "../../../../docs/planning/evidence/review-20261018/archive-build.log",
+      "sandboxNote": "initial store SQLite write was blocked; identical build rerun with narrowly approved host access succeeded"
+    },
+    {
+      "name": "real-loopback-openssh",
+      "command": "node --import tsx/esm scripts/gh-remote-verify.ts --archive <rebuilt-archive> --report <report>",
+      "exitCode": 0,
+      "cases": 12,
+      "passed": true,
+      "noNodeTargetJail": true,
+      "independentHost": false,
+      "realProvider": false,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/openssh.json",
+      "archiveSha256": "f1ea28d029daaaaa47cf7d2bfcb2e8bddbd13f81bd6844b58749f9ce699b7d8d"
+    },
+    {
+      "name": "targeted-lint",
+      "exitCode": 0,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/lint.log"
+    },
+    {
+      "name": "GH-closure",
+      "exitCode": 0,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/closure.log"
+    },
+    {
+      "name": "workspace-constraints",
+      "exitCode": 0,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/constraints.log"
+    },
+    {
+      "name": "doc-sync",
+      "command": "pnpm --config.verifyDepsBeforeRun=false run doc-sync",
+      "exitCode": 1,
+      "passed": 42,
+      "failed": 1,
+      "failure": "repository references: 33 unchanged pre-existing historical commit pins",
+      "evidence": "../../../../docs/planning/evidence/review-20261018/doc-sync.log"
+    },
+    {
+      "name": "reference-finding-origin-check",
+      "exitCode": 0,
+      "findings": 33,
+      "allPreExisting": true,
+      "evidence": "existing-reference-findings.json"
+    },
+    {
+      "name": "uploaded-archive-failure-before-extract",
+      "command": "vitest run scripts/gh-remote/deploy.spec.ts",
+      "exitCode": 0,
+      "cases": 6,
+      "transport": "fixture probe and transfer; actual tar/archive reader and generated sh",
+      "evidence": "../../../../docs/planning/evidence/review-20261018/upload-regression.log"
+    },
+    {
+      "name": "final-full-build",
+      "command": "pnpm --config.verifyDepsBeforeRun=false run build",
+      "exitCode": 0,
+      "gatesPassed": 9,
+      "clientArtifacts": 330,
+      "evidence": "../../../../docs/planning/evidence/review-20261018/build-final.log"
+    }
+  ],
+  "fixed": [
+    "RV09",
+    "RV10",
+    "RV11",
+    "RV12",
+    "RV13",
+    "RV14",
+    "RV15"
+  ],
+  "limitedExplicitly": [
+    "RV16 alias/ProxyJump full deployment not implemented; fail before scan/upload"
+  ],
+  "unverified": [
+    "real GLM/account/Coding Plan/PAT",
+    "independent remote host",
+    "native Electron rerun",
+    "other platforms",
+    "resident service/Supervisor/durable admission/reattach (GH-006)",
+    "full MEM/TOK/PER/VIS"
+  ],
+  "next": "GH-006-A resident remote service composition; upstream inventory and A-F delivery sequence are in the development plan 11.8",
+  "evidenceStorage": "Structured results and regression probes are versioned here. Raw execution logs are kept with the outer development documents, indexed by digest; they are not maintained runtime source."
+}

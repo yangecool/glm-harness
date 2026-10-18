@@ -110,7 +110,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 
 - 分析器仅覆盖 POSIX bash；`pwsh` 参数不会获得危险命中或只读证明（build 询问，guarded 像任何未解析命令一样直通）。CMD/Git Bash 方言随 Windows shell 支持补齐。
-- 只读证明是保守表：未知命令、未知 git 子命令与重动态结构在 `build` 下询问而不是运行；ZCode 的完整只读策略表未整体迁入。
+- 只读证明是保守表：未知命令、未知 git 子命令与重动态结构在 `build` 下询问而不是运行；ZCode 的完整只读策略表未整体迁入。 输出文件/执行参数、命令替换与未知 wrapper 语法均不授予只读证明；sed 需显式 `--sandbox`。Plan 同时拒绝代理委派和消息，直到实现可继承的只读委派策略。
 - `build` 模式在无人值守运行中按设计失败关闭；headless 确认流（非交互默认或排队审批）随远端工作延后。委派子代理保持组合默认与上游 `never` 审批钉死——子代理向用户的审批路由随 GH 子代理切片落地。
 - Composer 模式控件经 `@glm-harness/gh-ui-permissions` 接线（三选项菜单加独立 Plan 勾选，已在真实 Electron 桌面验证）；PER05/06/07/10（草稿/队列语义、回执重放、工作区身份、真实远端端到端）仍是未完成的验收门。
 

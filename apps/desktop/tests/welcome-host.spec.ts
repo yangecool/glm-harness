@@ -5,7 +5,7 @@ import { connectDesktopWelcome } from '../src/welcome-backend.ts'
 function transport(preference?: string) {
   const keys = new Map<string, string>()
   const namespaces = [
-    { ns: 'llm-deepseek', value: { apiKeyEnv: 'CUSTOM_DEEPSEEK_KEY' } },
+    { ns: 'custom-glm-settings', value: { apiKeyEnv: 'CUSTOM_GLM_KEY' } },
     { ns: 'llm-pi-ai', value: { profiles: { example: { apiKeyEnv: 'EXAMPLE_API_KEY' } } } },
     { ns: 'locale', value: preference === undefined ? {} : { preference } },
   ]
@@ -19,7 +19,10 @@ function transport(preference?: string) {
     let value: unknown
     if (method === 'account/getState') value = { links: { usageUrl: 'http://localhost/usage', topUpUrl: 'http://localhost/top_up' }, status: 'signed-out', attempt: null }
     else if (method === 'settings/describe') value = { namespaces }
-    else if (method === 'llm/listConfigurableProviders') value = [{ settingsNs: 'llm-pi-ai', settingsPath: ['profiles', 'example'] }]
+    else if (method === 'llm/listConfigurableProviders') value = [
+      ...(namespaces.some(item => item.ns === 'custom-glm-settings') ? [{ provider: 'glm', settingsNs: 'custom-glm-settings', settingsPath: [] }] : []),
+      { provider: 'example', settingsNs: 'llm-pi-ai', settingsPath: ['profiles', 'example'] },
+    ]
     else if (method === 'productAnalytics/enabled') value = true
     else if (method === 'productAnalytics/report') value = undefined
     else if (method === 'credentials/set') keys.set(payload.args.ref, payload.args.value)
@@ -38,7 +41,7 @@ describe('desktop welcome Web operations', () => {
     expect(host.send).toHaveBeenCalledExactlyOnceWith(url, { credentials: 'include' })
     expect(await backend.analyticsEnabled()).toBe(true)
     expect(await backend.save('sk-example')).toEqual({ ok: true })
-    expect(host.keys.get('CUSTOM_DEEPSEEK_KEY')).toBe('sk-example')
+    expect(host.keys.get('CUSTOM_GLM_KEY')).toBe('sk-example')
     expect(await backend.read()).toEqual({ loggedIn: false, hasApiKey: true, writable: true, localePreference: null })
     for (const [input, init] of host.send.mock.calls.slice(1)) {
       expect(input).toMatch(/^http:\/\/127\.0\.0\.1:19387\/api\//u)
@@ -74,6 +77,31 @@ describe('desktop welcome Web operations', () => {
     expect(await backend.read()).toMatchObject({ hasApiKey: true, writable: false })
     expect(await backend.save('official-key')).toEqual({ ok: false })
     expect(host.keys.has('undefined')).toBe(false)
+  })
+
+  it.each(['gateway/service-unavailable', 'gateway/context-failed', 'account/storage-failed'])('surfaces an account failure: %s', async (code) => {
+    const host = transport()
+    const send: Parameters<typeof connectDesktopWelcome>[1] = async (input, init) => {
+      if (input.endsWith('/api/account/getState')) {
+        const { rpcId } = JSON.parse(init!.body as string) as { rpcId: string }
+        return Response.json({ type: 'server-response', rpcId, result: { ok: false, error: { code, message: 'account backend failed' } } })
+      }
+      return host.send(input, init)
+    }
+    const backend = await connectDesktopWelcome(url, send)
+    await expect(backend.read()).rejects.toThrow('account backend failed')
+  })
+
+  it('treats only an unexported account endpoint as signed out', async () => {
+    const host = transport()
+    const send: Parameters<typeof connectDesktopWelcome>[1] = async (input, init) => {
+      if (input.endsWith('/api/account/getState')) {
+        const { rpcId } = JSON.parse(init!.body as string) as { rpcId: string }
+        return Response.json({ type: 'server-response', rpcId, result: { ok: false, error: { code: 'gateway/invocation-unavailable', message: 'not exported' } } })
+      }
+      return host.send(input, init)
+    }
+    expect(await (await connectDesktopWelcome(url, send)).read()).toMatchObject({ loggedIn: false, writable: true })
   })
 
   it.each(['', 'bad key', 'key\n'])('rejects malformed keys without contacting a provider: %s', async (value) => {
