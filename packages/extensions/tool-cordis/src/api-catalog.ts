@@ -2175,6 +2175,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'acknowledgement that the Agent accepted the prompt.',
       },
       {
+        signature: '@Remote(\'admission\') admission(request: SessionAdmissionRequest): Promise<SessionAdmissionValue>',
+        description: 'Reconcile one prompt identity without admitting anything: the durable answer for a caller whose acknowledgement was lost or whose service restarted — query first, never blindly resubmit.',
+        parameters: [{ name: 'request', description: 'Session and prompt identities to reconcile.' }],
+        returns: 'whether the request is admitted, with the provable admission facts.',
+      },
+      {
         signature: '@Remote(\'attachment\') attachment(request: SessionAttachmentRequest): Promise<SessionAttachmentValue>',
         description: 'Read one image proven reachable from the addressed Session log.',
         parameters: [{ name: 'request', description: 'Session and attachment identities used for authorization.' }],
@@ -7052,6 +7058,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionAddress',
     declaration: 'export type SessionAddress = {\n    readonly kind: \'session\';\n    readonly sessionId: SessionId;\n} | {\n    readonly kind: \'subagent\';\n    readonly parentSessionId: SessionId;\n    readonly childSessionId: SessionId;\n    readonly mode: \'one-shot\' | \'continuable\' | \'unknown\';\n};',
+  },
+  {
+    name: 'SessionAdmissionRequest',
+    declaration: 'export interface SessionAdmissionRequest {\n    readonly sessionId: SessionId;\n    readonly requestId: SessionRequestId;\n}',
+  },
+  {
+    name: 'SessionAdmissionValue',
+    declaration: 'export interface SessionAdmissionValue {\n    readonly found: boolean;\n    readonly fingerprint?: string;\n    readonly admittedAt?: number;\n}',
   },
   {
     name: 'SessionAssistantStreamAttempt',

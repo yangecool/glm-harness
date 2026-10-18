@@ -41,7 +41,7 @@ node apps/cli/lib/bin.js --profile gh-remote --no-open --host 127.0.0.1 --port 0
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-补丁层在 `dsh-web-app` 生效后按 id 移除行：`web-runtime`（静态 dist、URL 行、打开浏览器）、`modules`、`client-hmr`、`cordis-client-runner`，以及桌面层同样移除的遥测/分析/账号行。插件随后认领空出的 webserver fallback 席位：未认证根路径收到 connection 的最小 401，有效启动令牌以标准 303 铸造 cookie，已认证根路径收到明确的“无静态内容”应答。就绪行只在 Loader 落定且 webServer 与 connection 服务存活时打印，与 dsh web 行的契约一致。`GhRemoteIdentityService` 发布 `ghRemote` Remote 命名空间，仅一个 `identity()` 方法，返回产品、profile、运行时、node、平台、架构、pid 与启动时间。
+补丁层在 `dsh-web-app` 生效后按 id 移除行：`web-runtime`（静态 dist、URL 行、打开浏览器）、`modules`、`client-hmr`、`cordis-client-runner`，以及桌面层同样移除的遥测/分析/账号行。它还按 id 重指 `session-controller` 行并置 `durableAdmission: true`（GH-006-C）：常驻服务的 prompt 回执等待 Session flush，崩溃可能抹掉的接纳不会被回执。插件随后认领空出的 webserver fallback 席位：未认证根路径收到 connection 的最小 401，有效启动令牌以标准 303 铸造 cookie，已认证根路径收到明确的“无静态内容”应答。就绪行只在 Loader 落定且 webServer 与 connection 服务存活时打印，与 dsh web 行的契约一致。`GhRemoteIdentityService` 发布 `ghRemote` Remote 命名空间，仅一个 `identity()` 方法，返回产品、profile、运行时、node、平台、架构、pid 与启动时间。
 
 <a id="further-exploration"></a>
 ## 延伸阅读

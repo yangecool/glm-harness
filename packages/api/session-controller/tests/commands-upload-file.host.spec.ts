@@ -95,7 +95,7 @@ async function uploadHarness(origin?: 'subagent'): Promise<{
   const agents = {
     resolveAgent: () => Promise.resolve({ agent }),
     selectionFor: () => selection,
-    serializeImageAdmission: <Value>(_agent: Agent, operation: () => Promise<Value>) => operation(),
+    serializeAdmission: <Value>(_agent: Agent, operation: () => Promise<Value>) => operation(),
   } as unknown as ApiSessionAgentController
   const uploads = new FileUploads(ctx)
   if (uploadRoute === undefined) throw new Error('file upload route was not registered')
@@ -363,7 +363,7 @@ describe('Session file uploads', () => {
       source: { kind: 'user' },
     }), { surfaceOp: 'append' })
     agent.session.append('user/message', createUserMessage({
-      content: [{ type: 'text', text: 'accepted' }],
+      content: [{ type: 'text', text: 'once' }],
       source: { kind: 'user', rpcId: request.requestId },
     }), { surfaceOp: 'append' })
 

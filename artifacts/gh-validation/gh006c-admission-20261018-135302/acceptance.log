@@ -1,0 +1,10 @@
+PASS prompt-ack-durable: requestId=admission-1792298165829 acknowledged with flush-before-ACK policy
+PASS duplicate-idempotent: independent connection retry accepted=true
+PASS admission-query-found: found=true fingerprint=a6648b457b03bf19…
+PASS conflict-rejected: code=session/request-conflict
+PASS crash-restart-query: new pid=464101 query found=true
+PASS crash-restart-idempotent: post-crash retry accepted=true
+PASS crash-restart-conflict: code=session/request-conflict
+PASS admission-query-absent: found=false
+{"passed":true,"cases":["ok prompt-ack-durable","ok duplicate-idempotent","ok admission-query-found","ok conflict-rejected","ok crash-restart-query","ok crash-restart-idempotent","ok crash-restart-conflict","ok admission-query-absent"]}
+acceptance-exit=0

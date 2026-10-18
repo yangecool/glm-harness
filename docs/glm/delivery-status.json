@@ -471,6 +471,37 @@
     "持久接纳/durable receipt 属 GH-006-C;断线续跑属 D;版本生命周期属 E;断线/崩溃/MEM 联验属 F"
    ],
    "next": "GH-006-C 持久命令接纳与查询;然后 D/E/F"
+  },
+  {
+   "id": "GH-006-C",
+   "title": "持久命令接纳与查询——串行准入/requestId 冲突/flush 前回执/session:admission 查询",
+   "planRefs": [
+    "11.8 GH-006-C",
+    "F09 部分",
+    "R13-R20 当前子集"
+   ],
+   "owner": "远端服务",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "packages/api/session-controller:serializeAdmission 每 Agent 串行接纳(原 serializeImageAdmission 推广,selectModel/prompt 共用)",
+    "src/admission.ts:原始负载指纹 journal(每会话 4096 上限)+日志 user 消息文本通道对比;同 requestId 不同负载 session/request-conflict",
+    "durableAdmission 配置(默认 false 保上游语义):回执等待 ctx.sessions.flush,无写入者 session/no-durable-writer,flush 失败 session/flush-failed;接纳已成立,丢回执可对账不重复执行",
+    "session/admission Remote 查询:{found,fingerprint?,admittedAt?},journal 先查再查持久日志",
+    "gh-remote-app 补丁行重指 session-controller 置 durableAdmission:true;README/目录/pairing 再生成"
+   ],
+   "evidence": [
+    "artifacts/gh-validation/gh006c-admission-20261018-135302/summary.md",
+    "单元 9/9 新用例(admission.host.spec.ts)+998/998 回归(44 文件)",
+    "真服务联验 8/8(gh-remote profile+GH-006-B 监护,loopback GLM 不应答):flush 回执/独立连接幂等/查询 found+指纹/冲突/kill -9 恢复查询/重启后幂等+持久冲突/不存在 false",
+    "build 9/9;oxlint 0;gh-closure/工作区约束清;doc-sync 除既有 GH-018 外全过"
+   ],
+   "boundaries": [
+    "跨重启冲突检测仅文本通道,附件负载不可比则幂等接受",
+    "queue edit 无 requestId 不在对账面;真服务未构造无写入者场景(gh-base 恒挂 jsonl,单元覆盖)",
+    "桌面/web 客户端尚未接入 session/admission 调用面(GH-006-D)"
+   ],
+   "next": "GH-006-D 持续执行与重附着;然后 E/F"
   }
  ],
  "blocked": [

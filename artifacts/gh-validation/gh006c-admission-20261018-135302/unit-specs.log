@@ -1,0 +1,68 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > routes Remote events from the $events stream into the object layer and runs handleConnected once per generation
+[connection] connection lost, retry #1
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > keeps immediate control projections when the ready notification follows their baseline
+[connection] connection lost, retry #1
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > keeps immediate control projections when the ready notification follows their baseline
+[connection] connection lost, retry #1
+
+ ✓ |thread-safe| packages/api/session-controller/tests/manager.client.spec.ts (97 tests) 252ms
+ ✓ |thread-safe| packages/api/session-controller/tests/reference-ownership.client.spec.ts (17 tests) 394ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-pending-submissions.client.spec.ts (31 tests) 530ms
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > waits for a Host generation before retrying the control stream
+[connection] connection lost, retry #1
+
+ ✓ |thread-safe| packages/api/session-controller/tests/session-search.host.spec.ts (26 tests) 228ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-history-journal.host.spec.ts (28 tests) 243ms
+ ✓ |thread-safe| packages/api/session-controller/tests/client-apply.client.spec.ts (7 tests) 736ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-presets.host.spec.ts (34 tests) 322ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-fork.host.spec.ts (25 tests) 239ms
+ ✓ |thread-safe| packages/api/session-controller/tests/media-references.host.spec.ts (22 tests) 180ms
+ ✓ |thread-safe| packages/api/session-controller/tests/sessions-service.client.spec.ts (45 tests) 1138ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-projections.host.spec.ts (24 tests) 322ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-models.host.spec.ts (26 tests) 867ms
+     ✓ account login replaces a saved default only without another API key: false  541ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session.client.spec.ts (62 tests) 1293ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-upload-file.host.spec.ts (22 tests) 221ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-open-workspace-path.host.spec.ts (16 tests) 160ms
+ ✓ |thread-safe| packages/api/session-controller/tests/controller.host.spec.ts (6 tests) 127ms
+ ✓ |thread-safe| packages/api/session-controller/tests/remote-access.host.spec.ts (7 tests) 129ms
+ ✓ |thread-safe| packages/api/session-controller/tests/subagent-catalog.host.spec.ts (10 tests) 112ms
+ ✓ |thread-safe| packages/api/session-controller/tests/list-scheduling.host.spec.ts (27 tests) 128ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-cold.host.spec.ts (20 tests) 238ms
+ ✓ |thread-safe| packages/api/session-controller/tests/time-zone.client.spec.ts (3 tests) 15ms
+ ✓ |thread-safe| packages/api/session-controller/tests/scope.client.spec.ts (6 tests) 18ms
+ ✓ |thread-safe| packages/api/session-controller/tests/control-queue.host.spec.ts (7 tests) 62ms
+ ✓ |thread-safe| packages/api/session-controller/tests/projection-discovery.host.spec.ts (22 tests) 700ms
+ ✓ |thread-safe| packages/api/session-controller/tests/projection-store.client.spec.ts (21 tests) 113ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-create-fork.host.spec.ts (13 tests) 84ms
+ ✓ |thread-safe| packages/api/session-controller/tests/transport.host.spec.ts (20 tests) 96ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-skills.host.spec.ts (13 tests) 39ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-list-blank.host.spec.ts (2 tests) 38ms
+ ✓ |thread-safe| packages/api/session-controller/tests/agent.host.spec.ts (14 tests) 88ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-rename.host.spec.ts (4 tests) 51ms
+ ✓ |thread-safe| packages/api/session-controller/tests/admission.host.spec.ts (9 tests) 40ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-remote-rejection.client.spec.ts (2 tests) 17ms
+ ✓ |thread-safe| packages/api/session-controller/tests/lineage.client.spec.ts (5 tests) 6ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-queue-attachment.host.spec.ts (20 tests) 80ms
+ ✓ |thread-safe| packages/api/session-controller/tests/notifier.client.spec.ts (9 tests) 6ms
+ ✓ |thread-safe| packages/api/session-controller/tests/file-references.host.spec.ts (1 test) 8ms
+ ✓ |thread-safe| packages/api/session-controller/tests/history-records.client.spec.ts (3 tests) 5ms
+ ✓ |thread-safe| packages/api/session-controller/tests/assistant-stream.client.spec.ts (10 tests) 9ms
+ ✓ |thread-safe| packages/api/session-controller/tests/client-contract.client.spec.ts (6 tests) 5ms
+ ✓ |thread-safe| packages/api/session-controller/tests/assistant-stream.host.spec.ts (1 test) 4ms
+ ✓ |thread-safe| packages/api/session-controller/tests/archived-session-gate.host.spec.ts (4 tests) 13ms
+ ✓ |thread-safe| packages/api/session-controller/tests/inbox-projection.client.spec.ts (7 tests) 10ms
+ ✓ |thread-safe| packages/api/session-controller/tests/transport.client.spec.ts (244 tests) 4580ms
+
+ Test Files  44 passed (44)
+      Tests  998 passed (998)
+   Start at  12:36:09
+   Duration  5.70s (transform 15.20s, setup 1.47s, import 27.15s, tests 13.95s, environment 4ms)

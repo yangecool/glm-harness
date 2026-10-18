@@ -37,6 +37,8 @@ import type {
   SessionWorkspacePathApplication,
   SessionAddress,
   SessionAttachmentRequest,
+  SessionAdmissionRequest,
+  SessionAdmissionValue,
   SessionAttachmentValue,
   SessionCancelRequest,
   SessionCancelValue,
@@ -96,10 +98,12 @@ export interface Config {
   readonly nativeOpen?: boolean
   /** Positive integral milliseconds of list work before yielding between complete rows. */
   readonly listWorkSliceMs?: number
+  /** Whether prompt acknowledgement waits for a durable Session flush (resident deployments). */
+  readonly durableAdmission?: boolean
 }
 
 /** Deployment policy after schema defaults have been applied. */
-type ResolvedConfig = Config & { readonly listWorkSliceMs: number }
+type ResolvedConfig = Config & { readonly listWorkSliceMs: number; readonly durableAdmission: boolean }
 
 /** Host integrations replaceable by direct unit tests. */
 export interface SessionControllerInternals {
@@ -135,6 +139,7 @@ export class SessionController extends TypertRemoteService {
   static Config: z<Config, ResolvedConfig> = z.object({
     nativeOpen: z.boolean(),
     listWorkSliceMs: z.natural().min(1).default(16),
+    durableAdmission: z.boolean().default(false),
   })
 
   private readonly agents: ApiSessionAgentController
@@ -160,7 +165,7 @@ export class SessionController extends TypertRemoteService {
     const resolved = SessionController.Config(config)
     installModelSelectionProjection(ctx)
     this.agents = new ApiSessionAgentController(ctx)
-    this.commands = new SessionCommandController(ctx, this.agents, process.cwd())
+    this.commands = new SessionCommandController(ctx, this.agents, process.cwd(), resolved.durableAdmission)
     ctx.effect(() => ctx.fileUploads.registerAgentResolver(async (sessionId) => {
       const result = await this.agents.resolveAgent(sessionId)
       if ('error' in result) throw result.error
@@ -483,6 +488,18 @@ export class SessionController extends TypertRemoteService {
       ...(principal === undefined ? {} : { principal }),
     }
     return this.commands.prompt(request, source)
+  }
+
+  /**
+   * Reconcile one prompt identity without admitting anything: the durable
+   * answer for a caller whose acknowledgement was lost or whose service
+   * restarted — query first, never blindly resubmit.
+   * @param request - Session and prompt identities to reconcile.
+   * @returns whether the request is admitted, with the provable admission facts.
+   */
+  @Remote('admission')
+  admission(request: SessionAdmissionRequest): Promise<SessionAdmissionValue> {
+    return this.commands.admission(request)
   }
 
   /**

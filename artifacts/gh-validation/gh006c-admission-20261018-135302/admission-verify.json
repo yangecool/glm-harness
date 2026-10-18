@@ -1,0 +1,47 @@
+{
+  "scope": "durable prompt admission over the real resident gh-remote profile under the supervisor, loopback GLM fixture that never answers, synthetic credentials",
+  "cases": [
+    {
+      "name": "prompt-ack-durable",
+      "passed": true,
+      "detail": "requestId=admission-1792298165829 acknowledged with flush-before-ACK policy"
+    },
+    {
+      "name": "duplicate-idempotent",
+      "passed": true,
+      "detail": "independent connection retry accepted=true"
+    },
+    {
+      "name": "admission-query-found",
+      "passed": true,
+      "detail": "found=true fingerprint=a6648b457b03bf19…"
+    },
+    {
+      "name": "conflict-rejected",
+      "passed": true,
+      "detail": "code=session/request-conflict"
+    },
+    {
+      "name": "crash-restart-query",
+      "passed": true,
+      "detail": "new pid=464101 query found=true"
+    },
+    {
+      "name": "crash-restart-idempotent",
+      "passed": true,
+      "detail": "post-crash retry accepted=true"
+    },
+    {
+      "name": "crash-restart-conflict",
+      "passed": true,
+      "detail": "code=session/request-conflict"
+    },
+    {
+      "name": "admission-query-absent",
+      "passed": true,
+      "detail": "found=false"
+    }
+  ],
+  "supervisorErrTail": "gh-remote-supervisor: drained on SIGTERM\n",
+  "passed": true
+}

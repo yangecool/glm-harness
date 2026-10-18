@@ -40,6 +40,16 @@
 - id: account-controller
   disabled: true
 
+# GH-006-C durable admission: this row re-addresses the web-app's
+# session-controller so the resident service's prompt acknowledgement waits
+# for the Session flush. An admission a crash could erase must never be
+# acknowledged; lost ACKs reconcile through session/admission and idempotent
+# resubmission by the same requestId.
+- id: session-controller
+  name: '@deepseek-ai/dsh-api-session-controller'
+  config:
+    durableAdmission: true
+
 - insert:
     # The GH resident-service plugin: readiness announce line and the
     # ghRemote/identity Remote method connecting clients query before

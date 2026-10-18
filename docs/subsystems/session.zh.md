@@ -942,6 +942,15 @@ workspaceDesktop(): { name: string; available: boolean; fileManager: 'finder' | 
 @Remote('prompt') async prompt(request: SessionPromptRequest, signal: AbortSignal): Promise<SessionPromptValue>
 
 /**
+ * Reconcile one prompt identity without admitting anything: the durable
+ * answer for a caller whose acknowledgement was lost or whose service
+ * restarted — query first, never blindly resubmit.
+ * @param request - Session and prompt identities to reconcile.
+ * @returns whether the request is admitted, with the provable admission facts.
+ */
+@Remote('admission') admission(request: SessionAdmissionRequest): Promise<SessionAdmissionValue>
+
+/**
  * Read one image proven reachable from the addressed Session log.
  * @param request - Session and attachment identities used for authorization.
  * @returns the durable attachment reference and base64-encoded bytes.

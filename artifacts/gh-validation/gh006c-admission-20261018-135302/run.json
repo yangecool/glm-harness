@@ -1,0 +1,16 @@
+{
+  "slice": "GH-006-C",
+  "title": "durable prompt admission: serialized per-Agent admission, requestId conflict detection, flush-before-ACK, admission query",
+  "packages": ["packages/api/session-controller (src/admission.ts new; commands/index/types extended)", "packages/glm/remote-app (patch row)"],
+  "baseCommit": "7c58475835",
+  "date": "2026-10-18",
+  "scope": "extends the existing requestId/inbox/flush seam in dsh-api-session-controller; no second business queue; upstream default ACK semantics preserved via durableAdmission=false default, GH profiles enable it through the gh-remote-app patch row",
+  "verification": {
+    "unitSpecs": "998/998 in packages/api/session-controller (new admission.host.spec.ts: 9/9)",
+    "acceptance": "8/8 (scripts/gh-remote-admission-verify.ts over the real gh-remote profile under the GH-006-B supervisor; report: admission-verify.json)",
+    "build": "pnpm run build 9/9 gates",
+    "oxlint": "0 errors",
+    "closure": "gh-closure clean; workspace constraints clean",
+    "docSync": "all pass except the pre-existing repository-references GH-018 ledger item"
+  }
+}

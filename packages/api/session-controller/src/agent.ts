@@ -368,12 +368,14 @@ export class ApiSessionAgentController {
   }
 
   /**
-   * Serialize image admission and model selection for one Agent.
+   * Serialize prompt admission and model selection for one Agent: one
+   * check-then-place chain per Agent, so concurrent same-requestId prompts
+   * reconcile atomically instead of racing past the journal.
    * @param agent - live Agent that owns the serialization chain.
    * @param operation - asynchronous operation admitted after prior work settles.
    * @returns the operation result or rejection.
    */
-  serializeImageAdmission<Value>(agent: Agent, operation: () => Promise<Value>): Promise<Value> {
+  serializeAdmission<Value>(agent: Agent, operation: () => Promise<Value>): Promise<Value> {
     const result = (this.imageAdmissionChains.get(agent) ?? Promise.resolve()).then(operation)
     this.imageAdmissionChains.set(agent, result.then(() => undefined, () => undefined))
     return result

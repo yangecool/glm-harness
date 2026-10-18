@@ -34,7 +34,16 @@ import {
   inspectApiSession,
   type ApiSessionCreated,
 } from './agent.ts'
+import {
+  PromptAdmissionJournal,
+  admittedMessageFingerprint,
+  findPromptRequest,
+  promptRequestFingerprint,
+  promptTextFingerprint,
+} from './admission.ts'
 import type {
+  SessionAdmissionRequest,
+  SessionAdmissionValue,
   SessionAttachmentRequest,
   SessionAttachmentValue,
   SessionCancelRequest,
@@ -51,7 +60,6 @@ import type {
   SessionSelectModelValue,
   SessionUpdateQueueRequest,
   SessionUpdateQueueValue,
-  SessionRequestId,
 } from './types.ts'
 
 interface SessionReadState {
@@ -91,15 +99,20 @@ function latestCompletedPrefixBoundary(events: readonly SessionEvent[]): Session
 
 /** Implements Session business commands delegated by the Session Controller Remote service. */
 export class SessionCommandController {
+  /** Service-local prompt-admission reconciliation facts; the log is the durable truth. */
+  private readonly admissions = new PromptAdmissionJournal()
+
   /**
    * @param ctx - Host context carrying Agent, model, attachment, title, and Workspace services.
    * @param agents - sole owner of create, resume, and Session-local model selection.
    * @param defaultCwd - project directory used when create names neither a Workspace nor a cwd.
+   * @param durableAdmission - whether prompt acknowledgement waits for a durable Session flush.
    */
   constructor(
     private readonly ctx: Context,
     private readonly agents: ApiSessionAgentController,
     private readonly defaultCwd: string,
+    private readonly durableAdmission = false,
   ) {}
 
   /**
@@ -156,7 +169,7 @@ export class SessionCommandController {
    */
   async selectModel(request: SessionSelectModelRequest): Promise<SessionSelectModelValue> {
     const agent = await this.resolveAgent(request.sessionId)
-    return this.agents.serializeImageAdmission(agent, async () => {
+    return this.agents.serializeAdmission(agent, async () => {
       try {
         await this.requireModel(request)
         const resolved = await this.ctx.llm.resolveCallConfig({
@@ -312,54 +325,139 @@ export class SessionCommandController {
   /**
    * Admit one prompt after Agent and attachment validation; the Remote method
    * has already validated the content and built the durable message source.
+   * Admission is serialized per Agent and reconciled by requestId: an
+   * identical resubmission acknowledges idempotently, a different payload on
+   * the same requestId is a conflict, and with {@link durableAdmission} the
+   * acknowledgement waits for the Session flush that makes it survive a crash.
    * @param request - Session identity, prompt content, and delivery mode.
    * @param source - the `user-rpc` source recorded on the accepted message.
    * @returns acknowledgement that the Agent accepted the prompt.
    */
   async prompt(request: SessionPromptRequest, source: MessageSource): Promise<SessionPromptValue> {
     const agent = await this.resolveAgent(request.sessionId)
-    if (hasPromptRequest(agent, request.requestId)) return { accepted: true }
-    const hasImage = request.content.some(part => part.type === 'image')
-    const admit = async (): Promise<SessionPromptValue> => {
-      try {
-        if (hasImage) {
-          const current = this.agents.selectionFor(agent).current
-          const model = await this.ctx.llm.resolveModelInfo(current.provider, current.model)
-          if (model.inputModalities !== undefined && !model.inputModalities.includes('image')) {
-            throw new RemoteError(
-              'session/attachment-invalid',
-              `Model "${current.model}" does not support image input.`,
-              { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
-            )
-          }
-        }
-        const admission = resolvePromptFileReceipts(
-          request.content,
-          receiptId => this.ctx.fileUploads.resolve(agent, receiptId),
+    const fingerprint = promptRequestFingerprint(request)
+    return this.agents.serializeAdmission(agent, () => this.admitPrompt(agent, request, source, fingerprint))
+  }
+
+  /**
+   * The serialized admission body: journal reconciliation, then the legacy
+   * image/model checks, then the durability gate.
+   */
+  private async admitPrompt(
+    agent: Agent,
+    request: SessionPromptRequest,
+    source: MessageSource,
+    fingerprint: string,
+  ): Promise<SessionPromptValue> {
+    const recorded = this.admissions.lookup(agent.id, request.requestId)
+    if (recorded !== undefined) {
+      if (recorded.fingerprint !== fingerprint) {
+        throw new RemoteError(
+          'session/request-conflict',
+          `requestId "${request.requestId}" was already admitted with a different payload`,
+          { sessionId: agent.id, requestId: request.requestId },
         )
-        const content = await this.ctx.attachments.admitPromptContent(admission.content)
-        const message: UserMessage = createUserMessage({ content, source })
-        if (this.ctx.agents.get(agent.id) !== agent) {
-          throw new RemoteError(
-            'session/not-found',
-            `session "${agent.id}" was disposed during prompt admission`,
-            { sessionId: agent.id },
-          )
-        }
-        using binding = this.ctx.fileUploads.bindPrompt(agent, admission.receiptIds, request.requestId)
-        if (request.mode === 'steer') agent.steer(message)
-        else agent.followup(message)
-        binding.commit()
-      } catch (error) {
-        if (remoteErrorOf(error) !== undefined) throw error
-        if (error instanceof AttachmentError) {
-          throw new RemoteError('session/attachment-invalid', error.message, { reason: error.code })
-        }
-        throw new RemoteError('session/agent-busy', 'prompt rejected', { reason: String(error) })
       }
       return { accepted: true }
     }
-    return hasImage ? this.agents.serializeImageAdmission(agent, admit) : admit()
+    // Cross-restart reconciliation: the durable message is the receipt. Text
+    // lanes compare structurally; attachment-bearing requests cannot be
+    // verified against admitted references and reconcile idempotently.
+    const admitted = findPromptRequest(agent, request.requestId)
+    if (admitted !== undefined) {
+      const requestText = promptTextFingerprint(request)
+      const admittedText = admittedMessageFingerprint(admitted)
+      if (requestText !== undefined && admittedText !== undefined && requestText !== admittedText) {
+        throw new RemoteError(
+          'session/request-conflict',
+          `requestId "${request.requestId}" is already logged with different content`,
+          { sessionId: agent.id, requestId: request.requestId },
+        )
+      }
+      this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
+      return { accepted: true }
+    }
+    await this.placePrompt(agent, request, source)
+    this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
+    if (this.durableAdmission) {
+      try {
+        const participated = await this.ctx.sessions.flush(agent.session)
+        if (!participated) {
+          throw new RemoteError(
+            'session/no-durable-writer',
+            `prompt admitted to session "${agent.id}" but no durability writer is mounted`,
+            { sessionId: agent.id, requestId: request.requestId },
+          )
+        }
+      } catch (error) {
+        if (remoteErrorOf(error) !== undefined) throw error
+        throw new RemoteError(
+          'session/flush-failed',
+          `prompt admitted to session "${agent.id}" but its flush failed: ${String(error)}`,
+          { sessionId: agent.id, requestId: request.requestId },
+        )
+      }
+    }
+    return { accepted: true }
+  }
+
+  /** The legacy admission body: validation, attachment resolution, and inbox placement. */
+  private async placePrompt(agent: Agent, request: SessionPromptRequest, source: MessageSource): Promise<void> {
+    const hasImage = request.content.some(part => part.type === 'image')
+    try {
+      if (hasImage) {
+        const current = this.agents.selectionFor(agent).current
+        const model = await this.ctx.llm.resolveModelInfo(current.provider, current.model)
+        if (model.inputModalities !== undefined && !model.inputModalities.includes('image')) {
+          throw new RemoteError(
+            'session/attachment-invalid',
+            `Model "${current.model}" does not support image input.`,
+            { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
+          )
+        }
+      }
+      const admission = resolvePromptFileReceipts(
+        request.content,
+        receiptId => this.ctx.fileUploads.resolve(agent, receiptId),
+      )
+      const content = await this.ctx.attachments.admitPromptContent(admission.content)
+      const message: UserMessage = createUserMessage({ content, source })
+      if (this.ctx.agents.get(agent.id) !== agent) {
+        throw new RemoteError(
+          'session/not-found',
+          `session "${agent.id}" was disposed during prompt admission`,
+          { sessionId: agent.id },
+        )
+      }
+      using binding = this.ctx.fileUploads.bindPrompt(agent, admission.receiptIds, request.requestId)
+      if (request.mode === 'steer') agent.steer(message)
+      else agent.followup(message)
+      binding.commit()
+    } catch (error) {
+      if (remoteErrorOf(error) !== undefined) throw error
+      if (error instanceof AttachmentError) {
+        throw new RemoteError('session/attachment-invalid', error.message, { reason: error.code })
+      }
+      throw new RemoteError('session/agent-busy', 'prompt rejected', { reason: String(error) })
+    }
+  }
+
+  /**
+   * Reconcile one prompt identity without admitting anything: the
+   * service-local journal first, then the durable Session log.
+   * @param request - Session and prompt identities to query.
+   * @returns whether the request is admitted, with the facts this service can prove.
+   */
+  async admission(request: SessionAdmissionRequest): Promise<SessionAdmissionValue> {
+    const agent = await this.resolveAgent(request.sessionId)
+    const recorded = this.admissions.lookup(agent.id, request.requestId)
+    if (recorded !== undefined) {
+      return { found: true, fingerprint: recorded.fingerprint, admittedAt: recorded.admittedAt }
+    }
+    const admitted = findPromptRequest(agent, request.requestId)
+    if (admitted === undefined) return { found: false }
+    const comparable = admittedMessageFingerprint(admitted)
+    return comparable === undefined ? { found: true } : { found: true, fingerprint: comparable }
   }
 
   private async requireModel(selection: Pick<AgentModelSelection, 'provider' | 'model'>): Promise<void> {
@@ -581,19 +679,6 @@ function resolvePromptFileReceipts(
   return { content: resolved, receiptIds: [...receiptIds] }
 }
 
-function hasPromptRequest(agent: Agent, requestId: SessionRequestId): boolean {
-  const matches = (message: UserMessage): boolean => {
-    const source = message.source
-    return source.kind === 'user' && 'rpcId' in source && source.rpcId === requestId
-  }
-  if (agent.inbox.nextTurn.some(matches) || agent.inbox.nextStep.some(matches)) return true
-  // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
-  return agent.session.snapshotEvents().some((event) => {
-    if (event.type !== 'user/message') return false
-    const source = event.data.source
-    return source.kind === 'user' && 'rpcId' in source && source.rpcId === requestId
-  })
-}
 function imageBlockIn(
   content: unknown,
   match: (ref: ImageAttachmentRef) => boolean,

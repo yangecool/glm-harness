@@ -215,6 +215,9 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/projections-unavailable': Record<string, never>
     'session/writer-held': { readonly sessionId: SessionId }
     'session/agent-busy': { readonly reason: string }
+    'session/request-conflict': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
+    'session/no-durable-writer': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
+    'session/flush-failed': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/invalid-time-zone': { readonly value: string }
     'session/workspace-attach-failed': { readonly sessionId: SessionId; readonly workspaceId: string }
     'agent-preset/conflict': {
@@ -354,6 +357,24 @@ export interface SessionPromptRequest {
 /** Receipt after one prompt enters the target Agent inbox. */
 export interface SessionPromptValue {
   readonly accepted: true
+}
+
+/** Durable prompt-admission reconciliation query. */
+export interface SessionAdmissionRequest {
+  /** Session whose admissions are queried. */
+  readonly sessionId: SessionId
+  /** Client-minted prompt identity to reconcile. */
+  readonly requestId: SessionRequestId
+}
+
+/** Reconciliation answer for one prompt identity. */
+export interface SessionAdmissionValue {
+  /** Whether the request is admitted: journal-recorded in this service life or present in the durable log. */
+  readonly found: boolean
+  /** Admission fingerprint when this service recorded the raw payload; text-lane digest when recovered from the log. */
+  readonly fingerprint?: string
+  /** Epoch milliseconds when this service recorded the admission; log recovery cannot prove one. */
+  readonly admittedAt?: number
 }
 
 /** Durable image read request. */
