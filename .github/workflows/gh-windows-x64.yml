@@ -1,0 +1,73 @@
+# GH Windows x64 desktop packaging on GitHub-hosted runners.
+#
+# Boundary, stated honestly: hosted runners cannot perform the upstream EV
+# hardware-token signing, so this line always builds the UNSIGNED installer
+# (`package:desktop:win:x64:unsigned`). Unsigned artifacts are for the owner's
+# own machines; they are not qualified for the signed auto-update channel.
+# Triggers: manual dispatch, or a `gh-v*` tag which also attaches the
+# installer to a GitHub release.
+name: GH Desktop · Windows x64
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['gh-v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-windows-x64-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          clean: true
+      - uses: pnpm/action-setup@5.0.0
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm-${{ github.run_id }}-${{ github.run_attempt }}
+      - uses: actions/setup-node@7.0.0
+        with:
+          node-version: '24'
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          exit $LASTEXITCODE
+      - name: Build the unsigned Windows x64 installer
+        run: |
+          pnpm run package:desktop:win:x64:unsigned
+          exit $LASTEXITCODE
+      - name: Retain the unsigned installer
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: gh-windows-x64-unsigned-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Attach to the gh-v* release
+        if: startsWith(github.ref, 'refs/tags/gh-v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = Get-ChildItem -File apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/* | Select-Object -ExpandProperty FullName
+          if ($files.Count -eq 0) { throw 'no unsigned artifacts found' }
+          gh release view $env:GITHUB_REF_NAME 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:GITHUB_REF_NAME @files --clobber
+          } else {
+            gh release create $env:GITHUB_REF_NAME @files --title "GH $env:GITHUB_REF_NAME (windows x64 unsigned)" --notes "Unsigned Windows x64 desktop installer built from $env:GITHUB_REF_NAME. Hosted-runner builds cannot perform EV signing; not qualified for the signed auto-update channel."
+          }
+          exit $LASTEXITCODE
