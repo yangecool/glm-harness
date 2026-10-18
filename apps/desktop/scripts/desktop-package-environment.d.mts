@@ -8,6 +8,14 @@
 export function localMacOSPackageEnvironment(environment?: NodeJS.ProcessEnv): NodeJS.ProcessEnv
 
 /**
+ * Select an independent unsigned preview without release accounts or policy services.
+ * @param appId - Explicit product application identifier.
+ * @param environment - Parent build-tool environment.
+ * @returns Preview settings; signed publication cannot use this mode.
+ */
+export function standaloneUnsignedPackageEnvironment(appId: string, environment?: NodeJS.ProcessEnv): NodeJS.ProcessEnv
+
+/**
  * Read a machine preset when selected, otherwise the target's required dotenv; no ambient release fallback.
  * PACKAGE_TEST_RELEASE_ID overrides the test preset only; blank retains its configured ID.
  * @param platform Target platform.

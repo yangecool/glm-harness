@@ -34,6 +34,20 @@ export function localMacOSPackageEnvironment(environment = process.env) {
 }
 
 /**
+ * Select an independent unsigned preview without release accounts or policy services.
+ * @param {string} appId - Explicit product application identifier.
+ * @param {NodeJS.ProcessEnv} environment - Parent build-tool environment.
+ * @returns {NodeJS.ProcessEnv} Preview settings; signed publication cannot use this mode.
+ */
+export function standaloneUnsignedPackageEnvironment(appId, environment = process.env) {
+  return {
+    ...localMacOSPackageEnvironment(environment),
+    DSH_DESKTOP_APP_ID: resolveDesktopAppId({ DSH_DESKTOP_APP_ID: appId }),
+    DSH_DESKTOP_STANDALONE: '1',
+  }
+}
+
+/**
  * Read a machine preset when selected, otherwise the target's required dotenv; no ambient release fallback.
  * PACKAGE_TEST_RELEASE_ID overrides the test preset only; blank retains its configured ID.
  * @param {'win32' | 'darwin'} platform Target platform.
@@ -136,7 +150,9 @@ function requireReadableFile(environment, name) {
 export function validateDesktopPackageEnvironment(environment, target, options = {}) {
   resolveDesktopAppId(environment)
   resolveNpmRegistry(environment)
-  if (target.platform !== 'darwin' || !options.unsigned) resolveDesktopPolicyEnvironment(environment)
+  const standalone = environment.DSH_DESKTOP_STANDALONE === '1'
+  if (standalone && !options.unsigned) throw new Error('desktop package: standalone previews must be unsigned')
+  if (!standalone && (target.platform !== 'darwin' || !options.unsigned)) resolveDesktopPolicyEnvironment(environment)
   if (target.platform === 'darwin') resolveMacOSPackageSettings(environment)
   else resolveWindowsPackageSettings(environment)
   if (options.unsigned) return

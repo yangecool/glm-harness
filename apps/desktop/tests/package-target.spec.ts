@@ -87,6 +87,22 @@ describe('desktop package target', () => {
       .toThrow(/cannot use --prepare-only/u)
   })
 
+  it('parses standalone unsigned previews and rejects incomplete or signed use', () => {
+    expect(parseDesktopPackageInvocation(['win-x64', '--unsigned', '--standalone', '--app-id', 'com.example.standalone'], 'win32', 'x64'))
+      .toMatchObject({ unsigned: true, standaloneAppId: 'com.example.standalone' })
+    expect(parseDesktopPackageInvocation(['win-x64', '--unsigned', '--standalone', '--app-id', '  com.example.standalone  '], 'win32', 'x64')
+      .standaloneAppId).toBe('com.example.standalone')
+    expect(parseDesktopPackageInvocation(['win-x64', '--unsigned'], 'win32', 'x64').standaloneAppId).toBeUndefined()
+    expect(() => parseDesktopPackageInvocation(['win-x64', '--standalone', '--app-id', 'com.example.standalone'], 'win32', 'x64'))
+      .toThrow(/--standalone requires --unsigned and --app-id/u)
+    expect(() => parseDesktopPackageInvocation(['win-x64', '--unsigned', '--standalone'], 'win32', 'x64'))
+      .toThrow(/--standalone requires --unsigned and --app-id/u)
+    expect(() => parseDesktopPackageInvocation(['win-x64', '--unsigned', '--standalone', '--app-id', '  '], 'win32', 'x64'))
+      .toThrow(/--standalone requires --unsigned and --app-id/u)
+    expect(() => parseDesktopPackageInvocation(['win-x64', '--unsigned', '--app-id', 'com.example.standalone'], 'win32', 'x64'))
+      .toThrow(/--app-id requires --standalone/u)
+  })
+
   it('removes ambient certificate inputs for unsigned builds and overrides an inherited signing mode', () => {
     const environment = {
       DSH_DESKTOP_APP_ID: 'com.example.desktop',

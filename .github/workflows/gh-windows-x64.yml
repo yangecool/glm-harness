@@ -45,8 +45,10 @@ jobs:
           pnpm install --frozen-lockfile
           exit $LASTEXITCODE
       - name: Build the unsigned Windows x64 installer
+        env:
+          GH_STANDALONE_APP_ID: com.yangecool.glm-harness
         run: |
-          pnpm run package:desktop:win:x64:unsigned
+          pnpm run package:desktop:win:x64:unsigned -- --standalone --app-id $env:GH_STANDALONE_APP_ID
           exit $LASTEXITCODE
       - name: Retain the unsigned installer
         uses: actions/upload-artifact@v7.0.1

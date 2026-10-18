@@ -975,6 +975,13 @@ describe('bubblewrap preparation script', () => {
 })
 
 describe('DeepSeek e2e workflow', () => {
+  it('requires derived products to opt into the DeepSeek suite while retaining untrusted-PR exclusion', () => {
+    const e2e = workflowJob(loadWorkflow('.github/workflows/e2e.yml'), 'e2e')
+    expect(e2e.if).toContain("github.repository == 'deepseek-ai/deepseek-harness' || vars.DSH_ENABLE_REAL_API_E2E == 'true'")
+    expect(e2e.if).toContain("&& (github.event_name != 'pull_request'")
+    expect(e2e.if).toContain("github.event.pull_request.head.repo.fork || github.event.pull_request.user.login == 'dependabot[bot]'")
+  })
+
   it('prepares bubblewrap from the pinned payload without a package transaction', () => {
     const workflow = loadWorkflow('.github/workflows/e2e.yml')
     const e2e = workflowJob(workflow, 'e2e')

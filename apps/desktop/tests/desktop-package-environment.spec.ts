@@ -2,7 +2,9 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { loadDesktopPackageEnvironment, localMacOSPackageEnvironment, validateDesktopPackageEnvironment } from '../scripts/desktop-package-environment.mjs'
+import {
+  loadDesktopPackageEnvironment, localMacOSPackageEnvironment, standaloneUnsignedPackageEnvironment, validateDesktopPackageEnvironment,
+} from '../scripts/desktop-package-environment.mjs'
 import { resolveWindowsPackageSettings } from '../scripts/windows-package-settings.mjs'
 
 const WINDOWS = { platform: 'win32', arch: 'x64' } as const
@@ -39,6 +41,21 @@ describe('Desktop local packaging configuration', () => {
     })
     expect(() => { validateDesktopPackageEnvironment(local, MACOS, { unsigned: true }) }).not.toThrow()
     expect(parent.DSH_DESKTOP_UNSIGNED).toBe('0')
+    expect(parent.DSH_DESKTOP_APP_ID).toBe('com.example.release')
+  })
+
+  it('builds a standalone unsigned preview without release accounts and forbids signed publication', () => {
+    const parent = {
+      PATH: 'build-tools', HTTPS_PROXY: 'http://proxy.example:8080', DSH_DESKTOP_NPM_REGISTRY: 'https://registry.npmmirror.com',
+      DSH_DESKTOP_APP_ID: 'com.example.release', DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: 'needs-policy-service',
+    }
+    const standalone = standaloneUnsignedPackageEnvironment('com.example.standalone', parent)
+    expect(standalone).toEqual({
+      PATH: parent.PATH, HTTPS_PROXY: parent.HTTPS_PROXY, DSH_DESKTOP_NPM_REGISTRY: parent.DSH_DESKTOP_NPM_REGISTRY,
+      DSH_DESKTOP_APP_ID: 'com.example.standalone', DSH_DESKTOP_UNSIGNED: '1', DSH_DESKTOP_STANDALONE: '1',
+    })
+    expect(() => { validateDesktopPackageEnvironment(standalone, WINDOWS, { unsigned: true }) }).not.toThrow()
+    expect(() => { validateDesktopPackageEnvironment(standalone, WINDOWS, {}) }).toThrow('standalone previews must be unsigned')
     expect(parent.DSH_DESKTOP_APP_ID).toBe('com.example.release')
   })
 

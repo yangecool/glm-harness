@@ -151,6 +151,7 @@
     { "path": "./packages/api/workspace-files/tsconfig.client.json" },
     { "path": "./packages/client/web" },
     { "path": "./packages/glm/brand" },
+    { "path": "./packages/glm/ui-permissions" },
     { "path": "./packages/context/file-reference" },
     { "path": "./apps/web" }
   ]
