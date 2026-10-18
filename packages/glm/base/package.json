@@ -115,6 +115,7 @@
     "@glm-harness/gh-model-retry": "workspace:*",
     "@glm-harness/gh-permissions": "workspace:*",
     "@glm-harness/gh-persona": "workspace:*",
+    "@glm-harness/gh-plan-review": "workspace:*",
     "@glm-harness/gh-ui-permissions": "workspace:*"
   },
   "peerDependencies": {

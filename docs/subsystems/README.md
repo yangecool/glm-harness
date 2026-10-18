@@ -58,6 +58,7 @@ One page per subsystem of the DeepSeek Harness: what it is, the data structures 
 | [jobs.md](jobs.md) | the background-job runtime: branded `JobId`s, the producer contract, consumer views, and `ctx.jobs` service behavior |
 | [permission-presets.md](permission-presets.md) | the permission-preset layer: `PresetSpec`/`PresetOption`, the derived `custom` state, the log-only `permission/preset` event |
 | [gh-permissions.md](gh-permissions.md) | the GH permission modes: `yolo`/`guarded`/`build` with an independent plan gate, the log-only `permission/mode` event, the shell dangerous-command grammar, and the executor decision order |
+| [gh-plan-review.md](gh-plan-review.md) | the GH plan-review ledger: numbered `gh-plan/*` revisions under the session log, the deterministic `.glm/plans` plan file written on approval without clobbering user edits, and the X05 monotonic approval fold |
 | [gh-account.md](gh-account.md) | the GH account seam: per-domain OAuth authorization-code + PKCE logins, single-flight refresh, per-domain epochs, and short-term project tokens with rejection- and generation-driven invalidation |
 | [gh-remote-bootstrap.md](gh-remote-bootstrap.md) | the E04.2/GH-006 remote artifact chain: relocatable runtime archive with bundled node, POSIX bootstrap delegating activation to the bundled supervisor, TOFU-pinned SSH deployment, stage-localized install/update/rollback, resident gh-supervisor profile |
 | [plan.md](plan.md) | plan mode: the log-only `plan/mode` state, pending-selection flush, `PlanModeConfig`, the `exit_plan_mode` review arc |

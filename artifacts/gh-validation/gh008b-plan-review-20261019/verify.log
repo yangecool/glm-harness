@@ -1,0 +1,4 @@
+PASS approve-writes-plan-file: file bytes exact=true submitted@1=true approved@1 fileWritten=true
+PASS decline-records-feedback: outcome=keep-planning feedback recorded=true file absent=true
+PASS user-edit-wins: file still the user's text=true revision2 fileWritten=false
+{"passed":true,"cases":["approve-writes-plan-file","decline-records-feedback","user-edit-wins"]}

@@ -1,0 +1,15 @@
+== gh-plan-review unit (12) ==
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+== glm suite + closure spec (236) ==
+ Test Files  13 passed (13)
+      Tests  236 passed (236)
+== check-gh-closure ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+== persistence-changes --check ==
+persistence changes: 69 roots match 18 history records.
+== oxlint (plan-review + driver) ==
+Found 0 warnings and 0 errors.
+Finished in 1.8s on 3 files with 90 rules using 12 threads.
+== host aggregate typecheck ==
+host tsc exit=0

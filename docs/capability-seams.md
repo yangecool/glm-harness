@@ -173,6 +173,8 @@ flowchart LR
   svc_planMode["ctx.planMode<br/>Plan collaboration state"]
   pkg_glm_permissions["glm/permissions"]
   svc_ghPermissions["ctx.ghPermissions<br/>GH permission modes"]
+  pkg_glm_plan_review["glm/plan-review"]
+  svc_ghPlanReview["ctx.ghPlanReview<br/>GH plan-review ledger"]
   pkg_glm_account["glm/account"]
   svc_ghAccount["ctx.ghAccount<br/>GH account owner"]
   svc_ghProjectToken["ctx.ghProjectToken<br/>GH project tokens"]
@@ -363,6 +365,7 @@ flowchart LR
   pkg_glm_account --> svc_ghAccount
   pkg_glm_account --> svc_ghProjectToken
   pkg_glm_permissions --> svc_ghPermissions
+  pkg_glm_plan_review --> svc_ghPlanReview
   pkg_goal --> svc_goals
   pkg_hmr --> svc_hmr
   pkg_host_directory_picker --> svc_directoryPicker
@@ -678,6 +681,7 @@ flowchart LR
 | `ctx.userQuestions` | `seam` | [`user-questions`](../packages/interaction/user-questions) | - | [`tool-ask-user`](../packages/interaction/tool-ask-user) | - | UI front ends provide the active human-answer provider; tool-ask-user pauses a tool call on the provider-neutral ask() promise. |
 | `ctx.planMode` | `core` | [`plan-mode`](../packages/plan/plan-mode) | - | - | - | Folds logged plan/mode state, flushes user selections at turn boundaries, renders deployment-owned guidance, registers /plan, and keeps the plan-exit schema stable across transitions. |
 | `ctx.ghPermissions` | `core` | `glm/permissions` | - | - | - | Folds the durable permission/mode selection with legacy migration, states the live mode in the runtime context, registers /permission, and enforces the yolo/guarded/build decision order plus the plan read-only gate in tools/pre-execute. |
+| `ctx.ghPlanReview` | `core` | `glm/plan-review` | - | - | - | Observes the plan-review question and the settled exit_plan_mode result, numbers every presented plan as a durable gh-plan/* revision, writes the approved text to the workspace plan file without clobbering user edits, and folds approvals monotonically so replayed late results update nothing. |
 | `ctx.ghAccount` | `core` | `glm/account` | - | - | - | Owns per-domain OAuth authorization-code + PKCE logins with credentials-seam grant persistence, single-flight access refresh with per-caller cancellation, and per-domain epochs that discard superseded results. |
 | `ctx.ghProjectToken` | `core` | `glm/account` | - | - | - | Mints and caches short-term project tokens per domain and project, drops exactly the transport-rejected token, and invalidates the cache the moment the account generation moves. |
 | `ctx.agentPresets` | `core` | [`agent-preset-registry`](../packages/preset/agent-preset-registry) | - | - | - | Eagerly mounts YAML-declared preset revisions, binds Agents and cold readers to scoped contributions, and retains retired revisions until their last user releases them. |

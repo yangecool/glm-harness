@@ -175,6 +175,8 @@ flowchart LR
   svc_planMode["ctx.planMode<br/>Plan collaboration state"]
   pkg_glm_permissions["glm/permissions"]
   svc_ghPermissions["ctx.ghPermissions<br/>GH permission modes"]
+  pkg_glm_plan_review["glm/plan-review"]
+  svc_ghPlanReview["ctx.ghPlanReview<br/>GH plan-review ledger"]
   pkg_glm_account["glm/account"]
   svc_ghAccount["ctx.ghAccount<br/>GH account owner"]
   svc_ghProjectToken["ctx.ghProjectToken<br/>GH project tokens"]
@@ -365,6 +367,7 @@ flowchart LR
   pkg_glm_account --> svc_ghAccount
   pkg_glm_account --> svc_ghProjectToken
   pkg_glm_permissions --> svc_ghPermissions
+  pkg_glm_plan_review --> svc_ghPlanReview
   pkg_goal --> svc_goals
   pkg_hmr --> svc_hmr
   pkg_host_directory_picker --> svc_directoryPicker
@@ -679,6 +682,7 @@ flowchart LR
 | `ctx.tools` | `core` | [`tools`](../packages/core/tools) | - | [`agent-loop`](../packages/core/agent-loop), [`tool-ask-user`](../packages/interaction/tool-ask-user), [`tool-bash`](../packages/shell/tool-bash), [`tool-cordis`](../packages/extensions/tool-cordis), [`tool-fs`](../packages/fs/tool-fs), [`tool-terminal`](../packages/experimental/tool-terminal), [`tool-skill`](../packages/skill/tool-skill), [`tool-subagent`](../packages/subagent/tool-subagent), [`tool-todo`](../packages/todo/tool-todo), [`tool-web`](../packages/web/tool-web) | - | 注册能力，负责 PTC mode 传输，并让调用依次经过策略前处理、单调守卫、环绕分派、策略后处理和最终结果观测。 |
 | `ctx.userQuestions` | `seam` | [`user-questions`](../packages/interaction/user-questions) | - | [`tool-ask-user`](../packages/interaction/tool-ask-user) | - | UI 前端提供当前生效的人工回答提供方；tool-ask-user 在提供方无关的 ask() promise 上暂停工具调用。 |
 | `ctx.ghPermissions` | `core` | `glm/permissions` | - | - | - | 折叠持久的 permission/mode 选择并迁移旧预设，在运行时上下文声明当前模式，注册 /permission，并在 tools/pre-execute 执行 yolo/guarded/build 判定顺序与 Plan 只读门。 |
+| `ctx.ghPlanReview` | `core` | `glm/plan-review` | - | - | - | 观察计划审阅问题与已结算的 exit_plan_mode 结果，把每个呈现的计划编号为持久的 gh-plan/* revision，把批准文本写入工作区计划文件且不覆盖用户编辑，并单调折叠批准使重放的迟到结果不改变任何状态。 |
 | `ctx.ghAccount` | `core` | `glm/account` | - | - | - | 按域 OAuth 授权码 + PKCE 登录、credentials seam grant 持久化、单飞访问刷新与按调用者取消，以及丢弃被超越结果的按域 epoch。 |
 | `ctx.ghProjectToken` | `core` | `glm/account` | - | - | - | 按域与 project 铸造/缓存短时项目令牌，只丢弃被传输拒绝的令牌，账号代数移动即令缓存失效。 |
 | `ctx.planMode` | `core` | [`plan-mode`](../packages/plan/plan-mode) | - | - | - | 折叠已记录的计划／模式状态，在轮次边界刷新用户选择，渲染由部署方拥有的指导信息，注册 /plan，并在状态转换期间保持计划退出 schema 稳定。 |

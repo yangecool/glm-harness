@@ -1922,6 +1922,11 @@
       "source": "packages/interaction/permission-presets/src/types.ts"
     },
     {
+      "doc": "docs/subsystems/gh-plan-review.md",
+      "symbol": "GhPlanReviewConfig",
+      "source": "packages/glm/plan-review/src/index.ts"
+    },
+    {
       "doc": "docs/subsystems/plan.md",
       "symbol": "PlanModeConfig",
       "source": "packages/plan/plan-mode/src/index.ts"

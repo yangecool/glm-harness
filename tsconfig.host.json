@@ -471,6 +471,7 @@
     { "path": "./packages/glm/model-glm" },
     { "path": "./packages/glm/model-retry" },
     { "path": "./packages/glm/permissions" },
+    { "path": "./packages/glm/plan-review" },
     { "path": "./packages/glm/account" },
     { "path": "./packages/glm/persona" },
     { "path": "./packages/glm/desktop" },

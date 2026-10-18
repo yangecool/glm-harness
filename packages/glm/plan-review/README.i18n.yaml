@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/plan-review/README.md
+/:
+  en: c667ffd743ef8ffb
+  zh: 25bb5010a346d03b
+/glm-harness-gh-plan-review:
+  en: a086c824a89be5c6
+  zh: aaf922c9b7709003
+/glm-harness-gh-plan-review/summary:
+  en: 824139572ce3b327
+  zh: c7e08a23fa2b573e
+/glm-harness-gh-plan-review/table-of-contents:
+  en: 4d5ec89f7a524c33
+  zh: 6e1e8366f4cb6e7b
+/glm-harness-gh-plan-review/use-this-package:
+  en: 3fd1d4e8c3bd5104
+  zh: f6d31274b8aba9a3
+/glm-harness-gh-plan-review/use-this-package/when-to-choose-it:
+  en: 307e8baf6e945501
+  zh: af8946a0898d515d
+/glm-harness-gh-plan-review/use-this-package/minimal-configuration:
+  en: fcea1505907f5a09
+  zh: 75b3b7e57a7dcda5
+/glm-harness-gh-plan-review/understand-the-implementation:
+  en: 756414be451c052f
+  zh: 98732fb1b951e370
+/glm-harness-gh-plan-review/further-exploration:
+  en: 9335fe0bbb331bc5
+  zh: 36a3cd232708aa22
+/glm-harness-gh-plan-review/model-experience:
+  en: 215e7ba838619b7b
+  zh: e61c78b7d37628ed
+/glm-harness-gh-plan-review/model-experience/plan-review-ledger-context:
+  en: ef9b3ffa18d066d7
+  zh: 7f17dd8631a44e00
+/glm-harness-gh-plan-review/model-experience/plan-review-ledger-context/what-the-model-sees:
+  en: cc078a0e82aeb205
+  zh: 42042f242b556a68
+/glm-harness-gh-plan-review/model-experience/plan-review-ledger-context/token-effect:
+  en: 6b7e27637ae5a1ad
+  zh: 7d573f3c0837ac0d
+/glm-harness-gh-plan-review/model-experience/plan-review-ledger-context/kv-cache-effect:
+  en: 7240ebebf365b512
+  zh: 8ad9c45275359341
+/glm-harness-gh-plan-review/known-limitations-and-deferred-work:
+  en: 40b514bdfce95b8b
+  zh: 4f862891e2ec1b0b
+/glm-harness-gh-plan-review/known-limitations-and-deferred-work/dev-note:
+  en: f00dfe813e6f71aa
+  zh: 64fa0ba94f197ea9

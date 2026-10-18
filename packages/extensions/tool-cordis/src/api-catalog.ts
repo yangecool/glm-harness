@@ -1294,6 +1294,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'ghPlanReview',
+    summary: '`ctx.ghPlanReview`: the plan-review ledger.',
+    description: '`ctx.ghPlanReview`: the plan-review ledger. Observes the plan-review question and the exit tool\'s settled result, assigns one revision per presented plan, appends the `gh-plan/*` events, and maintains the plan file under the session\'s workspace cwd.',
+    methods: [
+      {
+        signature: 'describe(agent: Agent): GhPlanReviewView',
+        description: 'Read the folded ledger for one agent\'s session.',
+        parameters: [{ name: 'agent', description: 'the agent whose plan history is read.' }],
+        returns: 'the newest revision, the newest approval, and the plan file path.',
+      },
+      {
+        signature: 'planPathOf(session: Session): string | null',
+        description: 'Resolve the deterministic plan file path for a session\'s workspace.',
+        parameters: [{ name: 'session', description: 'the session whose header cwd anchors the path.' }],
+        returns: '`<cwd>/<plansDir>/plan-<sanitized id>.md`, or null without a cwd.',
+      },
+    ],
+  },
+  {
     key: 'ghProjectToken',
     summary: 'The PAT owner.',
     description: 'The PAT owner. Composed wherever the account owner is; the GLM route consults it before the static key path.',
@@ -5724,6 +5743,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GhPermissionMode',
     declaration: 'export type GhPermissionMode = \'yolo\' | \'guarded\' | \'build\';',
+  },
+  {
+    name: 'GhPlanReviewView',
+    declaration: 'export interface GhPlanReviewView {\n    readonly revision: number;\n    readonly approvedRevision: number | null;\n    readonly planPath: string | null;\n}',
   },
   {
     name: 'GoalActivation',

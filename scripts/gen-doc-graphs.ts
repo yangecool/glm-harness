@@ -589,6 +589,13 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Folds the durable permission/mode selection with legacy migration, states the live mode in the runtime context, registers /permission, and enforces the yolo/guarded/build decision order plus the plan read-only gate in tools/pre-execute.',
   },
   {
+    key: 'ghPlanReview',
+    pkg: 'glm/plan-review',
+    title: 'GH plan-review ledger',
+    mode: 'core',
+    note: 'Observes the plan-review question and the settled exit_plan_mode result, numbers every presented plan as a durable gh-plan/* revision, writes the approved text to the workspace plan file without clobbering user edits, and folds approvals monotonically so replayed late results update nothing.',
+  },
+  {
     key: 'ghAccount',
     pkg: 'glm/account',
     title: 'GH account owner',

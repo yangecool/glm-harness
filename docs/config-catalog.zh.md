@@ -4678,6 +4678,27 @@ export interface PermissionRule {
 ```
 <!-- END GENERATED config-catalog:@glm-harness/gh-permissions -->
 
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-plan-review -->
+<a id="glm-harnessgh-plan-review"></a>
+
+## `@glm-harness/gh-plan-review`
+
+- `inject`: `tools` · `sessionProjections`
+- `source`: [`packages/glm/plan-review/src/index.ts:89`](../packages/glm/plan-review/src/index.ts)
+
+```ts config-catalog
+/** Plugin config: where plan files live inside the session's workspace cwd. */
+export interface GhPlanReviewConfig {
+  /**
+   * Workspace-relative directory for plan files, joined onto the session's
+   * header cwd. Must be a plain relative path: no absolute form, no `..`
+   * segments, no platform separators.
+   */
+  readonly plansDir: string
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-plan-review -->
+
 <!-- BEGIN GENERATED config-catalog:@glm-harness/gh-remote-app -->
 <a id="glm-harnessgh-remote-app"></a>
 

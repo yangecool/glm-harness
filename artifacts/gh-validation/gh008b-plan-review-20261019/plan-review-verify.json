@@ -1,0 +1,21 @@
+{
+  "scope": "resident gh-remote service / synthetic loopback GLM / real user-questions relay, no real GLM",
+  "cases": [
+    {
+      "name": "approve-writes-plan-file",
+      "passed": true,
+      "detail": "file bytes exact=true submitted@1=true approved@1 fileWritten=true"
+    },
+    {
+      "name": "decline-records-feedback",
+      "passed": true,
+      "detail": "outcome=keep-planning feedback recorded=true file absent=true"
+    },
+    {
+      "name": "user-edit-wins",
+      "passed": true,
+      "detail": "file still the user's text=true revision2 fileWritten=false"
+    }
+  ],
+  "supervisorErr": "gh-remote-supervisor: drained on SIGTERM\n"
+}

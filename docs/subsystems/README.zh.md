@@ -58,6 +58,7 @@
 | [jobs.md](jobs.zh.md) | 后台任务运行时：品牌化 `JobId`、producer 约定、消费方视图和 `ctx.jobs` 服务行为 |
 | [permission-presets.md](permission-presets.zh.md) | 权限预设层：`PresetSpec`/`PresetOption`、派生的 `custom` 状态、仅记日志的 `permission/preset` 事件 |
 | [gh-permissions.md](gh-permissions.zh.md) | GH 权限模式：`yolo`/`guarded`/`build` 与独立 Plan 门、仅记日志的 `permission/mode` 事件、shell 危险命令文法与执行器判定顺序 |
+| [gh-plan-review.md](gh-plan-review.zh.md) | GH 计划审阅台账：会话日志下带编号的 `gh-plan/*` revision、批准时确定性写入且不覆盖用户编辑的 `.glm/plans` 计划文件、X05 单调批准折叠 |
 | [gh-account.md](gh-account.zh.md) | GH 账号 seam：按域 OAuth 授权码 + PKCE 登录、单飞刷新、按域 epoch，以及带拒绝/代数失效的短时项目令牌 |
 | [gh-remote-bootstrap.md](gh-remote-bootstrap.zh.md) | E04.2/GH-006 远端制品链：自带 node 的可重定位运行时归档、激活委托自带 supervisor 的 POSIX 自举、TOFU 固定的 SSH 部署、阶段化的安装/更新/回滚、常驻 gh-supervisor profile |
 | [plan.md](plan.zh.md) | 计划模式：仅记日志的 `plan/mode` 状态、待定选择的冲刷、`PlanModeConfig`、`exit_plan_mode` 审阅流程 |

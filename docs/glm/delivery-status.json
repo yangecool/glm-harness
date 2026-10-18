@@ -6,7 +6,7 @@
     "baseTag": "dsh-v0.2.1-rc.1",
     "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
   },
-  "updatedAt": "2026-10-18",
+  "updatedAt": "2026-10-19",
   "tasks": [
     {
       "id": "GH-001",
@@ -305,6 +305,42 @@
         "真实 GLM 未联调(D01);Electron 与远端未测;Web Composer 三选项菜单+独立 Plan 勾选未接线(ui-permission-presets 客户端在宿主服务缺失时安全未激活)"
       ],
       "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT 与 purpose 级模型配置;PER05/06/07/10 随 UI/远端切片;GH-003-B 其余"
+    },
+    {
+      "id": "GH-008-B",
+      "title": "计划审阅台账：草稿 revision、计划文件与审批绑定",
+      "status": "complete-slice",
+      "planRefs": [
+        "E03.2",
+        "F13",
+        "X05",
+        "12.2"
+      ],
+      "requiredBehavior": [
+        "every plan presented for review becomes a numbered durable revision under the session log",
+        "approval writes the approved text verbatim to a deterministic workspace plan file, atomically, and never over user edits",
+        "approvals bind to their revision; replayed late approvals update nothing (X05)",
+        "keep-planning feedback is recorded as the revision's annotation; dismissals and failures are recorded honestly",
+        "calls that never reached the review leave no events"
+      ],
+      "completed": "2026-10-19",
+      "owner": "packages/glm/plan-review (@glm-harness/gh-plan-review, ctx.ghPlanReview)",
+      "deliverables": [
+        "packages/glm/plan-review：纯观察者插件——user-questions/request 捕获审阅答案，tools/post-execute 分配单调 revision 并追加 gh-plan/submitted|approved|rejected（log-only）；批准原子写 <workspace>/.glm/plans/plan-<id>.md，用户编辑永不覆盖（fileWritten:false 记录分歧）；ghPlanReview 投影带 X05 单调批准守卫与 wire 视图",
+        "gh-base 新行（全部 GH profile 继承）+ known-event-types/persistence-catalog/cordis-catalog/config-catalog/plugin-packages/doc-graphs/capability-seams 再生成 + 持久化变更记录 2026-10-19-gh-plan-review（same-version）",
+        "docs/subsystems/gh-plan-review(.zh) 子系统文档 + README 双语；scripts/gh-plan-review-verify.ts 端到端验收驱动（真实 gh-remote 常驻服务 + supervisor + 回环 GLM + 真实 user-questions 中继，commands/execute 进 plan、$events/result 应答）"
+      ],
+      "evidence": [
+        "单元/组合 12/12（真实 AgentLoop+UserQuestionService+plan-mode，mock 模型：批准精确写、反馈、驳回、不覆盖序列、单调 revision、未审阅无事件、无 cwd；X05 折叠重放防护）",
+        "端到端 3/3（批准写文件+双事件、拒绝记录反馈无文件、用户编辑后批准不覆盖）；产品 smoke 回归 5/5；glm 全套 236/236；doc-sync 43/43；closure/persistence-changes(69 根 18 记录)/oxlint/host+client typecheck 全绿",
+        "artifacts/gh-validation/gh008b-plan-review-20261019（summary/verify.log/plan-review-verify.json/product-smoke.json/gates.log）"
+      ],
+      "boundaries": [
+        "压缩后 plan-file reminder 未做：上游 compaction 无 post-compact 注入接缝，随计划文件连续性设计记为 GH-008 后续",
+        "拒绝反馈仍按上游同回合工具错误回到模型；ZCode 式反馈成为真实下一条用户消息/无反馈拒绝结束回合延后到工作台切片",
+        "子代理无存活应答者无法到达审阅（上游限制），台账不记录；UI 渲染（计划文件路径/revision 历史）待客户端切片",
+        "回环 GLM fixture 校验事件/文件/中继行为，不证明真实 GLM 服务（D01 未解除）"
+      ]
     },
     {
       "id": "GH-004-B",
