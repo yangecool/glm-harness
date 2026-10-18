@@ -19,12 +19,19 @@ import { startFixture, observations } from './gh-desktop-fixture.mjs'
 const root = resolve(import.meta.dirname, '..')
 const outDir = resolve(process.argv[2] ?? '.gh-desktop-run')
 const keep = process.argv.includes('--keep')
+// Clean-home mode: the product seam must seed everything itself. The runner
+// pre-seeds no profiles, points HOME at a fixture user home, and drives the
+// desktop through $DSH_DESKTOP_PRODUCT_PROFILE — first start, then a restart
+// whose user patch layer must survive.
+const cleanHome = process.argv.includes('--clean-home')
 assert(process.env.DISPLAY !== undefined && process.env.DISPLAY !== '', 'DISPLAY must point at an X server (e.g. Xvnc :99)')
 
 const reasoning = '先写入测试文件，再核验结果。'
 const expected = 'GH desktop regression\n'
 const fixture = await mkdtemp(join(tmpdir(), 'gh-desktop-run-'))
 const home = join(fixture, 'home')
+const userHome = join(fixture, 'userhome')
+const productProfilePath = join(fixture, 'product-profile.json')
 // XDG redirect: the app's first-use workspace lives under the OS Documents
 // root; pointing it into the fixture keeps the run hermetic and puts the
 // session cwd where the scripted write can record.
@@ -33,7 +40,13 @@ const xdgConfig = join(fixture, 'xdg')
 await mkdir(xdgConfig, { recursive: true })
 await writeFile(join(xdgConfig, 'user-dirs.dirs'), `XDG_DOCUMENTS_DIR="${docsRoot}"\n`)
 await mkdir(outDir, { recursive: true })
-initGhProfiles(home)
+if (cleanHome) {
+  const { renderGhProductProfile } = await import('./gh-init-profiles.ts')
+  await writeFile(productProfilePath, `${JSON.stringify(renderGhProductProfile(), null, 2)}\n`)
+  await mkdir(userHome, { recursive: true })
+} else {
+  initGhProfiles(home)
+}
 const target = 'desktop-review.txt'
 
 const endpoint = startFixture({ reasoning, expected, target })
@@ -42,13 +55,11 @@ await once(endpoint, 'listening')
 const address = endpoint.address()
 assert(address !== null && typeof address === 'object')
 
-const child = spawn(process.execPath, [
-  'node_modules/pnpm/bin/pnpm.cjs', 'run', '--config.verifyDepsBeforeRun=false', 'start:desktop',
-], {
-  cwd: root,
-  env: {
+/** Launch the desktop shell once and capture its output into the shared log. */
+let appLog = ''
+function launchDesktop() {
+  const baseEnv = {
     ...process.env,
-    DSH_HOME: home,
     GLM_API_KEY: 'synthetic-desktop-key',
     GLM_BASE_URL: `http://127.0.0.1:${address.port}`,
     DSH_DESKTOP_OPEN_DEVTOOLS: '0',
@@ -57,13 +68,21 @@ const child = spawn(process.execPath, [
     DSH_DESKTOP_HOST_INSPECT_PORT: '9233',
     ELECTRON_ENABLE_LOGGING: '1',
     XDG_CONFIG_HOME: xdgConfig,
-  },
-  stdio: ['ignore', 'pipe', 'pipe'],
-})
-let appLog = ''
-child.stdout.setEncoding('utf8').on('data', chunk => { appLog += chunk })
-child.stderr.setEncoding('utf8').on('data', chunk => { appLog += chunk })
-const timer = setTimeout(() => child.kill('SIGKILL'), 300_000)
+  }
+  const env = cleanHome
+    ? { ...baseEnv, HOME: userHome, DSH_DESKTOP_PRODUCT_PROFILE: productProfilePath }
+    : { ...baseEnv, DSH_HOME: home }
+  const launched = spawn(process.execPath, [
+    'node_modules/pnpm/bin/pnpm.cjs', 'run', '--config.verifyDepsBeforeRun=false', 'start:desktop',
+  ], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] })
+  launched.stdout.setEncoding('utf-8').on('data', chunk => { appLog += chunk })
+  launched.stderr.setEncoding('utf-8').on('data', chunk => { appLog += chunk })
+  const killTimer = setTimeout(() => launched.kill('SIGKILL'), 300_000)
+  return { child: launched, timer: killTimer }
+}
+const started = launchDesktop()
+const child = started.child
+const timer = started.timer
 
 /** Minimal CDP client over the native WebSocket. */
 async function cdp() {
@@ -275,8 +294,48 @@ try {
   await waitFor(page, `document.body.innerText.includes('Plan mode on') || document.body.innerText.includes('计划模式已开启')`, 'plan toggled on', 30_000)
   await screenshot(page, '09-plan-active.png')
 
-  await writeFile(join(outDir, 'result.json'), `${JSON.stringify({ passed: true, mainRequests: mainCalls.length, target: writtenPath, home }, null, 2)}\n`)
-  console.log(JSON.stringify({ passed: true, mainRequests: mainCalls.length }))
+  if (cleanHome) {
+    // The product seam seeded the isolated home on first start.
+    const glmhHome = join(userHome, '.glmh')
+    assert(!existsSync(join(userHome, '.dsh')), 'the product home must not touch the upstream .dsh root')
+    for (const name of ['desktop', 'gh-web', 'gh-headless', 'gh-remote', 'gh-supervisor']) {
+      const manifest = JSON.parse(await readFile(join(glmhHome, 'profiles', name, 'package.json'), 'utf8'))
+      assert(Array.isArray(manifest.dsh?.profile?.bundles) && manifest.dsh.profile.bundles.length > 0, `profile ${name} seeded with bundles`)
+    }
+    const desktopManifest = JSON.parse(await readFile(join(glmhHome, 'profiles', 'desktop', 'package.json'), 'utf8'))
+    assert(desktopManifest.dsh.profile.bundles.includes('@glm-harness/gh-brand'), 'the reserved desktop profile uses the GH composition')
+    const patchPath = join(glmhHome, 'profiles', 'desktop', 'cordis.patch.yml')
+    const desktopPatch = await readFile(patchPath, 'utf8')
+    assert(desktopPatch.includes('- id: system-prompt'), 'the product patch layer was seeded')
+
+    // Recovery: a user patch edit must survive a restart that re-seeds nothing.
+    await writeFile(patchPath, desktopPatch + '\n# user marker: preserved across restart\n')
+    await screenshot(page, '10-before-restart.png')
+    clearTimeout(timer)
+    child.kill('SIGTERM')
+    await once(child, 'close').catch(() => {})
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      const alive = await fetch('http://127.0.0.1:9232/json').then(() => true).catch(() => false)
+      if (!alive) break
+      if (attempt === 59) throw new Error(`renderer debugger stayed up after stop\n${appLog.slice(-4000)}`)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    const second = launchDesktop()
+    try {
+      const page2 = await cdp()
+      await page2.send('Runtime.enable')
+      await waitFor(page2, 'document.querySelector("textarea, [contenteditable=true]") !== null', 'composer after restart', 120_000)
+      assert((await readFile(patchPath, 'utf8')).includes('# user marker: preserved across restart'), 'the user patch layer survived the restart')
+      await screenshot(page2, '11-after-restart.png')
+    } finally {
+      clearTimeout(second.timer)
+      if (second.child.exitCode === null && second.child.signalCode === null) second.child.kill('SIGKILL')
+    }
+  }
+
+  await writeFile(join(outDir, 'result.json'), `${JSON.stringify({ passed: true, mainRequests: mainCalls.length, target: writtenPath, home: cleanHome ? join(userHome, '.glmh') : home, cleanHome }, null, 2)}\n`)
+  console.log(JSON.stringify({ passed: true, mainRequests: mainCalls.length, cleanHome }))
 } finally {
   clearTimeout(timer)
   if (child.exitCode === null && child.signalCode === null) {

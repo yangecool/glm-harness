@@ -241,6 +241,21 @@ const PROFILE_PATCH_TEMPLATE = `# Your patch layer for this dsh profile, applied
 []
 `
 
+/**
+ * Replace a profile's pristine user patch layer with product-owned content.
+ * A layer the user edited (or a product already wrote) is preserved verbatim,
+ * so first-run seeding and recovery never clobber a customized patch.
+ * @param dir - the profile directory from {@link resolveProfileDir}.
+ * @param patch - the product patch content to seed while the layer is pristine.
+ * @returns whether the patch layer was replaced.
+ */
+export function applyProfilePatchIfPristine(dir: string, patch: string): boolean {
+  const patchPath = join(dir, PROFILE_PATCH_FILENAME)
+  if (readFileSync(patchPath, 'utf8') !== PROFILE_PATCH_TEMPLATE) return false
+  writeFileSync(patchPath, patch)
+  return true
+}
+
 // The hoisted linker gives out-of-tree plugins a flat node_modules whose
 // missing peers (cordis and friends) use the runtime resolution, so every plugin shares the
 // installation's single cordis instance instead of a duplicate. pnpm ≥10

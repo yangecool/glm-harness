@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "mainRequests": 2,
+  "target": "/tmp/gh-desktop-run-fZvDx8/docs/deepseek-harness/default-workspace/desktop-review.txt",
+  "home": "/tmp/gh-desktop-run-fZvDx8/userhome/.glmh",
+  "cleanHome": true
+}

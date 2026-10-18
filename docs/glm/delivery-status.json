@@ -582,7 +582,7 @@
     {
       "id": "GH-006-G",
       "title": "产品插件/profile、制品和生命周期事务收口",
-      "status": "not-started",
+      "status": "complete-slice",
       "planRefs": [
         "11.8 GH-006-G",
         "E04.3",
@@ -596,12 +596,31 @@
         "freeze admissions before drain; lease all execution resources and releases",
         "serialize lifecycle commands and protect in-flight installs from GC; interrupted transactions reconcile",
         "actual archive: node-free install, resident launch, disconnect/reattach, upgrade/rollback and data-preserving uninstall"
+      ],
+      "completed": "2026-10-18",
+      "owner": "常驻远端服务",
+      "deliverables": [
+        "packages/glm/remote-supervisor-app：gh-supervisor 最小 profile（单行 Cordis 树、Config 可调就绪/退避/排水/熔断、启动失败 exit 70 直写 stderr）",
+        "packages/glm/remote-supervisor：lifecycle-lock 生命周期事务（原子 link 声明、死持有者回收、中断可诊断、gc 保护载荷）+ runtime-id（一次铸造、损坏修复）+ install/commit/use/update/rollback/gc/uninstall/stop/restart/status 统一动词 + 接纳关闭排水（describe 能力握手）",
+        "packages/api/session-controller：merge-extensible session/new-prompt waterfall；packages/glm/remote-app：ghRemoteControl 准入门 + describe 汇报 runtimeId/releaseId/admission/capabilities",
+        "scripts/gh-remote/bootstrap.ts：POSIX 只做解压/校验，install/update/rollback/gc/uninstall/status 全部委托 supervisor CLI；GH-005 归档布局与 GH-006 release/指针统一",
+        "scripts/gh-remote-product-verify.ts：真实归档 A/B 10 用例验收（从零安装/握手/断线/崩溃/runtime id/升级排水/回滚/gc/并发/中断/卸载），证据 artifacts/gh-validation/gh006g-product-20261018",
+        "回归：lifecycle-verify 10/10、joint-verify 8/8（MEM03 106MiB/MEM04 432MiB 峰值）、bootstrap 矩阵、supervisor+remote-app 43/43、session-controller+bootstrap 1023/1023、doc-sync 43/43、typecheck/lint/closure 绿"
+      ],
+      "evidence": [
+        "artifacts/gh-validation/gh006g-product-20261018/summary.md",
+        "artifacts/gh-validation/gh006g-product-20261018/product-verify.json"
+      ],
+      "boundaries": [
+        "第二 release 为同树变体标记，非不同产品版本；机器重启未模拟（无容器特权）",
+        "PTY/全局 lease 与全部资源排水覆盖属 GH-009",
+        "升级接纳关闭以 supervisor 事务报告为权威证据（空闲服务关闭窗口短于轮询节拍）"
       ]
     },
     {
       "id": "GH-004-C",
       "title": "干净桌面安装与恢复入口",
-      "status": "not-started",
+      "status": "complete-slice",
       "planRefs": [
         "11.8 GH-004-C",
         "E01",
@@ -613,6 +632,24 @@
         "private GH plugins, profile patch and visual assets ship in the installer",
         "packaged Electron under a clean home completes GLM/permissions/remote/recovery workflows",
         "DSH default templates remain generic; no dependency on a pre-seeded source fixture"
+      ],
+      "completed": "2026-10-18",
+      "owner": "GLM 桌面",
+      "deliverables": [
+        "apps/desktop/src/product-profile.ts：ProductProfile 接缝（env 覆盖 > runtime 旁 product-profile.json > 上游默认；坏元数据响亮失败；homeDirName 钉住优先级）",
+        "packages/boot/app-boot：applyProfilePatchIfPristine 导出（pristine 层播种、永不覆盖用户编辑）",
+        "DesktopProjectManager/main.ts/dev.ts：外部 profile、项目元数据、home 解析全部走产品组合；gh-init-profiles --product-profile 生成 GH 产品文档（.glmh + 五 profile + 产品 patch）",
+        "scripts/gh-desktop-run.mjs --clean-home：真实 Electron 干净 home 首启/重启恢复验证（11 截图），证据 artifacts/gh-validation/gh004c-desktop-20261018",
+        "修复既有缺陷：GH 组合禁用上游 account-controller（缺 owner 永 pending 致欢迎流 boot 硬失败）+ welcome 容错传输层 404；6 个桌面 spec 快照/期望品牌化漂移更新；product-profile.spec 6/6"
+      ],
+      "evidence": [
+        "artifacts/gh-validation/gh004c-desktop-20261018/summary.md",
+        "artifacts/gh-validation/gh004c-desktop-20261018/result.json"
+      ],
+      "boundaries": [
+        "本平台为 Linux 未打包开发入口；Windows 安装包与正式发版按指示暂缓",
+        "打包发行（product-profile.json 随 runtime 入包、安装器、签名）属发版切片",
+        "apps/desktop/tests/macos-notarization-proxy.spec.ts 15 例既有失败（HEAD 复现；addon 探测路径与 pnpm --dir 兼容性）留待 macOS 平台恢复"
       ]
     }
   ],

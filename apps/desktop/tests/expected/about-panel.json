@@ -1,7 +1,7 @@
 {
   "darwin:en-US": {
     "menu": [
-      { "label": "About DeepSeek Harness", "role": "about" },
+      { "label": "About GLM Harness", "role": "about" },
       { "type": "separator" }
     ],
     "options": {
@@ -14,7 +14,7 @@
   },
   "darwin:zh-CN": {
     "menu": [
-      { "label": "关于 DeepSeek Harness", "role": "about" },
+      { "label": "关于 GLM Harness", "role": "about" },
       { "type": "separator" }
     ],
     "options": {
@@ -27,7 +27,7 @@
   },
   "win32:zh-CN": {
     "menu": [
-      { "label": "关于 DeepSeek Harness" },
+      { "label": "关于 GLM Harness" },
       { "type": "separator" }
     ],
     "options": {
@@ -40,7 +40,7 @@
   },
   "win32:en-US": {
     "menu": [
-      { "label": "About DeepSeek Harness" },
+      { "label": "About GLM Harness" },
       { "type": "separator" }
     ],
     "options": {

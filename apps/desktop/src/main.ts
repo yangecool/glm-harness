@@ -23,6 +23,8 @@ import {
   type MenuItemConstructorOptions,
 } from 'electron'
 import { resolveDesktopPaths } from './paths.ts'
+import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import { productPinnedHome, resolveProductProfile, seedProductHomeProfiles } from './product-profile.ts'
 import { DesktopProjectManager } from './project-manager.ts'
 import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError } from './host-process.ts'
 import { DesktopPlatformView, PLATFORM_IPC, platformBounds } from './platform-view.ts'
@@ -97,7 +99,8 @@ const recovery = new DesktopFatalRecovery({
   show: options => dialog.showMessageBox(options),
   stop: () => { shuttingDown = true; return stopForRecovery() },
   disablePlugins: async () => {
-    const manager = new DesktopProjectManager(resolveDesktopPaths(), runtimeResources())
+    const recoveryResources = runtimeResources()
+    const manager = new DesktopProjectManager(resolveDesktopPaths(), recoveryResources, resolveProductProfile(recoveryResources.dsh))
     const backupPath = await manager.disableAllPlugins()
     console.info('Desktop profile recovery completed:', { profilePatchBackup: backupPath ?? null, homePatch: 'unchanged' })
   },
@@ -320,13 +323,22 @@ async function main(): Promise<void> {
   const journalDirectory = process.env.DSH_DESKTOP_UPDATE_JOURNAL_DIR
   const updateJournal = journalDirectory === undefined ? undefined : new DesktopUpdateJournal(journalDirectory, app.getVersion())
   const resources = runtimeResources()
+  // The product seam decides the composition before any path resolves: a
+  // distribution's metadata pins the Harness home (unless $DSH_HOME wins) so
+  // the Electron shell, the Host child, and the CLI agree on one root.
+  const product = resolveProductProfile(resources.dsh)
+  const pinnedHome = productPinnedHome(product)
+  if (pinnedHome !== undefined) process.env.DSH_HOME = pinnedHome
   const paths = resolveDesktopPaths()
+  if (Object.keys(product.homeProfiles).length > 0) {
+    console.info('Desktop product profiles seeded:', seedProductHomeProfiles(resolveDshHome(), product))
+  }
   const development = !app.isPackaged
   const primaryRuntime = development
     ? developmentPrimaryRuntime()
     : join(process.resourcesPath, 'runtime', 'primary-runtime')
   const activeProject = paths.profile
-  const manager = new DesktopProjectManager(paths, resources)
+  const manager = new DesktopProjectManager(paths, resources, product)
   // Dock and Finder launches inherit only launchd's environment; every Host shares one login-shell read.
   const loginShellRead = new AbortController()
   // The probe runs in its own process group, which outlives Desktop unless the read is aborted.

@@ -1,0 +1,64 @@
+$ pnpm --filter @deepseek-ai/dsh-desktop run start
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+$ tsx scripts/dev.ts --skip-build
+desktop development: linux-x64 target, skipping packaged primary-runtime preparation
+desktop development: DSH_HOME=/tmp/gh-desktop-run-fZvDx8/userhome/.glmh
+desktop development: userData=/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/apps/desktop/.desktop-build/development/electron-user-data
+desktop development: inspectors main=9231, renderer=9232, host=9233
+Debugger listening on ws://127.0.0.1:9231/30bdf524-55a1-4142-ad89-94936ba2c8ac
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:9232/devtools/browser/c0b36293-cec6-4266-86f2-de30870e5921
+Desktop product profiles seeded: [ 'gh-web', 'gh-headless', 'gh-remote', 'gh-supervisor', 'desktop' ]
+[2872670:1018/222042.389177:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.
+[2872670:1018/222042.391691:WARNING:ui/gfx/linux/gbm_support_x11.cc:48] dri3 extension not supported.
+Debugger listening on ws://127.0.0.1:9233/dae9f306-fb3c-4217-8a01-713b339e97ce
+For help, see: https://nodejs.org/learn/getting-started/debugging
+[2872634:1018/222042.542100:INFO:CONSOLE:2] "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: node:electron/js2c/sandbox_bundle (2)
+dsh web: http://127.0.0.1:37701/?token=dQ0a0hMB3N9u8Zw3jSSAkk1aapWFc8jq1dixWKvr1Yo
+[2872634:1018/222046.189621:ERROR:content/browser/network_service_instance_impl.cc:650] Network service crashed or was terminated, restarting service.
+[2872634:1018/222046.201876:ERROR:content/common/zygote/zygote_communication_linux.cc:291] Failed to send GetTerminationStatus message to zygote
+[2872634:1018/222046.201903:WARNING:content/common/zygote/zygote_communication_linux.cc:303] Socket closed prematurely.
+[2872634:1018/222046.203709:ERROR:content/browser/gpu/gpu_process_host.cc:1029] GPU process launch failed: error_code=1002
+[2872634:1018/222046.203838:WARNING:content/browser/gpu/gpu_process_host.cc:1479] The GPU process has crashed 1 time(s)
+[2872634:1018/222046.204703:ERROR:content/browser/gpu/gpu_process_host.cc:1029] GPU process launch failed: error_code=1002
+[2872634:1018/222046.204716:WARNING:content/browser/gpu/gpu_process_host.cc:1479] The GPU process has crashed 2 time(s)
+[2872634:1018/222046.205333:ERROR:content/browser/gpu/gpu_process_host.cc:1029] GPU process launch failed: error_code=1002
+[2872634:1018/222046.205343:WARNING:content/browser/gpu/gpu_process_host.cc:1479] The GPU process has crashed 3 time(s)
+[2872634:1018/222046.205359:FATAL:content/browser/gpu/gpu_data_manager_impl_private.cc:417] GPU process isn't usable. Goodbye.
+$ pnpm --filter @deepseek-ai/dsh-desktop run start
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+$ tsx scripts/dev.ts --skip-build
+desktop development: linux-x64 target, skipping packaged primary-runtime preparation
+desktop development: DSH_HOME=/tmp/gh-desktop-run-fZvDx8/userhome/.glmh
+desktop development: userData=/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/apps/desktop/.desktop-build/development/electron-user-data
+desktop development: inspectors main=9231, renderer=9232, host=9233
+Debugger listening on ws://127.0.0.1:9231/40b6222e-803c-4c91-945c-d2c743082c6e
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:9232/devtools/browser/0c6c8c02-ee24-4330-9278-f33c10c1e25c
+Desktop product profiles seeded: [ 'gh-web', 'gh-headless', 'gh-remote', 'gh-supervisor', 'desktop' ]
+[2873003:1018/222050.018746:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.
+[2873003:1018/222050.020213:WARNING:ui/gfx/linux/gbm_support_x11.cc:48] dri3 extension not supported.
+Debugger listening on ws://127.0.0.1:9233/7e5d8ff2-20b5-4cb6-b388-d3a3b9a589e4
+For help, see: https://nodejs.org/learn/getting-started/debugging
+[2872966:1018/222050.166018:INFO:CONSOLE:2] "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: node:electron/js2c/sandbox_bundle (2)
+dsh web: http://127.0.0.1:41197/?token=pnjTvIGxlU-mPChDXKvwYMDKW2aHM56gO0JGn97kO3c

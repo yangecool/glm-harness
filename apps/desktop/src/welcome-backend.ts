@@ -41,6 +41,13 @@ class WelcomeRpcError extends Error {
   }
 }
 
+/** A non-2xx RPC transport answer; optional-service handling matches the method and status. */
+class WelcomeHttpError extends Error {
+  constructor(readonly endpoint: string, readonly status: number) {
+    super(`desktop welcome: Web request failed (${endpoint}: ${String(status)})`)
+  }
+}
+
 /**
  * Authenticate the native HTTP client through the Web application's launch URL.
  * @param authenticatedUrl - URL supplied by the running Desktop Host.
@@ -67,7 +74,7 @@ export async function connectDesktopWelcome(
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ type: 'client-request', rpcId, method, payload: { args: request.args } }),
     })
-    if (!response.ok) throw new Error('desktop welcome: Web request failed')
+    if (!response.ok) throw new WelcomeHttpError(method, response.status)
     const envelope: unknown = await response.json()
     if (!record(envelope) || envelope.type !== 'server-response' || envelope.rpcId !== rpcId
       || !record(envelope.result) || envelope.result.ok !== true) {
@@ -137,8 +144,12 @@ export async function connectDesktopWelcome(
     try {
       loggedIn = (await account.state()).status === 'credential-stored'
     } catch (error) {
-      if (!(error instanceof WelcomeRpcError) || error.code !== 'gateway/invocation-unavailable'
-        || error.endpoint !== 'account/getState') throw error
+      // Compositions without an account namespace read as signed-out: the
+      // absent method answers invocation-unavailable (envelope) or 404
+      // (transport). Anything else keeps its hard failure.
+      const absentRpc = error instanceof WelcomeRpcError && error.code === 'gateway/invocation-unavailable'
+      const absentHttp = error instanceof WelcomeHttpError && error.status === 404
+      if (!(absentRpc || absentHttp) || (error as { endpoint?: string }).endpoint !== 'account/getState') throw error
       loggedIn = false
     }
     return {

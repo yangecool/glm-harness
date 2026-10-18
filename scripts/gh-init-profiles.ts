@@ -71,6 +71,13 @@ const GH_WEB_PROFILE_PATCH = `
 - id: harness-dev-context
   disabled: true
 
+# The web-app bundle composes the upstream account controller, whose
+# deepseekAccount owner GH never ships (gh-account owns GH sign-in). Left
+# standing it stays pending and the desktop welcome hard-fails boot on
+# account/getState; disabled, the composition reads signed-out.
+- id: account-controller
+  disabled: true
+
 # The web-app bundle's preset-menu client cannot activate here: its host
 # permissionPresets service is disabled (gh-permissions owns the modes), and a
 # client entry that never activates fails the web boot gate. The GH composer
@@ -115,9 +122,39 @@ function homeFromArgv(argv: readonly string[]): string {
   return join(homedir(), '.glmh')
 }
 
+/**
+ * The GH product-profile document the Electron seam reads: the desktop
+ * composition plus every CLI profile, the GH home directory name, and the
+ * product patch layers. Packaging ships this beside the runtime descriptor;
+ * `$DSH_DESKTOP_PRODUCT_PROFILE` points a desktop launch at it.
+ * @returns the product-profile document.
+ */
+export function renderGhProductProfile(): Record<string, unknown> {
+  const homeProfiles: Record<string, { bundles: readonly string[]; patch: string }> = {}
+  for (const [name, bundles] of Object.entries(GH_PROFILES)) {
+    const patch = GH_WEB_PROFILES.has(name) ? GH_PROFILE_PATCH + GH_WEB_PROFILE_PATCH : GH_PROFILE_PATCH
+    homeProfiles[name] = { bundles: [...bundles], patch }
+  }
+  return {
+    productName: 'GLM Harness',
+    homeDirName: '.glmh',
+    bundles: [...(GH_PROFILES.desktop ?? [])],
+    profilePatch: GH_PROFILE_PATCH + GH_WEB_PROFILE_PATCH,
+    homeProfiles,
+  }
+}
+
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const home = homeFromArgv(process.argv.slice(2))
-  for (const dir of initGhProfiles(home)) {
-    console.log(`gh: initialized ${dir}`)
+  const args = process.argv.slice(2)
+  const profileIndex = args.indexOf('--product-profile')
+  const profilePath = profileIndex !== -1 ? args[profileIndex + 1] : undefined
+  if (profilePath !== undefined && profilePath !== '') {
+    writeFileSync(profilePath, `${JSON.stringify(renderGhProductProfile(), null, 2)}\n`)
+    console.log(`gh: wrote product profile ${profilePath}`)
+  } else {
+    const home = homeFromArgv(args)
+    for (const dir of initGhProfiles(home)) {
+      console.log(`gh: initialized ${dir}`)
+    }
   }
 }

@@ -64,6 +64,7 @@ export {
   bundlePatchFiles,
   bundlePatchPaths,
   initProfile,
+  applyProfilePatchIfPristine,
   removeLinkProjections,
   loadProfile,
   loadProfileDirectory,

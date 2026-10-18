@@ -23,8 +23,9 @@ import type { DesktopPaths } from './paths.ts'
 import type { DesktopRelease } from './release.ts'
 import { readDesktopRuntime } from './runtime-tree.ts'
 import {
-  initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
+  applyProfilePatchIfPristine, initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
 } from '@deepseek-ai/dsh-app-boot'
+import type { ProductProfile } from './product-profile.ts'
 
 const PROJECT_NAME = '@deepseek-ai/dsh-desktop-runtime'
 const DSH_PACKAGE = '@deepseek-ai/dsh'
@@ -62,10 +63,12 @@ export class DesktopProjectManager {
   /**
    * @param paths - Electron-owned package state and reserved desktop profile paths.
    * @param runtime - location of the bundled application runtime.
+   * @param product - the product composition the profile installs.
    */
   constructor(
     readonly paths: DesktopPaths,
     readonly runtime: { readonly dsh: string },
+    readonly product: Pick<ProductProfile, 'bundles' | 'profilePatch'> = { bundles: WEB_PROFILE.bundles, profilePatch: '' },
   ) {}
 
   /**
@@ -74,7 +77,7 @@ export class DesktopProjectManager {
    * @returns Backup path after the locked profile write, or undefined if the patch was absent.
    */
   async disableAllPlugins(): Promise<string | undefined> {
-    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, WEB_PROFILE.bundles))
+    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, this.product.bundles))
   }
 
   /**
@@ -85,7 +88,7 @@ export class DesktopProjectManager {
       // Validation only: an unreadable or mismatched runtime descriptor stops preparation before the Host starts.
       readDesktopRuntime(this.runtime.dsh)
       migrateProfileSettings(this.paths.profile)
-      createPluginProfile(this.paths.profile)
+      createPluginProfile(this.paths.profile, this.product)
       removeLinkProjections(this.paths.profile)
     })
   }
@@ -131,7 +134,11 @@ export class DesktopProjectManager {
 }
 
 /** Create build-only project metadata for materializing the signed runtime. */
-export function createRuntimeProjectMetadata(projectDir: string, release: DesktopRelease): void {
+export function createRuntimeProjectMetadata(
+  projectDir: string,
+  release: DesktopRelease,
+  product: Pick<ProductProfile, 'bundles'> = { bundles: WEB_PROFILE.bundles },
+): void {
   mkdirSync(projectDir, { recursive: true, mode: 0o700 })
   const packageSet = verifyDesktopCorePackageSet(projectDir, release.version)
   const manifest = {
@@ -139,7 +146,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
     private: true,
     version: '0.0.0',
     dependencies: desktopCorePackageOverrides(packageSet),
-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    dsh: { profile: { bundles: [...product.bundles] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(
@@ -154,7 +161,11 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
  * @param projectDir - Disposable development profile directory.
  * @param release - Release identity shared by the linked CLI package and Electron shell.
  */
-export function createDevelopmentProjectMetadata(projectDir: string, release: DesktopRelease): void {
+export function createDevelopmentProjectMetadata(
+  projectDir: string,
+  release: DesktopRelease,
+  product: Pick<ProductProfile, 'bundles'> = { bundles: WEB_PROFILE.bundles },
+): void {
   mkdirSync(projectDir, { recursive: true, mode: 0o700 })
   const manifest = {
     name: PROJECT_NAME,
@@ -164,13 +175,17 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
       [DSH_PACKAGE]: release.version,
       [DESKTOP_HOST_PACKAGE]: release.version,
     },
-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    dsh: { profile: { bundles: [...product.bundles] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(join(projectDir, 'pnpm-workspace.yaml'), workspaceFile(), { mode: 0o600 })
 }
 
 /** Create the first external plugin profile without running a package manager. */
-export function createPluginProfile(projectDir: string): void {
-  initProfile(projectDir, WEB_PROFILE.bundles)
+export function createPluginProfile(
+  projectDir: string,
+  product: Pick<ProductProfile, 'bundles' | 'profilePatch'> = { bundles: WEB_PROFILE.bundles, profilePatch: '' },
+): void {
+  initProfile(projectDir, product.bundles)
+  if (product.profilePatch !== '') applyProfilePatchIfPristine(projectDir, product.profilePatch)
 }

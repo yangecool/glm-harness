@@ -1,0 +1,6 @@
+== GH-004-C gates 2026-10-18T22:43:35+08:00
+product-profile.spec: 6/6
+desktop suite: 1617/1632 pass, 15 pre-existing macos-notarization failures (fail at HEAD; addon path + pnpm --dir compat — macOS tooling deferred)
+clean-home real-Electron run: passed (11 screenshots, result.json)
+normal-mode real-Electron run: passed (normal-mode.log)
+typecheck/lint/doc-sync: green

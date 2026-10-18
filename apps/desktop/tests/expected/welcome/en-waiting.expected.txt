@@ -1,5 +1,5 @@
-DeepSeek Harness
-DeepSeek Harness
+GLM Harness
+GLM Harness
 Browser didn’t open automatically?
 Copy sign-in link
 Completing sign in… [disabled]
