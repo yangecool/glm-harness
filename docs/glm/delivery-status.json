@@ -512,6 +512,16 @@
       "evidence": "artifacts/gh-validation/gh006d-reattach-20261018-144818",
       "summary": "admission-unknown 客户端对账（isCarrierFailure + session/admission 重连清扫）；真服务 6/6：断线续跑、基线+游标、双连接单执行、disconnect 不取消/显式取消 5ms、审批 waterfall 断开重投递+allowed-once 执行门控命令",
       "gates": "unit 1929 pass / typecheck 5/5 / oxlint 0 err / closure 0"
+    },
+    {
+      "id": "GH-006-E",
+      "title": "生命周期/版本",
+      "date": "2026-10-18",
+      "status": "done",
+      "commit": "bdd814f3ca",
+      "evidence": "artifacts/gh-validation/gh006e-lifecycle-20261018-151644",
+      "summary": "releases/<id> 不可变安装+current.json 原子指针+update/rollback/gc/uninstall 动词；ghRemote/activity RPC 排水；真监护验收 10/10（含真实服务长任务期间 update 等待空闲再切换）",
+      "gates": "unit 26 pass / typecheck 5/5 / oxlint 0 err / closure 0 / 翻译配对过"
     }
   ],
   "blocked": [

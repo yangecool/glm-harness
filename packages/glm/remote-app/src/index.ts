@@ -17,13 +17,16 @@ import { getDshRuntimeVersion } from '@deepseek-ai/dsh-app-boot'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
-import type { GhRemoteIdentity } from './types.ts'
+import type {} from '@deepseek-ai/dsh-agent'
+import type { GhRemoteActivity, GhRemoteIdentity } from './types.ts'
 
 /** Identity facts fixed for the process lifetime. */
 const STARTED_AT = new Date().toISOString()
 
 /** The `ghRemote` Remote namespace: what a connecting client asks before attaching. */
 export class GhRemoteIdentityService extends TypertRemoteService {
+  static inject = ['agents']
+
   constructor(ctx: Context) {
     super(ctx, 'ghRemoteIdentity', { namespace: 'ghRemote' })
   }
@@ -43,6 +46,20 @@ export class GhRemoteIdentityService extends TypertRemoteService {
       arch: process.arch,
       pid: process.pid,
       startedAt: STARTED_AT,
+    }
+  }
+
+  /**
+   * Report execution activity: the running-agent count a supervisor's drain
+   * gate polls before a version switch.
+   * @returns running and total live agent counts.
+   */
+  @Remote
+  activity(): GhRemoteActivity {
+    const agents = this.ctx.agents.list()
+    return {
+      runningAgents: agents.filter(agent => agent.status === 'running').length,
+      agents: agents.length,
     }
   }
 }

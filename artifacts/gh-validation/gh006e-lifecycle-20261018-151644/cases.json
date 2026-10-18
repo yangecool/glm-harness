@@ -1,0 +1,52 @@
+[
+  {
+    "name": "install-sealed",
+    "passed": true,
+    "detail": "stdout=r-alpha"
+  },
+  {
+    "name": "install-immutable",
+    "passed": true,
+    "detail": "exit=69 gh-remote-supervisor: release r-alpha is already installed; releases are immutable"
+  },
+  {
+    "name": "run-from-current-release",
+    "passed": true,
+    "detail": "identity.releaseId=r-alpha pid=632074"
+  },
+  {
+    "name": "update-switches-release",
+    "passed": true,
+    "detail": "releaseId=r-beta pid 632074→632103"
+  },
+  {
+    "name": "rollback-returns-previous",
+    "passed": true,
+    "detail": "releaseId=r-alpha pid 632103→632138"
+  },
+  {
+    "name": "gc-keeps-pinned-releases",
+    "passed": true,
+    "detail": "removed=[\"r-extra\"] kept={\"r-alpha\":\"live service runs it\",\"r-beta\":\"rollback target\"}"
+  },
+  {
+    "name": "interrupted-install-diagnosable",
+    "passed": true,
+    "detail": "status staging=[\".staging-r-torn\"] gc removed=[\".staging-r-torn\"]"
+  },
+  {
+    "name": "uninstall-keeps-data",
+    "passed": true,
+    "detail": "out=uninstalled (data kept) data=durable"
+  },
+  {
+    "name": "activity-rpc-idle",
+    "passed": true,
+    "detail": "activity={\"runningAgents\":0,\"agents\":1}"
+  },
+  {
+    "name": "update-drains-activity",
+    "passed": true,
+    "detail": "drain line seen=true noFixtureAbort=true releaseId=r-post updaterErr=gh-remote-supervisor: activity idle before switch\n"
+  }
+]

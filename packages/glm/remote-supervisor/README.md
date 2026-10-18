@@ -38,7 +38,21 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" run -- \
   --no-open --host 127.0.0.1 --port 0
 ```
 
-There is no configuration file; behavior is fixed product policy (ready timeout 60s, backoff 1s doubling to 60s, drain grace 10s, circuit at 5 crashes per 5 minutes). The verbs: `run`, `stop`, `restart`, `status` print or act on the root's lock and identity files; exit codes are 0 clean, 64 usage, 69 lock refused, 75 circuit open, 76 spawn failure.
+There is no configuration file; behavior is fixed product policy (ready timeout 60s, backoff 1s doubling to 60s, drain grace 10s, circuit at 5 crashes per 5 minutes). The verbs: `run`, `stop`, `restart`, `status` print or act on the root's lock and identity files; exit codes are 0 clean, 64 usage, 69 lock refused (or immutable-release collision), 75 circuit open, 76 spawn failure.
+
+### Release lifecycle
+
+`run` without an explicit `-- CMD` launches the current release: immutable runtime directories under `<root>/releases/<id>/` (each sealed with a `gh-release.json` manifest, entry `lib/bin.js`, optional bundled `bin/node`), named by a rename-atomic `<root>/releases/current.json` pointer that also chains the previous release for rollback.
+
+```sh
+node lib/index.js --root "$GH_REMOTE_HOME/data" install --from "$EXTRACTED_RUNTIME" --id r-1
+node lib/index.js --root "$GH_REMOTE_HOME/data" update --from "$NEXT_RUNTIME" --id r-2 --drain-timeout 30000
+node lib/index.js --root "$GH_REMOTE_HOME/data" rollback
+node lib/index.js --root "$GH_REMOTE_HOME/data" gc
+node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
+```
+
+`install` copies the source into a staging directory and commits it with one rename, so a release is complete or absent and a repeat install under the same id is refused. `update` and `rollback` poll the live service's `ghRemote/activity` RPC until no agent is running (or the drain timeout elapses), stop through the drain ladder, switch the pointer, and relaunch from the new release; the identity file records which release is live. `gc` removes interrupted-install staging leftovers and every release nothing pins — current, rollback target, and any release a live service still runs are kept. `uninstall` removes the runtimes and service state while keeping every other byte of the root; `uninstall --purge` deletes the root itself.
 
 -----
 
@@ -52,8 +66,10 @@ There is no configuration file; behavior is fixed product policy (ready timeout 
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Lock, identity, readiness, backoff, circuit breaker, drain ladder, CLI verbs |
+| [`src/index.ts`](src/index.ts) | Lock, identity, readiness, backoff, circuit breaker, drain ladder, CLI verbs, activity drain |
+| [`src/releases.ts`](src/releases.ts) | Immutable release installs, atomic current pointer, gc pinning, uninstall split |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | Lock races, identity lifecycle, ready-line edge cases, backoff caps, circuit, drain escalation, CLI verbs |
+| [`tests/releases.spec.ts`](tests/releases.spec.ts) | Install immutability, pointer chaining, staging diagnosis, gc pins, uninstall data retention |
 
 </details>
 

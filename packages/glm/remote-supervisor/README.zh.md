@@ -38,7 +38,21 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" run -- \
   --no-open --host 127.0.0.1 --port 0
 ```
 
-没有配置文件；行为是固定产品策略（就绪超时 60s，退避 1s 翻倍至 60s，排水宽限 10s，5 分钟 5 次崩溃断路）。动词：`run`、`stop`、`restart`、`status` 读取或作用于数据根的 lock 与 identity 文件；退出码 0 干净、64 用法、69 锁被拒、75 断路打开、76 拉起失败。
+没有配置文件；行为是固定产品策略（就绪超时 60s，退避 1s 翻倍至 60s，排水宽限 10s，5 分钟 5 次崩溃断路）。动词：`run`、`stop`、`restart`、`status` 读取或作用于数据根的 lock 与 identity 文件；退出码 0 干净、64 用法、69 锁被拒（或不可变 release 冲突）、75 断路打开、76 拉起失败。
+
+### 版本生命周期
+
+不带显式 `-- CMD` 的 `run` 启动当前 release：`<root>/releases/<id>/` 下的不可变运行时目录（各以 `gh-release.json` 清单封缄，入口 `lib/bin.js`，可带自带 `bin/node`），由一次 rename 原子写成的 `<root>/releases/current.json` 指针选定，并链出上一个 release 供回滚。
+
+```sh
+node lib/index.js --root "$GH_REMOTE_HOME/data" install --from "$EXTRACTED_RUNTIME" --id r-1
+node lib/index.js --root "$GH_REMOTE_HOME/data" update --from "$NEXT_RUNTIME" --id r-2 --drain-timeout 30000
+node lib/index.js --root "$GH_REMOTE_HOME/data" rollback
+node lib/index.js --root "$GH_REMOTE_HOME/data" gc
+node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
+```
+
+`install` 把源复制进暂存目录后以一次 rename 提交，release 要么完整要么不存在，同 id 重复安装被拒绝。`update` 与 `rollback` 先轮询存活服务的 `ghRemote/activity` RPC 直到没有运行中的 agent（或排水超时），经排水阶梯停止、切换指针、再从新 release 拉起；identity 文件记录当前运行的 release。`gc` 移除中断安装的暂存残留和没有任何钉住的 release——current、回滚目标、以及存活服务仍在运行的 release 都保留。`uninstall` 移除运行时与服务状态但保留数据根的其余字节；`uninstall --purge` 才删除整个数据根。
 
 -----
 
@@ -52,8 +66,10 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" run -- \
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | 锁、identity、就绪、退避、断路器、排水阶梯、CLI 动词 |
+| [`src/index.ts`](src/index.ts) | 锁、identity、就绪、退避、断路器、排水阶梯、CLI 动词、activity 排水 |
+| [`src/releases.ts`](src/releases.ts) | 不可变 release 安装、原子 current 指针、gc 钉住、卸载分离 |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | 锁竞争、identity 生命周期、就绪行边界、退避封顶、断路、排水升级、CLI 动词 |
+| [`tests/releases.spec.ts`](tests/releases.spec.ts) | 安装不可变、指针链、暂存诊断、gc 钉住、卸载数据保留 |
 
 </details>
 

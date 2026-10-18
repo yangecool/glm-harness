@@ -12,6 +12,9 @@
       "path": "../../../vendor/cordis"
     },
     {
+      "path": "../../core/agent"
+    },
+    {
       "path": "../../boot/app-boot"
     },
     {

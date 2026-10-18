@@ -105,7 +105,7 @@ it('reads identities tolerantly: absent, malformed, foreign, and valid', async (
   expect(await readIdentity(paths)).toBe(null)
   const valid: IdentityPayload = {
     kind: 'gh-remote-supervisor-identity', pid: 123, nonce: 'n', startedAt: 1,
-    readyAt: 2, restarts: 0, circuitOpen: false, readyUrl: 'http://x', command: ['x'],
+    readyAt: 2, restarts: 0, circuitOpen: false, readyUrl: 'http://x', releaseId: null, command: ['x'],
   }
   await writeFile(paths.identityFile, JSON.stringify(valid))
   expect(await readIdentity(paths)).toEqual(valid)

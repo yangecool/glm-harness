@@ -1,0 +1,26 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+no current release at /tmp/gh-releases-qMyzon; install one or pass run -- CMD
+ ✓ |thread-safe| packages/glm/remote-supervisor/tests/releases.spec.ts (8 tests) 35ms
+usage: gh-remote-supervisor [--root DIR] (run [-- CMD [ARGS…]] | stop | restart | status | install --from DIR [--id ID] [--note NOTE] | use ID | update --from DIR [--drain-timeout MS] | rollback [--drain-timeout MS] | gc | uninstall [--purge])
+usage: gh-remote-supervisor [--root DIR] (run [-- CMD [ARGS…]] | stop | restart | status | install --from DIR [--id ID] [--note NOTE] | use ID | update --from DIR [--drain-timeout MS] | rollback [--drain-timeout MS] | gc | uninstall [--purge])
+usage: gh-remote-supervisor [--root DIR] (run [-- CMD [ARGS…]] | stop | restart | status | install --from DIR [--id ID] [--note NOTE] | use ID | update --from DIR [--drain-timeout MS] | rollback [--drain-timeout MS] | gc | uninstall [--purge])
+no current release at /tmp/gh-supervisor-876o3I; install one or pass run -- CMD
+run requires a command after `--`
+usage: gh-remote-supervisor [--root DIR] (run [-- CMD [ARGS…]] | stop | restart | status | install --from DIR [--id ID] [--note NOTE] | use ID | update --from DIR [--drain-timeout MS] | rollback [--drain-timeout MS] | gc | uninstall [--purge])
+no live supervised service at /tmp/gh-supervisor-876o3I
+gh-remote-supervisor: /tmp/gh-supervisor-876o3I is not supervised
+{"identity":null,"current":null,"releases":[],"staging":[],"liveReleaseHeld":null}
+gh-remote-supervisor: this process already holds the lock
+{"identity":{"kind":"gh-remote-supervisor-identity","pid":632595,"nonce":"434c4edf-66d6-4afc-bf13-0ec1de6a3068","startedAt":1792307813651,"readyAt":1792307813651,"restarts":0,"circuitOpen":false,"readyUrl":"http://127.0.0.1:1/token#x","releaseId":null,"command":["/usr/bin/node","-e","process.stdout.write(\"gh-remote ready: http://127.0.0.1:1/token#x\" + '\\n')\nprocess.on('SIGTERM', () => { process.exit(0) })\nsetInterval(() => {}, 1 << 30)"]},"current":null,"releases":[],"staging":[],"liveReleaseHeld":null}
+ ✓ |thread-safe| packages/glm/remote-supervisor/tests/supervisor.spec.ts (18 tests) 11562ms
+   ✓ stop verb escalates when the supervised child ignores SIGTERM  10124ms
+
+ Test Files  2 passed (2)
+      Tests  26 passed (26)
+   Start at  15:16:52
+   Duration  11.79s (transform 178ms, setup 148ms, import 105ms, tests 11.60s, environment 0ms)
