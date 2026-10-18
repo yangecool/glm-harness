@@ -97,7 +97,8 @@ This matrix shows which packages dispatch each harness-owned event and which pac
 <!-- BEGIN GENERATED event-producer-consumer:undeclared -->
 | Event string | Dispatchers | Listeners |
 | --- | --- | --- |
-| `connection/reset` | `gateway` (`emit`) | `terminal-controller`, `ui-settings` |
+| `command/executed` | `ui-commands` (`events.dispatch`) | - |
+| `connection/reset` | `gateway` (`emit`) | `terminal-controller`, `ui-commands`, `ui-settings` |
 | `internal/config` | [`config-editor`](../packages/boot/config-editor) (`waterfall`) | [`llm-pi-ai`](../packages/llm/llm-pi-ai) |
 | `internal/dispatch` | - | [`terminal-bash`](../packages/terminal/terminal-bash) |
 | `internal/plugin` | - | `computer-use-cua-driver-native`, `inspector`, `loader`, [`lsp-stdio`](../packages/lsp/lsp-stdio), [`mcp-client`](../packages/mcp/mcp-client), `modules` |
@@ -105,7 +106,7 @@ This matrix shows which packages dispatch each harness-owned event and which pac
 | `internal/status` | - | [`agent`](../packages/core/agent), `inspector`, `translator`, [`web`](../packages/web/web) |
 | `internal/update` | - | [`app-boot`](../packages/boot/app-boot) |
 | `loader/volatile-update` | - | [`cua`](../packages/experimental/cua), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`plugin-market`](../packages/boot/plugin-market), `product-analytics`, `speech-to-text` |
-| `locale/change` | `locale` (`emit`) | `locale` |
+| `locale/change` | `locale` (`emit`) | `locale`, `ui-input-trigger` |
 | `slash/input-begin-command` | - | `ui-conversation` |
 | `slash/input-consume-token` | - | `ui-conversation` |
 | `slash/input-insert-reference` | - | `ui-conversation` |

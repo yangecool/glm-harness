@@ -1,0 +1,36 @@
+{
+  "scope": "real loopback OpenSSH, detached gh-headless runner inside the no-Node PATH jail, loopback GLM fixture",
+  "archive": "gh-remote-0.2.1-rc.1-linux-x64.tar.gz",
+  "rounds": 1150,
+  "readySeconds": 20,
+  "requestsSeen": 2301,
+  "sessionEvents": 10263,
+  "done": true,
+  "ready": {
+    "rss": {
+      "samples": 16,
+      "medianKb": 108732,
+      "peakKb": 148420
+    },
+    "pss": {
+      "samples": 16,
+      "medianKb": 104385,
+      "peakKb": 144073
+    }
+  },
+  "task": {
+    "rss": {
+      "samples": 48,
+      "medianKb": 259992,
+      "peakKb": 366784
+    },
+    "pss": {
+      "samples": 48,
+      "medianKb": 255581,
+      "peakKb": 362373
+    }
+  },
+  "logTail": [
+    "GH_REMOTE_MEM_DONE"
+  ]
+}

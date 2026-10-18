@@ -1,0 +1,13 @@
+== closure ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+== constraints ==
+== oxlint (gh-remote scope) ==
+Found 0 warnings and 0 errors.
+Finished in 1.8s on 15 files with 90 rules using 14 threads.
+== vitest scripts/gh-remote ==
+ Test Files  4 passed (4)
+      Tests  20 passed (20)
+== doc-sync ==
+PASS gates: 42
+== FAILED repository references (9.69s) ==
+  - FAILED repository references (9.69s, exit 1)

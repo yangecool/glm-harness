@@ -1,0 +1,102 @@
+{
+  "runId": "gh005-remote-20261018-011344",
+  "cases": [
+    {
+      "id": "SPEC01",
+      "name": "gh-remote unit specs (manifest verify, POSIX bootstrap install/rollback/tamper/concurrency on dash, targets, probe)",
+      "passed": true,
+      "detail": "20/20 vitest"
+    },
+    {
+      "id": "ACC-tofu-refuses-untrusted",
+      "name": "tofu-refuses-untrusted",
+      "passed": true,
+      "detail": "stage=connect"
+    },
+    {
+      "id": "ACC-deploy-probe-target",
+      "name": "deploy-probe-target",
+      "passed": true,
+      "detail": "target=linux-x64 libc=glibc 2.39"
+    },
+    {
+      "id": "ACC-deploy-install-activated",
+      "name": "deploy-install-activated",
+      "passed": true,
+      "detail": "gh-remote: activated 20261018T005528Z-192422fe (version 0.2.1-rc.1, target linux-x64)"
+    },
+    {
+      "id": "ACC-deploy-status-release",
+      "name": "deploy-status-release",
+      "passed": true,
+      "detail": "release=20261018T005528Z-192422fe version=0.2.1-rc.1 node=v22.23.2"
+    },
+    {
+      "id": "ACC-target-jail-has-no-node",
+      "name": "target-jail-has-no-node",
+      "passed": true,
+      "detail": "node-absent"
+    },
+    {
+      "id": "ACC-remote-turn-no-node",
+      "name": "remote-turn-no-node",
+      "passed": true,
+      "detail": "GH_REMOTE_VERIFY_DONE"
+    },
+    {
+      "id": "ACC-remote-turn-file",
+      "name": "remote-turn-file",
+      "passed": true,
+      "detail": "GH remote verify turn"
+    },
+    {
+      "id": "ACC-tamper-refused",
+      "name": "tamper-refused",
+      "passed": true,
+      "detail": "stage=verify-archive"
+    },
+    {
+      "id": "ACC-concurrent-installs-serialize",
+      "name": "concurrent-installs-serialize",
+      "passed": true,
+      "detail": "ok + ok"
+    },
+    {
+      "id": "ACC-two-releases-present",
+      "name": "two-releases-present",
+      "passed": true,
+      "detail": "20261018T005616Z-192422fe 20261018T005558Z-192422fe 20261018T005528Z-192422fe"
+    },
+    {
+      "id": "ACC-rollback-activates-previous",
+      "name": "rollback-activates-previous",
+      "passed": true,
+      "detail": "gh-remote: rolled back to 20261018T005558Z-192422fe (was 20261018T005616Z-192422fe)"
+    },
+    {
+      "id": "ACC-status-after-all",
+      "name": "status-after-all",
+      "passed": true,
+      "detail": "root=/home/yangecool/.gh-remote-verify-1792284911961 release=20261018T005558Z-192422fe version=0.2.1-rc.1"
+    },
+    {
+      "id": "BUILD01",
+      "name": "archive build: legacy deploy staging + workspace-package fixpoint restore (25) + banned prune (11) + staged gh-headless closure smoke + digest manifest",
+      "passed": true,
+      "detail": "166.7 MiB, 27761 files, node v22.23.2"
+    },
+    {
+      "id": "MEM03",
+      "name": "remote runner ready-state process-tree PSS (first model response held)",
+      "passed": true,
+      "detail": "median 104385 KiB, peak 144073 KiB over 16 samples; budget 256 MiB; scope: one-shot gh-headless runner, Supervisor lands GH-006; no same-carrier ZCode server baseline on this machine"
+    },
+    {
+      "id": "MEM04",
+      "name": "remote runner task peak PSS with 10,263 session events",
+      "passed": true,
+      "detail": "10263 events, task PSS median 255581 KiB peak 362373 KiB; budget 512 MiB; confirmation run at 1000 rounds: 9213 events, peak 351517 KiB"
+    }
+  ],
+  "passed": true
+}

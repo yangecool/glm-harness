@@ -1,0 +1,21 @@
+{
+  "task": "GH-005",
+  "title": "完整远端制品与 SSH 自举",
+  "runId": "gh005-remote-20261018-011344",
+  "date": "2026-10-18",
+  "baseCommit": "192422feb0",
+  "scope": "relocatable GH runtime archive (bundled node, POSIX bootstrap, digest manifest), controller SSH pipeline with TOFU/pinned keys, real-OpenSSH acceptance on an unprivileged loopback fixture sshd through a no-Node PATH jail, MEM03/MEM04 process-tree sampling",
+  "plannedAcceptance": ["E04.1 front", "E04.2", "F24", "R01", "R02", "R04", "R07", "R08 front", "MEM03", "MEM04"],
+  "environment": {
+    "host": "yangecool-NUC15CRHU5, Ubuntu 24.04, linux-x64, glibc 2.39",
+    "node": "v22.23.2 (bundled into the archive)",
+    "sshd": "real OpenSSH, unprivileged fixture instance on a random loopback port (own host key + authorized_keys, no PAM, no system state)",
+    "docker": "unavailable (permission denied on docker.sock) — upstream container acceptance path not usable here"
+  },
+  "archive": {
+    "file": "dist-exe/gh-remote/gh-remote-0.2.1-rc.1-linux-x64.tar.gz",
+    "size": "166.7 MiB",
+    "files": 27761,
+    "sha256": "4809e9e7b13baa3a72f151f3163d8bd720dd553371d3d0db6e28b2c268bf65f3"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "scope": "real loopback OpenSSH (unprivileged fixture sshd), no-Node PATH jail on the target side, loopback GLM fixture",
+  "archive": "gh-remote-0.2.1-rc.1-linux-x64.tar.gz",
+  "cases": [
+    {
+      "name": "tofu-refuses-untrusted",
+      "passed": true,
+      "detail": "stage=connect"
+    },
+    {
+      "name": "deploy-probe-target",
+      "passed": true,
+      "detail": "target=linux-x64 libc=glibc 2.39"
+    },
+    {
+      "name": "deploy-install-activated",
+      "passed": true,
+      "detail": "gh-remote: activated 20261018T005528Z-192422fe (version 0.2.1-rc.1, target linux-x64)"
+    },
+    {
+      "name": "deploy-status-release",
+      "passed": true,
+      "detail": "release=20261018T005528Z-192422fe version=0.2.1-rc.1 node=v22.23.2"
+    },
+    {
+      "name": "target-jail-has-no-node",
+      "passed": true,
+      "detail": "node-absent"
+    },
+    {
+      "name": "remote-turn-no-node",
+      "passed": true,
+      "detail": "GH_REMOTE_VERIFY_DONE"
+    },
+    {
+      "name": "remote-turn-file",
+      "passed": true,
+      "detail": "GH remote verify turn"
+    },
+    {
+      "name": "tamper-refused",
+      "passed": true,
+      "detail": "stage=verify-archive"
+    },
+    {
+      "name": "concurrent-installs-serialize",
+      "passed": true,
+      "detail": "ok + ok"
+    },
+    {
+      "name": "two-releases-present",
+      "passed": true,
+      "detail": "20261018T005616Z-192422fe 20261018T005558Z-192422fe 20261018T005528Z-192422fe"
+    },
+    {
+      "name": "rollback-activates-previous",
+      "passed": true,
+      "detail": "gh-remote: rolled back to 20261018T005558Z-192422fe (was 20261018T005616Z-192422fe)"
+    },
+    {
+      "name": "status-after-all",
+      "passed": true,
+      "detail": "root=/home/yangecool/.gh-remote-verify-1792284911961 release=20261018T005558Z-192422fe version=0.2.1-rc.1"
+    }
+  ],
+  "passed": true
+}

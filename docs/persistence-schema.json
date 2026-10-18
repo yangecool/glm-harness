@@ -23781,10 +23781,10 @@
     {
       "digest": "34884a64792a7857d78d97ece4ea537ef5c94a0313b1070a765fb3ab4a5d7b3a",
       "names": [
-        "packages/glm/permissions/src/index.ts#GhPermissionMode"
+        "packages/glm/permissions/src/types.ts#GhPermissionMode"
       ],
       "sources": [
-        "packages/glm/permissions/src/index.ts:85"
+        "packages/glm/permissions/src/types.ts:12"
       ]
     },
     {
@@ -24935,7 +24935,7 @@
       "digest": "803af1791130c4889c9fc68411101d870806ca69529a9479822f6f77d4652d77",
       "names": [],
       "sources": [
-        "packages/glm/permissions/src/index.ts:69"
+        "packages/glm/permissions/src/index.ts:74"
       ]
     },
     {

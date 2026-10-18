@@ -1,0 +1,31 @@
+gh-remote build: pnpm --filter @deepseek-ai/dsh deploy --legacy --prod --config.allow-unused-patches=true --config.node-linker=hoisted --config.auto-install-peers=false --config.link-workspace-packages=true --config.hoist-workspace-packages=false /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/.dsh-build/gh-remote-y1NiHV/staging
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+[WARN] Shared workspace lockfile detected but configuration forces legacy deploy implementation.
+[WARN] The store at /home/yangecool/.local/share/pnpm/store/v11 is not used because packages cannot be hard linked from it into this project. Using the store at /disk/ssd1/codecache/.pnpm-store/v11 instead. Set storeDir to choose the store.
+.                                        | [WARN] A pnpm-lock.yaml file exists. The current configuration prohibits to read or write a lockfile
+Progress: resolved 1, reused 0, downloaded 0, added 0
+[WARN] The following patches were not used: @earendil-works/pi-ai@1.1.0, @electron/osx-sign@1.3.3, @fortune-sheet/core@1.0.4, @fortune-sheet/react@1.0.4, @yao-pkg/pkg@6.21.0, app-builder-lib@26.17.0, exceljs@4.4.0
+[WARN] 1 deprecated subdependencies found: node-domexception@1.0.0
+[WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+.                                        | +587 ++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /disk/ssd1/codecache/.pnpm-store/v11
+  Virtual store is at:             .dsh-build/gh-remote-y1NiHV/staging/node_modules/.pnpm
+Progress: resolved 658, reused 253, downloaded 0, added 53
+Progress: resolved 658, reused 381, downloaded 0, added 428
+Progress: resolved 658, reused 445, downloaded 0, added 492
+Progress: resolved 658, reused 537, downloaded 0, added 587, done
+.../@deepseek-ai/dsh-subprocess-local postinstall$ node scripts/ensure-spawn-helper.mjs
+.../@deepseek-ai/dsh-subprocess-local postinstall: Done
+gh-remote build: pnpm install --offline --frozen-lockfile --prod=false --ignore-scripts
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+Scope: all 372 workspace projects
+Already up to date
+Done in 535ms using pnpm v11.28.5
+gh-remote build: restored workspace packages into staging (25): @deepseek-ai/cosmokit, @deepseek-ai/dsh-attachment, @deepseek-ai/dsh-session-persistence, @deepseek-ai/dsh-scope, @deepseek-ai/dsh-fs, @deepseek-ai/dsh-deepseek-account, @deepseek-ai/dsh-session-query, @deepseek-ai/dsh-util-time, @deepseek-ai/dsh-util-workspace-path, @deepseek-ai/cordis-plugin-group, @deepseek-ai/dsh-spill-policy, @deepseek-ai/dsh-compaction, @deepseek-ai/dsh-output-retention, @deepseek-ai/dsh-spill, @deepseek-ai/dsh-shell, @deepseek-ai/dsh-sandbox, @deepseek-ai/dsh-jobs, @deepseek-ai/dsh-workflow, @deepseek-ai/dsh-ptc-runtime, @deepseek-ai/dsh-bash-local, @deepseek-ai/dsh-anonymous-user-id, @deepseek-ai/dsh-llm-deepseek, @deepseek-ai/dsh-sdk-protocol, @deepseek-ai/dsh-session-telemetry, @deepseek-ai/dsh-session-title-llm
+gh-remote build: pruned banned packages from staging: @deepseek-ai/dsh-llm-pi-ai, @deepseek-ai/dsh-llm-deepseek, @deepseek-ai/dsh-llm-retry, @deepseek-ai/dsh-llm-deepseek-api-key, @deepseek-ai/dsh-llm-deepseek-account, @deepseek-ai/dsh-deepseek-account-platform, @deepseek-ai/dsh-deepseek-llm-api-extensions, @deepseek-ai/dsh-session-log-deepseek, @deepseek-ai/dsh-plugin-package-inventory-deepseek, @deepseek-ai/dsh-web-search-deepseek, @deepseek-ai/dsh-otel, @deepseek-ai/dsh-session-telemetry-otel
+GH remote archive: /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/dist-exe/gh-remote/gh-remote-0.2.1-rc.1-linux-x64.tar.gz (166.7 MiB, 27761 files, node v22.23.2)

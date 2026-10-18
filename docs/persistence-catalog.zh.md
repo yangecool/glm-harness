@@ -720,7 +720,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'permission/mode': { mode: GhPermissionMode }
 ```
 
-来源：[`packages/glm/permissions/src/index.ts:69`](../packages/glm/permissions/src/index.ts)
+来源：[`packages/glm/permissions/src/index.ts:74`](../packages/glm/permissions/src/index.ts)
 
 <a id="permissionpreset--log-only"></a>
 
@@ -3552,13 +3552,13 @@ SHA-256: `5808e36c95355f0e745201b5db1b6bcec4ebf5adb75d3e82d7d59cc89635ab80`
 
 <a id="persistence-type-ghpermissionmode"></a>
 
-<a id="persistence-type-packagesglmpermissionssrcindextsghpermissionmode"></a>
+<a id="persistence-type-packagesglmpermissionssrctypestsghpermissionmode"></a>
 
 ### `GhPermissionMode`
 
 SHA-256: `34884a64792a7857d78d97ece4ea537ef5c94a0313b1070a765fb3ab4a5d7b3a`
 
-来源：[`packages/glm/permissions/src/index.ts:85`](../packages/glm/permissions/src/index.ts)
+来源：[`packages/glm/permissions/src/types.ts:12`](../packages/glm/permissions/src/types.ts)
 
 以下类型之一：
 
@@ -7916,7 +7916,7 @@ SHA-256: `0bcfaf5566d271028429ac7b562cb59053c9d78b8ae14708c35fac835108d1b1`
 
 SHA-256: `803af1791130c4889c9fc68411101d870806ca69529a9479822f6f77d4652d77`
 
-来源：[`packages/glm/permissions/src/index.ts:69`](../packages/glm/permissions/src/index.ts)
+来源：[`packages/glm/permissions/src/index.ts:74`](../packages/glm/permissions/src/index.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

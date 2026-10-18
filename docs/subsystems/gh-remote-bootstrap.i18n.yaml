@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for gh-remote-bootstrap.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/subsystems/gh-remote-bootstrap.md
+/gh-remote-runtime-bootstrap:
+  en: 8d8721c4beee12cc
+  zh: e2da5986cb3545ad
+/gh-remote-runtime-bootstrap/the-archive:
+  en: 9a7e7b309bdf60ed
+  zh: 93017b4319bb72c4
+/gh-remote-runtime-bootstrap/the-bootstrap:
+  en: b76c1ec90e0b9b17
+  zh: c661466e0531627e
+/gh-remote-runtime-bootstrap/the-controller-pipeline:
+  en: 61e27f6159f0391f
+  zh: fc18006f9094ce2f
+/gh-remote-runtime-bootstrap/relation-to-the-ssh-helper:
+  en: dbdd2cd8075a9c5a
+  zh: 300e5b6aa50eda55

@@ -147,8 +147,8 @@
   en: 6d54db0c6953df26
   zh: 6d54db0c6953df26
 /session-persistence-event-catalog/events/permission/permission-mode-log-only:
-  en: 0ad2580a0bf51570
-  zh: f7507cb1fb4a1e8d
+  en: 7422e3dd2884cef0
+  zh: b6940c0aa7c36070
 /session-persistence-event-catalog/events/permission/permission-preset-log-only:
   en: 41de5f6e1dad8620
   zh: 92cb5d5e87a23405
@@ -1041,11 +1041,11 @@
   en: 4cab6c6ed2abedd8
   zh: a6cdd344e6c36c24
 /session-persistence-event-catalog/resolved-persistence-types/finishreason:
-  en: 52f600e8cf77c506
-  zh: d37747db858246cf
+  en: df44ba2ea8877355
+  zh: 817980c3bb347351
 /session-persistence-event-catalog/resolved-persistence-types/ghpermissionmode:
-  en: 3efa2eaed175c860
-  zh: 259eec5163c4cbe9
+  en: 3ab635336a238325
+  zh: 637e17d74590fd6c
 /session-persistence-event-catalog/resolved-persistence-types/goalblockreason:
   en: b1589f9578a585dd
   zh: 3783dbbd8793bb37
@@ -1920,8 +1920,8 @@
   en: fc30ba88d474daf1
   zh: d0b7610b4245bf34
 /session-persistence-event-catalog/resolved-persistence-types/mode:
-  en: 48f9d4e0a518bbcb
-  zh: a0e8a93a3b6a3502
+  en: 153b75762a1215ca
+  zh: fc8aa0558581d797
 /session-persistence-event-catalog/resolved-persistence-types/mode-source:
   en: 3028b222670ce5ad
   zh: cae4c9437e560d61

@@ -4601,9 +4601,9 @@ export type Config = Readonly<Record<string, never>>
 
 ## `@glm-harness/gh-permissions`
 
-- `inject`: `tools` · `systemPrompt` · `sessionProjections` · `planMode`
+- `inject`: `tools` · `systemPrompt` · `sessionProjections`
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/glm/permissions/src/index.ts:124`](../packages/glm/permissions/src/index.ts)
+- `source`: [`packages/glm/permissions/src/index.ts:122`](../packages/glm/permissions/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: composition default mode and the rule table. */
@@ -4755,6 +4755,7 @@ export interface PermissionRule {
 | `@deepseek-ai/dsh-workspace` | `storageDomain` · `sessionPersistence` | [`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts) |
 | `@glm-harness/gh-brand` | — | [`packages/glm/brand/src/index.ts`](../packages/glm/brand/src/index.ts) |
 | `@glm-harness/gh-persona` | `systemPrompt` | [`packages/glm/persona/src/index.ts`](../packages/glm/persona/src/index.ts) |
+| `@glm-harness/gh-ui-permissions` | — | [`packages/glm/ui-permissions/src/index.ts`](../packages/glm/ui-permissions/src/index.ts) |
 <!-- END GENERATED config-catalog:no-config -->
 
 ## Seam 包（不可直接加载）

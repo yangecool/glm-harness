@@ -348,6 +348,47 @@
         "MEM 削减(按需激活/装配裁剪)归 GH-009"
       ],
       "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT;MEM 优化与 UI 切片随后"
+    },
+    {
+      "id": "GH-005",
+      "title": "完整远端制品与 SSH 自举——可重定位运行时归档 + 无 Node POSIX 自举 + TOFU SSH 部署(回环真实 OpenSSH 切片)",
+      "planRefs": [
+        "E04.1 前段",
+        "E04.2",
+        "F24",
+        "R01",
+        "R02",
+        "R04",
+        "R07",
+        "R08 前段",
+        "MEM03",
+        "MEM04"
+      ],
+      "owner": "远端制品",
+      "status": "complete-slice",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "scripts/build-gh-remote-archive.ts:legacy-deploy staging + 工作区 peer/传递包不动点物化(25) + 被禁上游业务包剪除(11) + 真实 gh-headless 闭包回环冒烟 + 逐文件摘要清单;产物 166.7 MiB/27,761 文件/自带 node v22.23.2",
+        "scripts/gh-remote/artifact.ts:format-1 清单 schema 与 verifyPayload(缺失/多余/篡改/权限全拒)",
+        "scripts/gh-remote/bootstrap.ts:POSIX 安装器(目标机零 Node):探测/摘要/防逃逸解包/逐文件校验/flock/原子激活/home 播种/rollback/run/start/stop/status;stage= 前缀 + 阶段退出码(F24)",
+        "scripts/gh-remote/{targets,probe,deploy}.ts + scripts/gh-remote-deploy.ts:目标记录(无密钥材料)/ssh-keyscan TOFU/远端探测/scp 上传/阶段化安装/生命周期;委托系统 ssh(非标端口/别名/ProxyJump)",
+        "scripts/gh-remote/{sshd-fixture,gh-remote-verify}.ts:非特权 fixture sshd + 无 Node PATH 监牢 + 12 用例真实 OpenSSH 验收",
+        "scripts/gh-remote-mem.ts:进程树 Rss/Pss 采样;docs/subsystems/gh-remote-bootstrap(.zh) 文档"
+      ],
+      "evidence": [
+        "artifacts/gh-validation/gh005-remote-20261018-011344/summary.md",
+        "单测 20/20;真实 sshd 验收 12/12(TOFU 拒绝与固定/探测/激活/监牢无 node/无 Node 真实 gh-headless 写盘回合/篡改 verify-archive 拒绝/并发 flock 串行/三 release 回滚)",
+        "MEM:就绪态 PSS 中位 102.0 MiB(预算 256);10,263 事件任务峰值 353.9 MiB(预算 512)",
+        "closure/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
+      ],
+      "boundaries": [
+        "目标为本机回环 fixture sshd:真实 OpenSSH 传输/认证/非标端口,但非独立主机与真实网络;docker 无权限",
+        "仅上传/离线归档模式;目标侧 URL 拉取未实现(无分发端点)",
+        "密码/keyboard-interactive/agent/跳板机委托 OpenSSH 未实测",
+        "R06 磁盘满/只读目录未模拟(需 root);仅 linux-x64",
+        "E04.3(用户级服务/卸载/更新 GC/崩溃预算/断线不杀)归 GH-006;MEM03 口径为一次性 gh-headless 运行器,本机无同载体 ZCode Server 基线"
+      ],
+      "next": "GH-006 Supervisor 与持续执行(E04.3/4、F09/24/28/29);GH-007 账号/PAT"
     }
   ],
   "blocked": [

@@ -58,6 +58,7 @@ One page per subsystem of the DeepSeek Harness: what it is, the data structures 
 | [jobs.md](jobs.md) | the background-job runtime: branded `JobId`s, the producer contract, consumer views, and `ctx.jobs` service behavior |
 | [permission-presets.md](permission-presets.md) | the permission-preset layer: `PresetSpec`/`PresetOption`, the derived `custom` state, the log-only `permission/preset` event |
 | [gh-permissions.md](gh-permissions.md) | the GH permission modes: `yolo`/`guarded`/`build` with an independent plan gate, the log-only `permission/mode` event, the shell dangerous-command grammar, and the executor decision order |
+| [gh-remote-bootstrap.md](gh-remote-bootstrap.md) | the E04.2 remote artifact chain: relocatable runtime archive with bundled node and POSIX bootstrap, TOFU-pinned SSH deployment, stage-localized install/activate/rollback |
 | [plan.md](plan.md) | plan mode: the log-only `plan/mode` state, pending-selection flush, `PlanModeConfig`, the `exit_plan_mode` review arc |
 | [web-server.md](web-server.md) | the HTTP carrier: `WebRouteKind`/`WebRoute`, match order, the claimable fallback seat, index taps |
 | [webhook.md](webhook.md) | authenticated provider deliveries, arbitrary programmatic rules, and fire-and-forget Workspace Session creation |
