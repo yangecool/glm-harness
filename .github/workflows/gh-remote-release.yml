@@ -3,17 +3,21 @@
 # Builds the relocatable gh-remote archive from GH-005 (POSIX bootstrap,
 # per-file sha256 manifest, staged closure smoke) for every supported target
 # on its native host, and attaches the archives to a `gh-v*` GitHub release
-# so remote hosts can download them. Triggers: manual dispatch or a `gh-v*`
-# tag. The archive targets are POSIX-only today (linux-x64, linux-arm64).
+# so remote hosts can download them. Main pushes retain preview artifacts;
+# only `gh-v*` tags publish. Targets are POSIX-only (linux-x64, linux-arm64).
 name: GH Remote · Runtime archives
 
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['gh-v*']
 
 permissions:
   contents: write
+
+env:
+  GH_REPO: ${{ github.repository }}
 
 concurrency:
   group: gh-remote-archive-${{ github.ref }}
@@ -49,7 +53,7 @@ jobs:
       - name: Build the workspace runtime
         run: pnpm run build
       - name: Build the relocatable gh-remote archive
-        run: node --import tsx scripts/build-gh-remote-archive.ts --target ${{ matrix.target }}
+        run: node --import tsx/esm scripts/build-gh-remote-archive.ts --target ${{ matrix.target }}
       - name: Retain the archive and its digest
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -68,13 +72,13 @@ jobs:
           shopt -s nullglob
           files=(dist-exe/gh-remote/*.tar.gz dist-exe/gh-remote/*.sha256)
           if [ ${#files[@]} -eq 0 ]; then echo 'no archive artifacts found' >&2; exit 1; fi
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
-          else
-            gh release create "$GITHUB_REF_NAME" "${files[@]}" \
-              --title "GH $GITHUB_REF_NAME (remote runtime archives)" \
-              --notes "Relocatable gh-remote runtime archives (POSIX bootstrap, sha256 manifest) built from $GITHUB_REF_NAME. Deploy with scripts/gh-remote-deploy.ts or bootstrap.sh."
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --verify-tag \
+              --title "GH $GITHUB_REF_NAME" \
+              --notes "GLM Harness preview artifacts. Windows installers are unsigned and do not use the signed auto-update channel." \
+              || gh release view "$GITHUB_REF_NAME" >/dev/null
           fi
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
   release:
     if: startsWith(github.ref, 'refs/tags/gh-v')
     needs: [archive]

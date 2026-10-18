@@ -35,7 +35,7 @@ Bootstrap phase. Delivered so far, each with recorded evidence under `artifacts/
 - the Web workflow prototype and reserved desktop composition (GH-004);
 - the initial GLM Harness brand layer and partial interface replacement (GH-BRAND).
 
-The live ledger — including blocked items and honestly recorded not-met budgets — is [docs/glm/delivery-status.json](docs/glm/delivery-status.json). Upcoming work includes remote artifacts with SSH bootstrap (GH-005) and the supervisor and connection cards.
+The live ledger — including blocked items and unmet budgets — is [docs/glm/delivery-status.json](docs/glm/delivery-status.json). Remote archives, direct SSH bootstrap, and resident-service supervision and reconnection slices are implemented; complete remote lifecycle and desktop integration remain under review.
 
 Validation against the real GLM API is pending credentials and stays open in the ledger; every workflow claim so far is backed by a scripted mock endpoint recorded in the evidence runs.
 
@@ -111,6 +111,8 @@ pnpm run verify-translation-pairing
 ```
 
 `check-gh-closure` composes every GH profile and fails if the `@glm-harness` dependency closure or the composed profile names an upstream model, account, or telemetry package. Review [SAFETY.md](SAFETY.md) before running an agent against real workspaces.
+
+Main pushes and manual runs build [Windows x64 unsigned previews](.github/workflows/gh-windows-x64.yml) and [Linux runtime archives](.github/workflows/gh-remote-release.yml). Windows previews use an explicit standalone application ID without local release-account files. Only `gh-v*` tags attach artifacts to GitHub Releases; signed installation and auto-update qualification remain separate. The inherited real-DeepSeek suite runs in upstream or when `DSH_ENABLE_REAL_API_E2E=true` is explicitly configured; enabled runs still require their API secret.
 
 <a id="license"></a>
 

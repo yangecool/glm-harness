@@ -4,13 +4,13 @@
 # hardware-token signing, so this line always builds the UNSIGNED installer
 # (`package:desktop:win:x64:unsigned`). Unsigned artifacts are for the owner's
 # own machines; they are not qualified for the signed auto-update channel.
-# Triggers: manual dispatch, or a `gh-v*` tag which also attaches the
-# installer to a GitHub release.
+# Main pushes retain preview artifacts; only `gh-v*` tags publish a release.
 name: GH Desktop · Windows x64
 
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['gh-v*']
 
 permissions:
@@ -29,6 +29,7 @@ jobs:
         shell: pwsh
     env:
       DSH_TELEMETRY_DISABLED: '1'
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -48,7 +49,7 @@ jobs:
         env:
           GH_STANDALONE_APP_ID: com.yangecool.glm-harness
         run: |
-          pnpm run package:desktop:win:x64:unsigned -- --standalone --app-id $env:GH_STANDALONE_APP_ID
+          pnpm run package:desktop:win:x64:unsigned --standalone --app-id $env:GH_STANDALONE_APP_ID
           exit $LASTEXITCODE
       - name: Retain the unsigned installer
         uses: actions/upload-artifact@v7.0.1
@@ -67,9 +68,12 @@ jobs:
           $files = Get-ChildItem -File apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/* | Select-Object -ExpandProperty FullName
           if ($files.Count -eq 0) { throw 'no unsigned artifacts found' }
           gh release view $env:GITHUB_REF_NAME 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:GITHUB_REF_NAME @files --clobber
-          } else {
-            gh release create $env:GITHUB_REF_NAME @files --title "GH $env:GITHUB_REF_NAME (windows x64 unsigned)" --notes "Unsigned Windows x64 desktop installer built from $env:GITHUB_REF_NAME. Hosted-runner builds cannot perform EV signing; not qualified for the signed auto-update channel."
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME --verify-tag --title "GH $env:GITHUB_REF_NAME" --notes "GLM Harness preview artifacts. Windows installers are unsigned and do not use the signed auto-update channel."
+            if ($LASTEXITCODE -ne 0) {
+              gh release view $env:GITHUB_REF_NAME
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
           }
+          gh release upload $env:GITHUB_REF_NAME @files --clobber
           exit $LASTEXITCODE

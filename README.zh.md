@@ -35,7 +35,7 @@ GLM Harness（`glmh`）是一个面向 GLM 大模型的编码 agent harness，�
 - Web 最小工作流原型与保留名桌面组合（GH-004）；
 - GLM Harness 初步品牌层与部分界面替换（GH-BRAND）。
 
-实时台账——包括受阻项与如实记录的未达标预算——见 [docs/glm/delivery-status.json](docs/glm/delivery-status.json)。后续工作包括远端制品与 SSH 自举（GH-005）以及 supervisor、连接等卡。
+实时台账——包括受阻项与未达标预算——见 [docs/glm/delivery-status.json](docs/glm/delivery-status.json)。远端归档、直接 SSH 自举、常驻服务监护与重连已有实现切片；完整远端生命周期和桌面集成仍在审查中。
 
 对真实 GLM API 的验证仍在等待凭据，在台账中保持未决；目前的每一条工作流结论都由证据运行中记录的脚本化 mock 端点支撑。
 
@@ -111,6 +111,8 @@ pnpm run verify-translation-pairing
 ```
 
 `check-gh-closure` 会组合每一个 GH profile，一旦 `@glm-harness` 依赖闭包或组合后的 profile 出现上游模型、账号或遥测包即失败。在让 agent 操作真实工作区之前，请先阅读[安全说明](SAFETY.zh.md)。
+
+主分支推送和手动运行会构建 [Windows x64 未签名预览包](.github/workflows/gh-windows-x64.yml)与 [Linux 运行时归档](.github/workflows/gh-remote-release.yml)。Windows 预览包显式指定独立应用 ID，不需要本地发行账号文件。只有 `gh-v*` tag 才向 GitHub Releases 附加制品；签名安装与自动更新资格单独验收。继承的真实 DeepSeek 测试仅在上游仓库或显式配置 `DSH_ENABLE_REAL_API_E2E=true` 时执行；启用后仍必须提供其 API 密钥。
 
 <a id="license"></a>
 
