@@ -4640,6 +4640,23 @@ export interface PermissionRule {
 ```
 <!-- END GENERATED config-catalog:@glm-harness/gh-permissions -->
 
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-remote-app -->
+<a id="glm-harnessgh-remote-app"></a>
+
+## `@glm-harness/gh-remote-app`
+
+- `inject`: `webServer` · `connection`
+- `source`: [`packages/glm/remote-app/src/index.ts:51`](../packages/glm/remote-app/src/index.ts)
+
+```ts config-catalog
+/** The bundle plugin's configuration. */
+export interface Config {
+  /** Whether the readiness line prints the authenticated URL on stdout. */
+  printUrl: boolean
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-remote-app -->
+
 ## 无配置的可加载插件
 
 这些插件通过 `cordis.yml` 中不含 `config:` 块的条目加载；它们未声明任何配置接口。

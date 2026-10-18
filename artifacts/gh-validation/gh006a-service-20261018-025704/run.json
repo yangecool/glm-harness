@@ -1,0 +1,10 @@
+{
+  "task": "GH-006-A",
+  "title": "常驻远端服务组合（gh-remote profile）",
+  "runId": "gh006a-service-20261018-025704",
+  "date": "2026-10-18",
+  "baseCommit": "43595261dc",
+  "scope": "resident gh-remote service profile over the dsh web transport server half: browser/static/hmr/client-runner/telemetry/analytics/account rows removed, own readiness announce, minimal fallback root performing the token exchange, ghRemote/identity RPC; real HTTP RPC acceptance incl. second-connection attach to the same session",
+  "plannedAcceptance": ["11.8 GH-006-A"],
+  "boundaries": ["supervisor process (GH-006-B), durable admission (C), continuous execution/reattach (D), version lifecycle (E), disconnect/MEM validation (F) remain open"]
+}

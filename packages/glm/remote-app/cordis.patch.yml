@@ -1,0 +1,50 @@
+# The gh-remote-app bundle patch: the GH resident remote-service layer over
+# the dsh web-app surface, applied AFTER `@deepseek-ai/dsh-web-app` so these
+# rows win by id (last write wins per row). The `gh-remote` profile composes
+# gh-base + dsh-web-app + this bundle, yielding a headless RPC service.
+#
+# What this layer owns: removing every browser-facing and inherited-business
+# row the resident service must not carry. The web transport's server half
+# (webserver + gateway + controllers + connection policy) stays exactly as
+# upstream ships it; the static client, module graph, HMR chain, and client
+# plugin runner never mount, and the upstream telemetry/analytics/account rows
+# are removed for the same GH no-inherited-business policy the desktop layer
+# applies. The readiness announce and identity RPC the stripped surface still
+# needs come from the gh-remote-app plugin row below.
+
+- id: web-runtime
+  disabled: true
+
+- id: modules
+  disabled: true
+
+- id: client-hmr
+  disabled: true
+
+- id: cordis-client-runner
+  disabled: true
+
+# Upstream desktop OTel exporter and client analytics beacon; disabled
+# regardless of profile-name checks so a GH composition reports nothing.
+- id: desktop-product-telemetry
+  disabled: true
+
+- id: product-analytics
+  disabled: true
+
+# Account rows belong to GH account work (GH-007); the resident service runs
+# without them, and clients must not depend on the account namespace.
+- id: ui-settings-account
+  disabled: true
+
+- id: account-controller
+  disabled: true
+
+- insert:
+    # The GH resident-service plugin: readiness announce line and the
+    # ghRemote/identity Remote method connecting clients query before
+    # attaching to a session.
+    - id: gh-remote-app
+      name: '@glm-harness/gh-remote-app'
+      config:
+        printUrl: true

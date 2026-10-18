@@ -1,0 +1,20 @@
+== service acceptance ==
+PASS service-ready-line: http://127.0.0.1:34297/?token=S1Mk_I5yFdJhVEX8slSFN9PbeCjOQG3d2fH1tgYOeHM
+PASS no-static-client: unauthenticated GET / -> 401, 68 bytes
+PASS identity-rpc: product=GLM Harness profile=gh-remote pid=359807 node=v22.23.2
+PASS session-turn-writes: GH remote service turn
+PASS second-connection-same-session: session/list over a fresh connection reports 1 session(s), target present
+PASS clean-shutdown: exit=0 signal=null
+{"passed":true,"cases":["ok service-ready-line","ok no-static-client","ok identity-rpc","ok session-turn-writes","ok second-connection-same-session","ok clean-shutdown"]}
+== unit specs ==
+      Tests  29 passed (29)
+== smoke ==
+5/5-passed
+== closure/constraints ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+constraints-ok
+== oxlint ==
+Found 0 warnings and 0 errors.
+Finished in 1.5s on 3 files with 90 rules using 14 threads.
+== doc-sync ==
+PASS gates: 42; FAILED: repository references (pre-existing, GH-018)

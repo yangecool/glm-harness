@@ -1,0 +1,49 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/remote-app/README.md
+/:
+  en: c394473bbb8e2b0a
+  zh: 52a1cae01888ade7
+/glm-harness-gh-remote-app:
+  en: 21e5e2ca6bf26633
+  zh: 46a53fac1ea9bbf1
+/glm-harness-gh-remote-app/summary:
+  en: 974f50866bd9b026
+  zh: 63df3a59a5a10d00
+/glm-harness-gh-remote-app/table-of-contents:
+  en: 07f3642294ee905d
+  zh: 7b63a592fc032c27
+/glm-harness-gh-remote-app/use-this-package:
+  en: c1b73d68cb1427d3
+  zh: 425e57de2825d51c
+/glm-harness-gh-remote-app/use-this-package/when-to-choose-it:
+  en: c4116633b94dbbe6
+  zh: 83e78acc361cff69
+/glm-harness-gh-remote-app/understand-the-implementation:
+  en: 46c5cc4d87cb9cee
+  zh: 7a56bfa202e07d64
+/glm-harness-gh-remote-app/further-exploration:
+  en: f1cf172d4af19725
+  zh: aaa26e896088230c
+/glm-harness-gh-remote-app/dev-note:
+  en: 4fb4b93183daf5c8
+  zh: 99927bd2e9c275ef
+/glm-harness-gh-remote-app/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/glm-harness-gh-remote-app/model-experience/identity-rpc-is-operator-facing:
+  en: 870aeea1cfdadaaf
+  zh: 4d0f23a98042f963
+/glm-harness-gh-remote-app/model-experience/identity-rpc-is-operator-facing/what-the-model-sees:
+  en: 3701debbaebbba8a
+  zh: 899beb447fdbd05b
+/glm-harness-gh-remote-app/model-experience/identity-rpc-is-operator-facing/token-effect:
+  en: c7b7b6991b1296e9
+  zh: 71c01efe3d3a26e6
+/glm-harness-gh-remote-app/model-experience/identity-rpc-is-operator-facing/kv-cache-effect:
+  en: 429adc914b3c65ba
+  zh: 8b38d3ca7a1666b6
+/glm-harness-gh-remote-app/known-limitations-and-deferred-work:
+  en: 068b523eef4170db
+  zh: 2d54dbc668217147

@@ -33,6 +33,9 @@ import { initProfile } from '../packages/boot/app-boot/src/profile.ts'
 export const GH_PROFILES: Readonly<Record<string, readonly string[]>> = {
   'gh-web': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-brand'],
   'gh-headless': ['@glm-harness/gh-base', '@deepseek-ai/dsh-headless'],
+  // The resident remote service: the web transport's server half with the
+  // browser payload stripped; boots headless (`--no-open --host --port`).
+  'gh-remote': ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-remote-app'],
   desktop: ['@glm-harness/gh-base', '@deepseek-ai/dsh-web-app', '@glm-harness/gh-brand', '@glm-harness/gh-desktop'],
 }
 
@@ -73,7 +76,7 @@ const GH_WEB_PROFILE_PATCH = `
 `
 
 /** Profiles that compose the web surface bundle and its dev-context rows. */
-const GH_WEB_PROFILES: ReadonlySet<string> = new Set(['gh-web', 'desktop'])
+const GH_WEB_PROFILES: ReadonlySet<string> = new Set(['gh-web', 'gh-remote', 'desktop'])
 
 /** The loader's pristine empty patch, the marker of an untouched profile layer. */
 const PRISTINE_PROFILE_PATCH = `# Your patch layer for this dsh profile, applied after every bundle layer:

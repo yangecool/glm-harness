@@ -1,0 +1,38 @@
+{
+  "scope": "resident gh-remote profile over real HTTP RPC, loopback GLM fixture, synthetic credentials",
+  "cases": [
+    {
+      "name": "service-ready-line",
+      "passed": true,
+      "detail": "http://127.0.0.1:38471/?token=9IzzpplfsHp7Yrtwu0aJNJ53w1K_vHz6VZ9X09g5CWg"
+    },
+    {
+      "name": "no-static-client",
+      "passed": true,
+      "detail": "unauthenticated GET / -> 401, 68 bytes"
+    },
+    {
+      "name": "identity-rpc",
+      "passed": true,
+      "detail": "product=GLM Harness profile=gh-remote pid=358302 node=v22.23.2"
+    },
+    {
+      "name": "session-turn-writes",
+      "passed": true,
+      "detail": "GH remote service turn"
+    },
+    {
+      "name": "second-connection-same-session",
+      "passed": true,
+      "detail": "session/list over a fresh connection reports 1 session(s), target present"
+    },
+    {
+      "name": "clean-shutdown",
+      "passed": true,
+      "detail": "exit=0 signal=null"
+    }
+  ],
+  "stdoutTail": "gh-remote ready: http://127.0.0.1:38471/?token=9IzzpplfsHp7Yrtwu0aJNJ53w1K_vHz6VZ9X09g5CWg\n",
+  "stderrTail": "",
+  "passed": true
+}

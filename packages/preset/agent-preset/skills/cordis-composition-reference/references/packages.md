@@ -252,6 +252,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@glm-harness/gh-model-retry` | yes | GLM Harness bounded model-request retry executor: provider-owned normal-mode policies executed on the agent request-error extension point with durable retry events, cancellable waits, and an explicit refusal of unbounded retry |
 | `@glm-harness/gh-permissions` | yes | GLM Harness ZCode-aligned permission modes (full access, autonomous, confirm-before-changes) with an independent plan gate, a structured dangerous-command grammar, and executor-level enforcement in the tools pre-execute waterfall |
 | `@glm-harness/gh-persona` | no | GLM Harness model identity and work policy as system-prompt sections: goal-driven execution, locate before modifying, self-verification, and honest reporting, promising nothing the composed tool catalog does not grant |
+| `@glm-harness/gh-remote-app` | yes | The GH resident remote-service surface over the dsh web transport: no browser payload, no static client, no inherited telemetry or account rows; owns the readiness announce line and the ghRemote identity RPC |
 | `@glm-harness/gh-ui-permissions` | no | GLM Harness composer permission control: the three ZCode-aligned modes (full access, autonomous, confirm-before-changes) with an independent plan toggle, reading the ghPermissions and plan session projections and writing through the /permission and /plan commands |
 
 ## goal

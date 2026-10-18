@@ -1,0 +1,54 @@
+{
+  "runId": "gh006a-service-20261018-025704",
+  "cases": [
+    {
+      "id": "SVC-service-ready-line",
+      "name": "service-ready-line",
+      "passed": true,
+      "detail": "http://127.0.0.1:38471/?token=9IzzpplfsHp7Yrtwu0aJNJ53w1K_vHz6VZ9X09g5CWg"
+    },
+    {
+      "id": "SVC-no-static-client",
+      "name": "no-static-client",
+      "passed": true,
+      "detail": "unauthenticated GET / -> 401, 68 bytes"
+    },
+    {
+      "id": "SVC-identity-rpc",
+      "name": "identity-rpc",
+      "passed": true,
+      "detail": "product=GLM Harness profile=gh-remote pid=358302 node=v22.23.2"
+    },
+    {
+      "id": "SVC-session-turn-writes",
+      "name": "session-turn-writes",
+      "passed": true,
+      "detail": "GH remote service turn"
+    },
+    {
+      "id": "SVC-second-connection-same-session",
+      "name": "second-connection-same-session",
+      "passed": true,
+      "detail": "session/list over a fresh connection reports 1 session(s), target present"
+    },
+    {
+      "id": "SVC-clean-shutdown",
+      "name": "clean-shutdown",
+      "passed": true,
+      "detail": "exit=0 signal=null"
+    },
+    {
+      "id": "SPECS",
+      "name": "gh-remote unit specs (29 incl. review-hardened bootstrap/deploy matrices)",
+      "passed": true,
+      "detail": "29/29 vitest"
+    },
+    {
+      "id": "SMOKE",
+      "name": "built-profile smoke (gh-headless five scenarios)",
+      "passed": true,
+      "detail": "5/5"
+    }
+  ],
+  "passed": true
+}

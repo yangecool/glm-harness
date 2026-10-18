@@ -503,6 +503,9 @@ importers:
       '@glm-harness/gh-model-glm':
         specifier: workspace:*
         version: link:../../packages/glm/model-glm
+      '@glm-harness/gh-remote-app':
+        specifier: workspace:*
+        version: link:../../packages/glm/remote-app
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -10653,6 +10656,24 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt
+
+  packages/glm/remote-app:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-app-boot':
+        specifier: workspace:*
+        version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-client-connection':
+        specifier: workspace:*
+        version: link:../../client/connection
+      '@deepseek-ai/dsh-host-webserver':
+        specifier: workspace:*
+        version: link:../../host/webserver
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:*
+        version: link:../../typert/protocol
 
   packages/glm/ui-permissions:
     devDependencies:

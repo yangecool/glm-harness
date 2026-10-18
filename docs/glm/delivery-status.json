@@ -411,6 +411,34 @@
         "resident server process-tree memory acceptance"
       ],
       "next": "GH-006-A minimal service composition, then B-F"
+    },
+    {
+      "id": "GH-006-A",
+      "title": "常驻远端服务组合——gh-remote profile(浏览器/静态/账号/遥测剥离 + 就绪公告 + ghRemote/identity)",
+      "planRefs": [
+        "11.8 GH-006-A",
+        "E04.3 前段",
+        "F24 部分"
+      ],
+      "owner": "远端服务",
+      "status": "complete-slice",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "packages/glm/remote-app(@glm-harness/gh-remote-app):web-app 之上禁用 web-runtime/modules/client-hmr/cordis-client-runner/telemetry/analytics/account 行;认领 webserver fallback 席位以最小根路由完成令牌兑换(authorizeIndex),未认证 401/已认证无静态应答",
+        "就绪契约:Loader 落定后打印 gh-remote ready: <authenticated URL>(监守方观察行,替代 dsh web 行)",
+        "ghRemote/identity Remote:product/profile/runtimeVersion/node/platform/arch/pid/startedAt;边界类型 ./types 子路径",
+        "gh-remote profile 注册(gh-base+dsh-web-app+gh-remote-app);apps/cli 依赖与 tsconfig.host 接线;目录/pairing 再生成"
+      ],
+      "evidence": [
+        "artifacts/gh-validation/gh006a-service-20261018-014811/summary.md",
+        "服务验收 6/6(真实 HTTP RPC):就绪行/无静态(401)/identity pid 一致/RPC 会话回合写盘/第二条独立连接附着同一会话/SIGTERM 退出 0",
+        "单测 29/29;smoke 5/5;closure(gh-remote 纳入)/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
+      ],
+      "boundaries": [
+        "Supervisor 进程/持久接纳/断线续跑/版本生命周期/联验属 GH-006-B..F",
+        "本片附着是第二条连接读同一会话,非断线续跑语义;回环同机,跨主机 TLS 未验证"
+      ],
+      "next": "GH-006-B 进程监护;然后 C/D/E/F"
     }
   ],
   "blocked": [
