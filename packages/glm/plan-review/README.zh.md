@@ -1,5 +1,5 @@
 ---
-description: "GH 的计划审阅台账：会话日志下的带 revision 计划提交、批准时确定性写入工作区计划文件且绝不覆盖用户编辑、与 revision 绑定的批准/拒绝记录。"
+description: "按 revision 绑定的计划审阅、持久审批台账与检测外部编辑的工作区计划文件。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-挂载本插件，在上游计划模式旁为计划审阅留下持久记录：每个到达用户的计划成为会话日志中带编号的 `gh-plan/*` revision；批准时把批准文本逐字写入 `<workspace>/.glm/plans/plan-<id>.md` —— 原子写、绝不覆盖用户编辑；每个结局（批准、继续规划反馈、驳回、失败）都与 revision 绑定记录。重放的迟到批准不改变任何状态：折叠只接受不早于已记录批准的 revision。
+在上游计划模式旁挂载本插件，每个呈现的计划成为带编号的 `gh-plan/*` revision。分配发生在等待答案之前；已被新版本取代的批准会在退出工具继续前中止。有效批准在检查外部编辑后，把文本逐字写入 `<workspace>/.glm/plans/plan-<id>.md`。折叠只接受最新已提交 revision 的首次批准。
 
 ## 目录
 
@@ -45,10 +45,10 @@ kind: "package-reference"
 
 <a id="understand-the-implementation"></a>
 
-服务（`ctx.ghPlanReview`）注册 `ghPlanReview` 投影和两个观察者：
+服务（`ctx.ghPlanReview`）注册 `ghPlanReview` 投影和两个瀑布监听器：
 
-- `user-questions/request` —— 通过 intent 识别计划审阅问题，把该次退出调用标记为"已到达用户"，并捕获结构化答案（批准标签或拒绝、自由文本反馈）或驳回（`ASK_CANCELLED`）。它始终委托，从不代答。
-- `tools/post-execute` —— 对问题确实到达用户且已结算的 `exit_plan_mode`，分配下一个 revision（每会话单调，从持久折叠播种），追加 `gh-plan/submitted`，再追加结局事件。批准先写计划文件（临时文件 + 重命名；文件内容无法识别时跳过），再追加携带真实 `fileWritten` 的 `gh-plan/approved`。在到达审阅前就验证失败的调用（计划模式未开、计划格式错误）不留任何事件。
+- `user-questions/request` —— 委托前分配 revision 并记录提交，随后捕获批准、反馈或驳回。在途记录按 Session 和 call id 隔离。已被新版本取代的批准会在上游退出工具继续前抛出 `ASK_ABORTED`。
+- `tools/post-execute` —— 结局绑定呈现时分配的 revision。只有最新 revision 的成功且被接受的结果可以写计划文件并记录批准；拒绝或失败结果记录拒绝。未进入该监听器审阅流程的调用不留事件。
 
 计划文件路径为 `<会话 header cwd>/<plansDir>/plan-<净化 id>.md`；无工作区 cwd 的会话以空路径记录 revision，不写盘。会话 id 在文件名中只保留 `A-Za-z0-9._-`。
 
@@ -68,20 +68,21 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-没有新增内容。本插件不注册提示词段、工具或 schema，不改写任何工具结果，也不发起提问。`exit_plan_mode` 的模型侧行为（审阅问题、批准退出、继续规划错误带反馈、驳回结束回合）完全属于上游。`gh-plan/*` 事件是 log-only，绝不进入模型请求；计划文件服务的是用户与后续连续性表面，不是请求路径。
+本插件不新增提示词段、工具、schema 或第二次提问。正常审阅响应仍由上游拥有。对旧 revision 的迟到批准经上游工具路径返回审阅中止错误，不能批准新计划。`gh-plan/*` 事件仍为 log-only；计划正文可从已记录的工具调用重建。
 
 #### Token 影响
 
-零：无提示词字节、无消息插入、无请求形状变化。
+正常审阅不新增提示词字节或消息。旧审阅中止会产生上游工具错误，该失败路径不承诺固定零 token。
 
 #### KV Cache 影响
 
-无：本插件不贡献任何前缀或历史内容，缓存请求前缀在每次计划审阅前后保持有效。
+不改变静态前缀。旧审阅错误属于普通工具历史，从该位置影响后缀。
 
 ## 已知限制与延后工作
 
 <a id="known-limitations-and-deferred-work"></a>
 
+- 计划文件目前使用本地 Node 文件系统，不使用执行 provider 的文件系统；远端容器/provider 路径尚未验收。新文件以排他发布创建；已有文件在原子替换前检查内容，检查时发现的外部编辑会保留，检查之后的并发外部写入没有共享锁保护。
 - 尚无压缩后 reminder 引用计划文件（上游 compaction 没有注入接缝；连同计划文件连续性设计记为 GH-008 后续）。
 - 继续规划的反馈当前按上游行为在同回合以工具错误回到模型；ZCode 式改进（反馈成为真实的下一条用户消息、无反馈拒绝结束回合）延后到工作台切片。
 - 上游子代理会话没有存活的人类应答者，无法到达审阅；台账在那里不记录任何内容。
@@ -93,6 +94,6 @@ kind: "package-reference"
 <details>
 <summary>维护者的工作上下文——点击展开</summary>
 
-折叠中的批准守卫是 X05（迟到结果）规则的缩影：`revision < approvedRevision` 或 `revision >= nextRevision` 一律折叠为无操作，因此晚于新批准重放的旧批准——或指向未知未来 revision 的批准——都无法降级台账。同样的保守性驱动文件写入：本会话上次写入内容的摘要，是批准唯一可以替换的内容。
+投影状态版本 2 按连续提交和只接受最新批准的规则重建台账。写文件失败会记录 `fileWritten: false`，不撤销其他条件有效的批准。
 
 </details>

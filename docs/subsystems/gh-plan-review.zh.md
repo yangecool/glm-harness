@@ -2,21 +2,21 @@
 
 [English](gh-plan-review.md) | 中文
 
-GH 计划审阅是计划模式审阅边界周围的持久台账，由 [gh-plan-review](../../packages/glm/plan-review) 拥有（`ctx.ghPlanReview`，`GhPlanReviewService`）。上游[计划模式](plan.zh.md)保留模式开关、模型侧 `exit_plan_mode` 工具与审阅问题；本插件是它旁边的纯观察者——不改写任何工具结果、不发起提问、不改变任何模型可见行为。它新增的是记录：每个真正到达用户的计划获得一个带编号的 revision，批准时确定性写入计划文件，每个结局都有与 revision 绑定的事件。[包 README](../../packages/glm/plan-review/README.zh.md) 拥有组合状态与限制。
+GH 计划审阅是计划模式审阅边界周围的持久台账，由 [gh-plan-review](../../packages/glm/plan-review) 拥有（`ctx.ghPlanReview`，`GhPlanReviewService`）。上游[计划模式](plan.zh.md)保留模式开关、模型侧 `exit_plan_mode` 工具与审阅问题；本插件记录 revision，并在退出工具继续前拒绝已被新版本取代的审阅批准；不新增第二次提问或替换工具结果。它新增的是记录：每个真正到达用户的计划获得一个带编号的 revision，批准时确定性写入计划文件，每个结局都有与 revision 绑定的事件。[包 README](../../packages/glm/plan-review/README.zh.md) 拥有组合状态与限制。
 
 来源：[`packages/glm/plan-review/src/index.ts`](../../packages/glm/plan-review/src/index.ts)
 
 ## 记录状态与恢复
 
-三个 log-only、非表面的[会话事件](session.zh.md)：`gh-plan/submitted`（`{ revision, planPath, planSha256 }`）、`gh-plan/approved`（`{ revision, planPath, planSha256, fileWritten }`）、`gh-plan/rejected`（`{ revision, outcome, feedback }`，`outcome` 为 `keep-planning`/`dismissed`/`failed` 之一）。`ghPlanReview` 投影把它们折叠为 `{ nextRevision, approvedRevision, writtenSha256, planPath }`；恢复与 fork 通过折叠日志重建台账，wire 视图向客户端暴露 `{ revision, approvedRevision, planPath }`。折叠的批准守卫即 X05 迟到结果规则：早于已记录批准的 revision、或指向没有任何提交引入过的 revision 的批准，一律折叠为无操作——重放的迟到批准（重连重投、fork 继承）永远无法降级台账。完整事件声明见[持久化日志事件目录](../persistence-catalog.zh.md)与[变更记录](../persistence-changes/2026-10-19-gh-plan-review.zh.md)。
+三个 log-only、非表面的[会话事件](session.zh.md)：`gh-plan/submitted`（`{ revision, planPath, planSha256 }`）、`gh-plan/approved`（`{ revision, planPath, planSha256, fileWritten }`）、`gh-plan/rejected`（`{ revision, outcome, feedback }`，`outcome` 为 `keep-planning`/`dismissed`/`failed` 之一）。`ghPlanReview` 投影把它们折叠为 `{ nextRevision, approvedRevision, writtenSha256, planPath }`；恢复与 fork 通过折叠日志重建台账，wire 视图向客户端暴露 `{ revision, approvedRevision, planPath }`。折叠的批准守卫即 X05 迟到结果规则：只接受最新已提交 revision 的首次批准；旧、重复、零值或未知 revision 的批准一律折叠为无操作——重放的迟到批准（重连重投、fork 继承）永远无法降级台账。完整事件声明见[持久化日志事件目录](../persistence-catalog.zh.md)与[变更记录](../persistence-changes/2026-10-19-gh-plan-review.zh.md)。
 
-## 观察接缝
+## 审阅顺序
 
-服务观察两个瀑布并在两者中都保持委托。`user-questions/request` 通过 intent（`kind: 'plan-review'`，携带退出调用的 `callId`）识别计划审阅问题，标记该调用已到达用户，并捕获结构化答案——批准选项或拒绝，连同自由文本反馈——或 `ASK_CANCELLED` 驳回。`tools/post-execute` 随后在已结算的 `exit_plan_mode` 结果上运行：问题从未到达用户的调用（计划模式未开、计划格式错误、无应答者通道）不留任何事件；到达用户的计划被分配会话的下一个单调 revision 并按结局记录——批准从结果读取 `{ approved: true }`，继续规划与驳回跟随捕获的答案，其余诚实记录为 `failed`。
+`user-questions/request` 在等待答案前分配 revision 并追加提交。记录按 Session 和 call id 隔离；批准已被新版本取代的审阅会抛出 `ASK_ABORTED`。`tools/post-execute` 将结局绑定原 revision。只有最新且成功被接受的批准可以写计划文件。投影按状态版本 2 重建，事件载荷不变。
 
 ## 计划文件契约
 
-批准时把批准文本原样写入 `<会话 header cwd>/.glm/plans/plan-<净化会话 id>.md` —— 创建父目录、临时文件加重命名、逐字节保留模型提交内容。仅当文件不存在或仍保持本会话上次写入的内容（`writtenSha256`）时才写入；任何其他内容都是用户或外部编辑，原样保留并以 `fileWritten: false` 记录分歧。写入失败绝不阻塞批准本身。无工作区 cwd 的会话以空路径记录 revision，不写任何文件。
+批准时把文本原样写入 `<会话 header cwd>/.glm/plans/plan-<净化会话 id>.md`，创建父目录，新文件排他发布，已有文件原子替换。仅在文件不存在或检查时仍为本会话上次写入内容（`writtenSha256`）时写入；发现外部编辑则保留，并记录 `fileWritten: false`。检查后的外部并发写入没有共享锁保护。当前使用本地 Node 文件系统，执行 provider 文件系统尚未验收。写入失败不阻止批准本身；无工作区 cwd 的会话记录空路径，不写文件。
 
 ## 配置
 

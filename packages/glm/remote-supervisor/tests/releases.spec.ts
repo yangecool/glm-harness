@@ -83,7 +83,7 @@ it('switches the current pointer atomically and chains the rollback target', asy
   if (!missing.ok) expect(missing.reason).toContain('not installed')
 })
 
-it('surfaces interrupted installs as staging leftovers the gc removes', async () => {
+it('retains staging when gc cannot verify whether its installer is still active', async () => {
   const root = await freshRoot()
   await mkdir(join(root, 'releases', '.staging-r-torn'), { recursive: true })
   const source = await runtimeSource(root, 'one')
@@ -91,9 +91,11 @@ it('surfaces interrupted installs as staging leftovers the gc removes', async ()
   await useRelease(root, 'r-one')
   expect(await listStaging(root)).toEqual(['.staging-r-torn'])
   const gc = await gcReleases(root)
-  expect(gc.removedStaging).toEqual(['.staging-r-torn'])
+  expect(gc.removedStaging).toEqual([])
   expect(gc.removedReleases).toEqual([])
   expect(gc.kept).toMatchObject({ 'r-one': 'current' })
+  expect(gc.kept['.staging-r-torn']).toContain('ownership is unverified')
+  expect(await listStaging(root)).toEqual(['.staging-r-torn'])
 })
 
 it('gc keeps current, the rollback target, and live-pinned releases', async () => {

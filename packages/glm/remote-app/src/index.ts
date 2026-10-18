@@ -67,7 +67,7 @@ export class GhRemoteIdentityService extends TypertRemoteService {
     return {
       runningAgents: agents.filter(agent => agent.status === 'running').length,
       agents: agents.length,
-      ownedActivity: activity.reduce((total, count) => total + count, 0),
+      ownedActivity: activity.reduce((total, count) => total + count, this.ctx.ghRemoteControl.activeAdmissions()),
     }
   }
 
@@ -80,7 +80,7 @@ export class GhRemoteIdentityService extends TypertRemoteService {
   @Remote
   async describe(): Promise<GhRemoteDescribeValue> {
     const root = process.env.GH_REMOTE_ROOT
-    const runtimeId = root !== undefined && root !== '' ? await ensureRuntimeId(root).catch(() => null) : null
+    const runtimeId = root !== undefined && root !== '' ? await ensureRuntimeId(root) : null
     const capabilities = ['activity-drain', 'durable-admission', 'admission-close']
     if (runtimeId !== null) capabilities.push('runtime-id')
     const registry = this.ctx.get('workspaceRegistry')

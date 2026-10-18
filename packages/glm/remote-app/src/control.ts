@@ -36,6 +36,7 @@ export type GhAdmissionState = 'open' | 'closed'
  */
 export class GhRemoteControlService extends Service {
   private closed = false
+  private admissions = 0
 
   constructor(ctx: Context) {
     super(ctx, 'ghRemoteControl')
@@ -47,7 +48,8 @@ export class GhRemoteControlService extends Service {
           {},
         )
       }
-      await next()
+      this.admissions += 1
+      try { await next() } finally { this.admissions -= 1 }
     })
   }
 
@@ -57,6 +59,14 @@ export class GhRemoteControlService extends Service {
    */
   admissionState(): GhAdmissionState {
     return this.closed ? 'closed' : 'open'
+  }
+
+  /**
+   * Count prompts still owned by the admission pipeline.
+   * @returns new prompt admissions still validating, placing, or flushing their ACK.
+   */
+  activeAdmissions(): number {
+    return this.admissions
   }
 
   /**

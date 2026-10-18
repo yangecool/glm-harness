@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os'
 import { once } from 'node:events'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
+import { existsSync } from 'node:fs'
 import { initGhProfiles } from './gh-init-profiles.ts'
 
 interface CaseResult { name: string; passed: boolean; detail: string }
@@ -183,15 +184,17 @@ async function main(): Promise<void> {
         && gcReport.kept['r-alpha'] !== undefined && gcReport.kept['r-beta'] !== undefined,
       `removed=${JSON.stringify(gcReport.removedReleases)} kept=${JSON.stringify(gcReport.kept)}`)
 
-    // Interrupted installs stay diagnosable through status, then gc cleans them.
+    // Unverified staging may still belong to an installer; GC retains it for explicit recovery.
     await mkdir(join(fakeRoot, 'releases', '.staging-r-torn'), { recursive: true })
     const status = await runCli(supervisorCli, ['--root', fakeRoot, 'status'])
     const statusReport = JSON.parse(status.out) as { staging: string[]; current: { releaseId: string } | null }
     const cleaned = await runCli(supervisorCli, ['--root', fakeRoot, 'gc'])
-    const cleanedReport = JSON.parse(cleaned.out) as { removedStaging: string[] }
+    const cleanedReport = JSON.parse(cleaned.out) as { removedStaging: string[]; kept: Record<string, string> }
     note('interrupted-install-diagnosable',
       statusReport.staging.includes('.staging-r-torn') && statusReport.current?.releaseId === 'r-alpha'
-        && cleanedReport.removedStaging.includes('.staging-r-torn'),
+        && cleanedReport.removedStaging.length === 0
+        && cleanedReport.kept['.staging-r-torn']?.includes('ownership is unverified') === true
+        && existsSync(join(fakeRoot, 'releases', '.staging-r-torn')),
       `status staging=${JSON.stringify(statusReport.staging)} gc removed=${JSON.stringify(cleanedReport.removedStaging)}`)
 
     // uninstall keeps data; the purge variant lives in the unit suite.

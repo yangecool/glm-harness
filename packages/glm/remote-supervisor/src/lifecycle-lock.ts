@@ -9,7 +9,7 @@
  * @module @glm-harness/gh-remote-supervisor/lifecycle-lock
  */
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { link, mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { isPidAlive, readProcessIdentity } from './index.ts'
@@ -70,12 +70,18 @@ export const probeLifecycleLock = async (root: string): Promise<LifecycleLockPro
   let raw: string
   try {
     raw = await readFile(lifecycleLockPath(root), 'utf8')
-  } catch {
-    return { lock: null, holderAlive: false }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { lock: null, holderAlive: false }
+    throw error
   }
   const lock = parseLock(raw)
-  if (lock === null) return { lock: null, holderAlive: false }
-  return { lock, holderAlive: lock.pid > 0 && isPidAlive(lock.pid) }
+  if (lock === null) throw new Error('invalid lifecycle lock; refusing mutation of an unverified data root')
+  let holderAlive = lock.pid > 0 && isPidAlive(lock.pid)
+  if (holderAlive && lock.processIdentity) {
+    const current = await readProcessIdentity(lock.pid)
+    if (current !== null && current !== lock.processIdentity) holderAlive = false
+  }
+  return { lock, holderAlive }
 }
 
 /** A held lifecycle transaction; `release` always settles. */
@@ -136,7 +142,10 @@ export const acquireLifecycleLock = async (
       }
       return {
         payload,
-        release: () => rm(path, { force: true }).catch(() => undefined),
+        release: async () => {
+          const observed = await probeLifecycleLock(root)
+          if (observed.lock?.nonce === payload.nonce) await unlink(path)
+        },
       }
     } catch (error) {
       await rm(staging, { force: true }).catch(() => undefined)
@@ -144,11 +153,25 @@ export const acquireLifecycleLock = async (
     }
     const probed = await probeLifecycleLock(root)
     if (probed.lock !== null && !probed.holderAlive) {
-      // A dead holder's claim is an interrupted transaction: take it over.
-      await rm(path, { force: true }).catch(() => undefined)
-      continue
+      const reclaim = `${path}.reclaim-${createHash('sha256').update(probed.lock.nonce).digest('hex')}`
+      let claimed = false
+      try {
+        try {
+          await writeFile(reclaim, `${JSON.stringify(payload)}\n`, { flag: 'wx', mode: 0o600 })
+          claimed = true
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
+        }
+        if (claimed) {
+          const latest = await probeLifecycleLock(root)
+          if (latest.lock?.nonce === probed.lock.nonce && !latest.holderAlive) await unlink(path)
+        }
+      } finally {
+        if (claimed) await unlink(reclaim)
+      }
+      if (claimed) continue
     }
-    if (probed.lock !== null && probed.lock.pid === process.pid) {
+    if (probed.holderAlive && probed.lock?.pid === process.pid) {
       throw new Error('this process already holds the lifecycle lock')
     }
     if (now() >= deadline) {

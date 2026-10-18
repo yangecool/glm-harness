@@ -20,7 +20,7 @@ export const BOOTSTRAP_STAGE_CODES = {
 } as const
 
 /** Commands checked by the controller probe and by the target installer. */
-export const BOOTSTRAP_REQUIRED_TOOLS = ['tar', 'gzip', 'sha256sum', 'flock', 'awk', 'find', 'sort', 'mv', 'ln', 'chmod', 'cp', 'cmp', 'sed', 'mktemp', 'readlink', 'date', 'grep', 'cut', 'cat', 'mkdir', 'rm', 'uname', 'basename', 'ls'] as const
+export const BOOTSTRAP_REQUIRED_TOOLS = ['tar', 'gzip', 'nohup', 'sha256sum', 'flock', 'awk', 'find', 'sort', 'mv', 'ln', 'chmod', 'cp', 'cmp', 'sed', 'mktemp', 'readlink', 'date', 'grep', 'cut', 'cat', 'mkdir', 'rm', 'uname', 'basename', 'ls'] as const
 
 /**
  * Render the installer script for an archive payload.
@@ -271,21 +271,9 @@ cmd_start() {
   mkdir -p "$ROOT/run" "$ROOT/log"
   supervise_env
   supervisor_binaries "$release_dir"
-  ( exec "$SUP_NODE" "$release_dir/runtime/lib/bin.js" --profile gh-supervisor --no-open --host 127.0.0.1 --port 0 ) >>"$ROOT/log/runner.log" 2>&1 &
+  nohup "$SUP_NODE" "$release_dir/runtime/lib/bin.js" --profile gh-supervisor --no-open --host 127.0.0.1 --port 0 </dev/null >>"$ROOT/log/runner.log" 2>&1 &
   echo $! > "$ROOT/run/runner.pid"
   echo "$PROGRAM: started supervisor pid $(cat "$ROOT/run/runner.pid") (release $(current_release))"
-}
-
-wait_gone() {
-  pid=$1
-  budget=$2
-  i=0
-  while kill -0 "$pid" 2>/dev/null; do
-    i=$((i + 1))
-    if [ "$i" -gt "$budget" ]; then return 1; fi
-    sleep 1
-  done
-  return 0
 }
 
 cmd_stop() {
@@ -297,24 +285,12 @@ cmd_stop() {
     esac
     shift
   done
+  case $timeout in ''|*[!0-9]*) die runner 97 "stop timeout must be positive seconds" ;; esac
+  [ "$timeout" -gt 0 ] && [ "$timeout" -le 2147483 ] || die runner 97 "stop timeout is outside the supported range"
   [ -n "$(current_release)" ] || die runner 97 "no current release; run install first"
   release_dir=$ROOT/releases/$(current_release)
-  if [ -f "$ROOT/run/runner.pid" ]; then
-    pid=$(cat "$ROOT/run/runner.pid")
-    if kill -0 "$pid" 2>/dev/null; then
-      kill "$pid" 2>/dev/null || true
-      if wait_gone "$pid" "$timeout"; then
-        echo "$PROGRAM: stopped supervisor pid $pid"
-      else
-        kill -9 "$pid" 2>/dev/null || true
-        echo "$PROGRAM: killed supervisor pid $pid after $timeout seconds"
-      fi
-    fi
-    rm -f "$ROOT/run/runner.pid"
-  fi
-  # The supervisor CLI's stop also drains a service a crashed supervisor
-  # orphaned, and clears the root's lock and identity leftovers.
-  supervisor_verb "$release_dir" stop || die runner 97 "supervisor stop failed"
+  supervisor_verb "$release_dir" stop --timeout "$((timeout * 1000))" || die runner 97 "supervisor stop failed"
+  rm -f "$ROOT/run/runner.pid"
 }
 
 cmd_update() {
@@ -326,7 +302,7 @@ cmd_update() {
     case $1 in
       --drain-timeout) shift; if [ $# -lt 1 ]; then usage; fi; drain_timeout=$1 ;;
       --force) : ;;
-      --lock-timeout) shift; if [ $# -lt 1 ]; then usage; fi ;;
+      --lock-timeout) shift; if [ $# -lt 1 ]; then usage; fi; LOCK_TIMEOUT=$1 ;;
       *) usage ;;
     esac
     shift
@@ -348,6 +324,8 @@ cmd_update() {
     die activate 94 "supervisor install refused the update payload"
   fi
   rm -rf "$temp"
+  flock -u 9
+  exec 9>&-
   rm -f "$ROOT/run/runner.pid"
   # Drain, stop, switch, and supervise in the foreground exactly like run.
   release_dir=$ROOT/releases/$(current_release)

@@ -1,5 +1,5 @@
 ---
-description: "GH's plan-review ledger: revisioned plan submissions under the session log, a deterministic workspace plan file written on approval without ever clobbering user edits, and durable approval/rejection records bound to their revision."
+description: "Revision-bound plan reviews, a durable approval ledger, and workspace plan files with external-edit detection."
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Mount this plugin to give plan review a durable record beside upstream plan mode: every plan that reaches the user becomes a numbered `gh-plan/*` revision under the session log, an approval writes the approved text verbatim to `<workspace>/.glm/plans/plan-<id>.md` — atomically, and never over user edits — and every outcome (approval, keep-planning feedback, dismissal, failure) is recorded bound to its revision. Replayed late approvals update nothing: the fold accepts only revisions at least as new as the recorded one.
+Mount this plugin beside upstream plan mode to record each presented plan as a numbered `gh-plan/*` revision. Revisions are allocated before awaiting an answer; superseded approvals are aborted before continuing the exit tool. Accepted approvals write the text verbatim to `<workspace>/.glm/plans/plan-<id>.md` after checking for external edits. The fold accepts only the newest submitted revision’s first approval.
 
 ## Table of Contents
 
@@ -45,10 +45,10 @@ Choose it when a composition wants plan review to leave a durable trail — a re
 
 <a id="understand-the-implementation"></a>
 
-The service (`ctx.ghPlanReview`) registers the `ghPlanReview` projection and two observers:
+The service (`ctx.ghPlanReview`) registers the `ghPlanReview` projection and two waterfall listeners:
 
-- `user-questions/request` — recognizes the plan-review question by its intent, marks the exit call as having reached the user, and captures the structured answer (approve label vs decline, free-text feedback) or the dismissal (`ASK_CANCELLED`). It always delegates; it never answers.
-- `tools/post-execute` — on a settled `exit_plan_mode` whose question actually reached the user, assigns the next revision (monotonic per session, seeded from the durable fold), appends `gh-plan/submitted`, then the outcome event. An approval writes the plan file first (temp file + rename; skipped when the file holds unrecognized content) and appends `gh-plan/approved` with `fileWritten` recording the truth. Calls that failed validation before any review (plan mode off, malformed plan) leave no events.
+- `user-questions/request` — allocates and logs the submission before delegating, then captures approval, feedback, or dismissal. In-flight records are scoped by Session and call id. An approval for a superseded revision throws `ASK_ABORTED` before the upstream exit tool continues.
+- `tools/post-execute` — records the outcome against the revision allocated at presentation. Only a successful, accepted result for the latest revision may write a plan file and append approval. Rejected or failed results append rejection; calls that never reached this listener’s review flow leave no events.
 
 The plan file path is `<session header cwd>/<plansDir>/plan-<sanitized id>.md`; sessions without a workspace cwd record revisions with a null path and write nothing. The session id is reduced to `A-Za-z0-9._-` for the filename.
 
@@ -66,18 +66,19 @@ The plan file path is `<session header cwd>/<plansDir>/plan-<sanitized id>.md`; 
 
 #### What the model sees
 
-Nothing new. The plugin registers no prompt section, no tool, and no schema, rewrites no tool result, and asks no question. The model-facing behavior of `exit_plan_mode` (review question, approval exit, keep-planning error with feedback, dismissal turn end) is entirely upstream's. The `gh-plan/*` events are log-only and never enter a model request; the plan file is for the user and future continuity surfaces, not the request path.
+The plugin adds no prompt section, tool, schema, or second question. Normal review responses stay upstream-owned. A superseded approval now returns an aborted-review error through the upstream tool path; it cannot approve the newer plan. The `gh-plan/*` events remain log-only. The plan text is reconstructable from the logged tool call.
 
 #### Token effect
 
-Zero: no prompt bytes, no message inserts, no request-shape changes.
+Normal reviews add no prompt bytes or messages. An aborted stale review produces an upstream tool error; there is no fixed zero-token guarantee for that failure path.
 
 #### KV Cache effect
 
-None: the plugin contributes no prefix or history content, so cached request prefixes stay valid across every plan review.
+No static prefix changes. A stale-review error is ordinary tool history and affects the suffix from that point.
 
 ## Known Limitations and Deferred Work
 
+- Plan files currently use the local Node filesystem, not the execution provider’s filesystem. Remote-container/provider paths are unqualified. New files use exclusive publication; existing files are checked before atomic replacement, so edits detected at the check are preserved, while an external write after the check is not protected by a shared lock.
 - No post-compaction reminder references the plan file yet (upstream compaction exposes no injection seam; recorded as GH-008 follow-up with the plan-file continuity design).
 - Keep-planning feedback returns to the model as the upstream tool error in the same turn; the ZCode-style refinement (feedback as a real next user message, plain rejection ends the turn) is deferred to the workbench slice.
 - Subagent sessions have no live human answerer upstream, so they cannot reach a review; the ledger simply records nothing there.
@@ -89,6 +90,6 @@ None: the plugin contributes no prefix or history content, so cached request pre
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-The fold's approval guard is the X05 (late-result) rule in miniature: `revision < approvedRevision` or `revision >= nextRevision` folds to a no-op, so an old approval replayed after a newer one — or one naming an unknown future revision — cannot demote the ledger. The same conservatism drives the file write: the digest of what this session last wrote is the only content an approval may replace.
+Projection state version 2 rebuilds the ledger using contiguous submissions and latest-only approvals. File-write failure records `fileWritten: false` without revoking an otherwise valid approval.
 
 </details>

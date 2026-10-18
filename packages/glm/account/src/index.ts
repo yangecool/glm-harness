@@ -51,8 +51,10 @@ export interface Config {
     clientId: string
     /** Extra scopes appended to the authorization request, when the domain needs them. */
     scope?: string
-    /** Poll cadence for a pending login's completion, milliseconds. */
+    /** Reserved polling hint in milliseconds; no polling login driver is implemented. */
     pollMs?: number
+    /** Deadline for an OAuth or PAT exchange, including the response body. */
+    requestTimeoutMs?: number
   }>
 }
 
@@ -67,6 +69,7 @@ export function apply(ctx: Context, config: Config): void {
     clientId: row.clientId,
     ...(row.scope !== undefined && row.scope !== '' ? { scope: row.scope } : {}),
     ...(row.pollMs !== undefined ? { pollMs: row.pollMs } : {}),
+    ...(row.requestTimeoutMs !== undefined ? { requestTimeoutMs: row.requestTimeoutMs } : {}),
   }))
   const account = new GhAccountService(ctx, domains)
   ctx.plugin(GhProjectTokenService)
@@ -81,5 +84,6 @@ export const Config = z.object({
     clientId: z.string().default(''),
     scope: z.string().default(''),
     pollMs: z.number().default(1000),
+    requestTimeoutMs: z.number().default(30_000),
   })).default([]),
 })

@@ -8,14 +8,30 @@
 import { chmod, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
+import { once } from 'node:events'
 import { promisify } from 'node:util'
 import { expect, it, onTestFinished } from 'vitest'
 import { create as createTar } from 'tar'
 import { artifactManifestSchema, fileDigest, payloadFiles } from './artifact.ts'
 import { renderBootstrapScript } from './bootstrap.ts'
+import { isPidAlive } from '../../packages/glm/remote-supervisor/src/index.ts'
 
 const run = promisify(execFile)
+
+it('never signals a process named only by the legacy runner.pid file', async () => {
+  const world = await fixture()
+  const archive = await world.archive()
+  expect((await bootstrap(world.home, 'install', archive)).code).toBe(0)
+  const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1 << 30)'])
+  const exited = once(child, 'exit')
+  onTestFinished(async () => { child.kill('SIGKILL'); await exited })
+  await once(child, 'spawn')
+  await mkdir(join(world.home, 'run'), { recursive: true })
+  await writeFile(join(world.home, 'run', 'runner.pid'), `${String(child.pid)}\n`)
+  expect((await bootstrap(world.home, 'stop', '--timeout', '1')).code).toBe(0)
+  expect(isPidAlive(child.pid ?? -1)).toBe(true)
+})
 
 /** The real supervisor CLI the fake bundled node forwards delegation verbs to. */
 const realSupervisorCli = resolve(import.meta.dirname, '../../packages/glm/remote-supervisor/lib/index.js')

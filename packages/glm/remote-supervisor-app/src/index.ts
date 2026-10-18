@@ -84,9 +84,20 @@ export class GhSupervisorAppService extends Service {
   /** Boot settlement: resolves when the supervision loop is running. */
   readonly booted: Promise<void>
 
+  private disposed = false
+  private supervisor?: GhRemoteSupervisor
+  private running?: Promise<void>
+
   constructor(ctx: Context, readonly config: Config) {
     super(ctx, 'ghSupervisorApp')
     this.booted = this.boot()
+    ctx.effect(() => async () => {
+      this.disposed = true
+      // A failed boot has no running child; apply owns its user-facing error.
+      await this.booted.catch(() => undefined)
+      await this.supervisor?.stop()
+      await this.running
+    })
   }
 
   private async boot(): Promise<void> {
@@ -122,15 +133,16 @@ export class GhSupervisorAppService extends Service {
       crashThreshold: this.config.crashThreshold,
       crashWindowMs: this.config.crashWindowMs,
     }, current.releaseId)
-    this.ctx.effect(() => {
-      const done = supervisor.run().then((outcome) => {
-        if (outcome.reason !== 'stopped') {
-          this.ctx.logger.error(`gh-supervisor: ${outcome.reason}: ${outcome.detail}`)
-        }
+    if (this.disposed) return
+    this.supervisor = supervisor
+    this.running = supervisor.run().then((outcome) => {
+      if (outcome.reason !== 'stopped') {
+        this.ctx.logger.error(`gh-supervisor: ${outcome.reason}: ${outcome.detail}`)
+      }
+      if (!this.disposed) {
         const exit = this.ctx.get('appExit')
         if (exit !== undefined) exit(exitCodeOf(outcome.reason))
-      })
-      return () => { void supervisor.stop().then(() => done.catch(() => undefined)) }
+      }
     })
   }
 }

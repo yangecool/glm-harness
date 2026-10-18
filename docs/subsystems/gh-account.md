@@ -50,7 +50,7 @@ configuredDomains(): GhAccountDomain[]
  * @param domain - the account domain.
  * @returns the endpoint/client configuration the domain was constructed with.
  */
-domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig
+domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig & { requestTimeoutMs: number }
 
 /**
  * The domain's current generation. Every login and logout bumps it, so
@@ -76,7 +76,7 @@ snapshot(domain: GhAccountDomain): GhAccountSnapshot
  * @param redirectUrl - the OAuth redirect_uri the authorization round-trip uses.
  * @returns the user-facing verification URL and the pending login's expiry.
  */
-beginLogin(domain: GhAccountDomain, redirectUrl: string): { verificationUrl: string; expiresAt: number }
+async beginLogin(domain: GhAccountDomain, redirectUrl: string): Promise<{ verificationUrl: string; expiresAt: number }>
 
 /**
  * Complete one login by exchanging the authorization code. The verifier and

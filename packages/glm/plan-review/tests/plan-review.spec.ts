@@ -10,7 +10,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
+import LlmRuntime, { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -31,11 +31,12 @@ import GhPlanReviewService, {
 const PLAN_CONFIG = { section: 'Test plan mode instructions.' }
 
 /** What the scripted reviewer does with the plan-review question. */
-type Answer
+type SettledAnswer
   = | { kind: 'approve' }
     | { kind: 'keep' }
     | { kind: 'keep-feedback'; text: string }
     | { kind: 'dismiss' }
+type Answer = SettledAnswer | { kind: 'held'; arrived: () => void; answer: Promise<SettledAnswer> }
 
 const tests: { ctx: Context; dir: string }[] = []
 afterEach(async () => {
@@ -62,11 +63,15 @@ async function harness(adapter: MockAdapter, script: readonly Answer[]): Promise
   await ctx.plugin(UserQuestionService)
   await ctx.plugin(GhPlanReviewService)
   ctx.llm.registerAdapter(['mock'], adapter)
-  ctx.on('user-questions/request', (request, next) => {
+  ctx.on('user-questions/request', async (request, next) => {
     const question = request.questions.find(item => item.intent?.kind === 'plan-review')
     if (question?.intent?.kind !== 'plan-review') return next()
-    const answer = pending.shift()
+    let answer = pending.shift()
     if (answer === undefined) throw new Error('the script has no answer left for a plan review')
+    if (answer.kind === 'held') {
+      answer.arrived()
+      answer = await answer.answer
+    }
     if (answer.kind === 'dismiss') {
       return Promise.reject(new UserQuestionError('the user dismissed the plan review', 'ASK_CANCELLED'))
     }
@@ -301,6 +306,75 @@ describe('gh-plan-review fold invariants (X05 late-result guard)', () => {
   it('the empty log folds to the no-history view', () => {
     const state = fold([])
     expect(state).toEqual({ nextRevision: 1, approvedRevision: null, writtenSha256: null, planPath: null })
+  })
+
+  it('ignores an older approval while a newer submitted plan is still waiting', () => {
+    const state = fold([submitted(1), submitted(2), approved(1)])
+    expect(state.approvedRevision).toBeNull()
+    expect(state.writtenSha256).toBeNull()
+  })
+
+  it('does not accept zero or a repeated approval as a new settlement', () => {
+    expect(fold([approved(0)]).approvedRevision).toBeNull()
+    const state = fold([submitted(1), approved(1), {
+      type: 'gh-plan/approved', data: { revision: 1, planSha256: 'changed', fileWritten: true },
+    }])
+    expect(state.writtenSha256).toBe('sha-1')
+  })
+})
+
+describe('concurrent plan reviews', () => {
+  it('binds revisions when plans are presented and refuses an older answer arriving last', async () => {
+    const entered = [Promise.withResolvers<undefined>(), Promise.withResolvers<undefined>()]
+    const answers = [Promise.withResolvers<SettledAnswer>(), Promise.withResolvers<SettledAnswer>()]
+    const { ctx, dir } = await harness(new MockAdapter([]), answers.map((answer, i) => ({
+      kind: 'held', arrived: () => { only(entered, i).resolve(undefined) }, answer: answer.promise,
+    })))
+    const agent = await planAgent(ctx, dir, 'concurrent-reviews')
+    const first = ctx.tools.execute({
+      name: 'exit_plan_mode', arguments: { plan: PLAN_A }, callId: ToolCallId('older'), agent, signal: new AbortController().signal,
+    })
+    await only(entered).promise
+    const second = ctx.tools.execute({
+      name: 'exit_plan_mode', arguments: { plan: PLAN_B }, callId: ToolCallId('newer'), agent, signal: new AbortController().signal,
+    })
+    try {
+      await only(entered, 1).promise
+      only(answers, 1).resolve({ kind: 'approve' })
+      await second
+    } finally {
+      for (const answer of answers) answer.resolve({ kind: 'approve' })
+      await Promise.allSettled([first, second])
+    }
+    expect((await first).isError).toBe(true)
+    expect(readFileSync(planPathFor(dir, agent.id), 'utf8')).toBe(PLAN_B)
+    expect(ctx.ghPlanReview.describe(agent).approvedRevision).toBe(2)
+  })
+
+  it('keeps the same provider call id independent across sessions', async () => {
+    const entered = Promise.withResolvers<undefined>()
+    const answer = Promise.withResolvers<SettledAnswer>()
+    const { ctx, dir } = await harness(new MockAdapter([]), [
+      { kind: 'held', arrived: () => { entered.resolve(undefined) }, answer: answer.promise },
+      { kind: 'keep-feedback', text: 'feedback for the other session' },
+    ])
+    const a = await planAgent(ctx, dir, 'session-a')
+    const b = await planAgent(ctx, dir, 'session-b')
+    const pending = ctx.tools.execute({
+      name: 'exit_plan_mode', arguments: { plan: PLAN_A }, callId: ToolCallId('same-id'), agent: a, signal: new AbortController().signal,
+    })
+    try {
+      await entered.promise
+      await ctx.tools.execute({
+        name: 'exit_plan_mode', arguments: { plan: PLAN_B }, callId: ToolCallId('same-id'), agent: b, signal: new AbortController().signal,
+      })
+    } finally {
+      answer.resolve({ kind: 'approve' })
+      await pending
+    }
+    expect(eventsOf(a, 'gh-plan/approved')).toHaveLength(1)
+    expect(readFileSync(planPathFor(dir, a.id), 'utf8')).toBe(PLAN_A)
+    expect(only(eventsOf(b, 'gh-plan/rejected')).data).toMatchObject({ feedback: 'feedback for the other session' })
   })
 })
 

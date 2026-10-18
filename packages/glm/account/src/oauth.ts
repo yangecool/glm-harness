@@ -55,6 +55,9 @@ export class OAuthRejection extends Error {
 
 /** Parse one token-endpoint document into the fields the owner keeps. */
 function parseGrant(payload: unknown): TokenGrant {
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+    throw new OAuthRejection(0, 'token endpoint response must be an object')
+  }
   const body = payload as {
     access_token?: unknown
     refresh_token?: unknown
@@ -70,11 +73,14 @@ function parseGrant(payload: unknown): TokenGrant {
     : typeof body.sub === 'string' ? body.sub
       : ''
   if (accountId === '') throw new OAuthRejection(0, 'token endpoint response carries no account identity')
-  const expiresIn = typeof body.expires_in === 'number' && Number.isFinite(body.expires_in) ? body.expires_in : 3600
+  if (typeof body.expires_in !== 'number' || !Number.isFinite(body.expires_in) || body.expires_in <= 0
+    || !Number.isFinite(Date.now() + body.expires_in * 1000)) {
+    throw new OAuthRejection(0, 'token endpoint response carries no valid expires_in')
+  }
   return {
     accessToken: body.access_token,
     ...(typeof body.refresh_token === 'string' && body.refresh_token.length > 0 ? { refreshToken: body.refresh_token } : {}),
-    expiresInSeconds: expiresIn,
+    expiresInSeconds: body.expires_in,
     accountId,
     plan: typeof body.plan === 'string' ? body.plan : null,
   }
@@ -87,6 +93,7 @@ function parseGrant(payload: unknown): TokenGrant {
  * @param code - the authorization code the issuer redirected with.
  * @param codeVerifier - the PKCE verifier paired with the request's challenge.
  * @param redirectUrl - the redirect URI the authorization request carried.
+ * @param signal - cancellation covering the request and response body.
  * @returns the parsed grant.
  */
 export async function exchangeCode(
@@ -95,9 +102,11 @@ export async function exchangeCode(
   code: string,
   codeVerifier: string,
   redirectUrl: string,
+  signal?: AbortSignal,
 ): Promise<TokenGrant> {
   const response = await fetch(tokenUrl, {
     method: 'POST',
+    ...(signal === undefined ? {} : { signal }),
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
@@ -108,7 +117,7 @@ export async function exchangeCode(
     }),
   })
   if (!response.ok) throw new OAuthRejection(response.status, `authorization_code exchange rejected with HTTP ${String(response.status)}`)
-  return parseGrant(await response.json())
+  return await readGrant(response)
 }
 
 /**
@@ -117,15 +126,18 @@ export async function exchangeCode(
  * @param tokenUrl - the domain's token endpoint.
  * @param clientId - the registered client id.
  * @param refreshToken - the grant's current refresh token.
+ * @param signal - cancellation covering the request and response body.
  * @returns the parsed grant, carrying the rotated refresh token when the issuer rotated it.
  */
 export async function exchangeRefresh(
   tokenUrl: string,
   clientId: string,
   refreshToken: string,
+  signal?: AbortSignal,
 ): Promise<TokenGrant> {
   const response = await fetch(tokenUrl, {
     method: 'POST',
+    ...(signal === undefined ? {} : { signal }),
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'refresh_token',
@@ -134,5 +146,15 @@ export async function exchangeRefresh(
     }),
   })
   if (!response.ok) throw new OAuthRejection(response.status, `refresh_token exchange rejected with HTTP ${String(response.status)}`)
-  return parseGrant(await response.json())
+  return await readGrant(response)
+}
+
+/** Keep invalid JSON diagnostics free of response excerpts containing bearer material. */
+async function readGrant(response: Response): Promise<TokenGrant> {
+  let payload: unknown
+  try { payload = await response.json() } catch (error) {
+    if (error instanceof SyntaxError) throw new OAuthRejection(response.status, 'token endpoint returned invalid JSON')
+    throw error
+  }
+  return parseGrant(payload)
 }

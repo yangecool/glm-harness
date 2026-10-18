@@ -12,6 +12,7 @@
 
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { GhAccountDomain } from './types.ts'
+import { GhAccountFailure } from './service.ts'
 
 /** Seconds before PAT expiry at which a re-mint is due. */
 const PAT_MARGIN_MS = 30_000
@@ -49,11 +50,18 @@ export class GhProjectTokenService extends Service {
   static inject = ['ghAccount']
 
   private readonly cache = new Map<GhAccountDomain, PatEntry>()
+  private readonly lifetime = new AbortController()
+  private readonly operations = new Set<Promise<unknown>>()
   /** Mint counter for surfaces; deliberately carries no token material. */
   private mints = 0
 
   constructor(ctx: Context) {
     super(ctx, 'ghProjectToken')
+    ctx.effect(() => async () => {
+      this.lifetime.abort(new GhAccountFailure('gh-account/unavailable', 'the project-token service was unloaded'))
+      await Promise.allSettled([...this.operations])
+      this.cache.clear()
+    })
   }
 
   /**
@@ -72,19 +80,35 @@ export class GhProjectTokenService extends Service {
    * @returns the bearer token for exactly one physical request.
    */
   async resolvePat(domain: GhAccountDomain, projectId: string, signal?: AbortSignal): Promise<string> {
+    signal?.throwIfAborted()
+    this.lifetime.signal.throwIfAborted()
     const account = this.ctx.ghAccount
+    await account.hydrated
+    signal?.throwIfAborted()
+    const epoch = account.epochOf(domain)
     const cached = this.cache.get(domain)
     if (cached !== undefined && cached.projectId === projectId && cached.expiresAt - PAT_MARGIN_MS > Date.now()
       // A login or logout since the mint supersedes the cached PAT: logout
       // must stop authorizing immediately, not at the token's expiry.
-      && cached.epoch === account.epochOf(domain)) {
+      && cached.epoch === epoch) {
       return cached.token
     }
-    const accessToken = await account.accessToken(domain, signal)
+    const operation = this.mint(domain, projectId, epoch, signal)
+    this.operations.add(operation)
+    try { return await operation } finally { this.operations.delete(operation) }
+  }
+
+  /** Mint under one account generation and discard every superseded result. */
+  private async mint(domain: GhAccountDomain, projectId: string, epoch: number, caller?: AbortSignal): Promise<string> {
+    const account = this.ctx.ghAccount
     const config = account.domainConfigOf(domain)
+    const signal = AbortSignal.any([
+      this.lifetime.signal, AbortSignal.timeout(config.requestTimeoutMs), ...caller === undefined ? [] : [caller],
+    ])
+    const accessToken = await account.accessToken(domain, signal)
     const response = await fetch(config.tokenUrl, {
       method: 'POST',
-      ...(signal !== undefined ? { signal } : {}),
+      signal,
       headers: { 'content-type': 'application/x-www-form-urlencoded', authorization: `Bearer ${accessToken}` },
       body: new URLSearchParams({
         grant_type: 'urn:glm-harness:pat',
@@ -93,16 +117,29 @@ export class GhProjectTokenService extends Service {
       }),
     })
     if (!response.ok) throw new PatRejection(response.status, `pat mint rejected with HTTP ${String(response.status)}`)
-    const body = await response.json() as { access_token?: unknown; expires_in?: unknown }
+    let payload: unknown
+    try { payload = await response.json() } catch (error) {
+      if (error instanceof SyntaxError) throw new PatRejection(0, 'pat mint returned invalid JSON')
+      throw error
+    }
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+      throw new PatRejection(0, 'pat mint response must be an object')
+    }
+    const body = payload as { access_token?: unknown; expires_in?: unknown }
     if (typeof body.access_token !== 'string' || body.access_token.length === 0) {
       throw new PatRejection(0, 'pat mint response carries no access_token')
     }
-    const expiresIn = typeof body.expires_in === 'number' && Number.isFinite(body.expires_in) ? body.expires_in : 600
+    if (typeof body.expires_in !== 'number' || !Number.isFinite(body.expires_in) || body.expires_in <= 0
+      || !Number.isFinite(Date.now() + body.expires_in * 1000)) {
+      throw new PatRejection(0, 'pat mint response carries no valid expires_in')
+    }
+    signal.throwIfAborted()
+    if (account.epochOf(domain) !== epoch) throw new GhAccountFailure('gh-account/stale-generation', 'the account changed during PAT mint')
     const entry: PatEntry = {
       token: body.access_token,
-      expiresAt: Date.now() + expiresIn * 1_000,
+      expiresAt: Date.now() + body.expires_in * 1_000,
       projectId,
-      epoch: account.epochOf(domain),
+      epoch,
     }
     this.cache.set(domain, entry)
     this.mints += 1

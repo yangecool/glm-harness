@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/gh-plan-review.md
 /gh-plan-review:
-  en: 841919b86d290cb7
-  zh: 5ea3f394aa8f4d0b
+  en: d4c25f66a984353e
+  zh: 685282ca3f12b150
 /gh-plan-review/logged-state-and-recovery:
-  en: 3bcf4c96d8286e71
-  zh: aec3501f55e9f079
-/gh-plan-review/the-observation-seam:
-  en: ed630ae4ff3722be
-  zh: de36bc5785bc3562
+  en: a5acc3a1be8df206
+  zh: 81d29a255df90b89
+/gh-plan-review/review-ordering:
+  en: f0fc77542aba3dcc
+  zh: 5bd810848734738e
 /gh-plan-review/the-plan-file-contract:
-  en: 53a1139452485c8e
-  zh: ea91f4054189c2d2
+  en: b7bc5ed008b6aab3
+  zh: 27cdf7120aca5700
 /gh-plan-review/configuration:
   en: 70a6251a3e3d0de4
   zh: 4ee92cd1653f9de0

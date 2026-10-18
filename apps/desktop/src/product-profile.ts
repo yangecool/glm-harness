@@ -14,7 +14,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { applyProfilePatchIfPristine, initProfile, PROFILE_TEMPLATES, type ProfileTemplate } from '@deepseek-ai/dsh-app-boot'
 
 /** The upstream home directory name the stock shell keeps using. */
@@ -60,7 +60,7 @@ const isBundleName = (value: unknown): value is string =>
 /** A single path segment usable as a home directory name. */
 const isHomeDirName = (value: unknown): value is string =>
   typeof value === 'string' && value !== '' && !value.includes('/') && !value.includes('\\')
-  && value !== '.' && value !== '..'
+  && !value.includes('\0') && !value.includes(':') && value !== '.' && value !== '..'
 
 /**
  * Read and validate one product-profile document.
@@ -72,7 +72,7 @@ const isHomeDirName = (value: unknown): value is string =>
 function parseProductProfile(path: string): ProductProfile {
   const raw: unknown = JSON.parse(readFileSync(path, 'utf8'))
   if (typeof raw !== 'object' || raw === null) throw new Error(`${path}: product profile must be a JSON object`)
-  const candidate = raw as Partial<ProductProfile> & { homeProfiles?: unknown }
+  const candidate = raw as Record<string, unknown>
   if (candidate.productName !== undefined && typeof candidate.productName !== 'string') {
     throw new Error(`${path}: productName must be a string`)
   }
@@ -84,14 +84,14 @@ function parseProductProfile(path: string): ProductProfile {
   }
   const homeProfiles: Record<string, ProductHomeProfile> = {}
   if (candidate.homeProfiles !== undefined) {
-    if (typeof candidate.homeProfiles !== 'object' || Array.isArray(candidate.homeProfiles)) {
+    if (typeof candidate.homeProfiles !== 'object' || candidate.homeProfiles === null || Array.isArray(candidate.homeProfiles)) {
       throw new Error(`${path}: homeProfiles must be an object of profile templates`)
     }
     for (const [name, entry] of Object.entries(candidate.homeProfiles as Record<string, unknown>)) {
       const invalid = `${path}: homeProfiles.${name} must map to { bundles, patch }`
       if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) throw new Error(invalid)
       const template = entry as Partial<ProductHomeProfile>
-      if (name === '' || name.includes('/') || name === 'node_modules'
+      if (!isHomeDirName(name) || name.toLowerCase() === 'node_modules'
         || !Array.isArray(template.bundles) || template.bundles.length === 0 || !template.bundles.every(isBundleName)
         || (template.patch !== undefined && typeof template.patch !== 'string')) {
         throw new Error(invalid)
@@ -122,7 +122,11 @@ export function resolveProductProfile(
   env: Record<string, string | undefined> = process.env,
 ): ProductProfile {
   const override = env[PRODUCT_PROFILE_ENV]
-  const path = override !== undefined && override !== '' ? override : join(runtimeDir, 'product-profile.json')
+  if (override !== undefined && override !== '') {
+    if (!isAbsolute(override)) throw new Error(`${PRODUCT_PROFILE_ENV} must name an absolute product-profile path`)
+    return parseProductProfile(override)
+  }
+  const path = join(runtimeDir, 'product-profile.json')
   if (!existsSync(path)) return UPSTREAM_PRODUCT_PROFILE
   return parseProductProfile(path)
 }

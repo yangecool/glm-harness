@@ -1,32 +1,17 @@
 /**
- * GH plan-review ledger. Upstream plan mode owns the mode toggle, the
- * model-facing `exit_plan_mode` tool, and the review question; this plugin
- * owns the durable record around each review: every presented plan becomes a
- * numbered revision under the session log, an approval writes the approved
- * text to a deterministic workspace plan file (atomically, and never over an
- * externally edited file), and every outcome — approval, keep-planning with
- * feedback, dismissal, or failure — is appended bound to its revision.
- *
- * The plugin is a pure observer of the tool pipeline: it replaces no tool
- * result and prompts no second question. It watches the plan-review question
- * flow through `user-questions/request` to learn whether a call actually
- * reached the user, then records the outcome from `tools/post-execute`.
- * Validation failures that never reached the review leave no events at all.
- *
- * X05 (late-result) semantics: approvals are monotonic. The fold accepts an
- * approval only for a revision at least as new as the recorded one, so a
- * replayed older approval — reconnect redelivery, fork inheritance, or an
- * in-flight answer racing a newer submission — updates nothing. The same
- * rule protects the plan file: an approval rewrites it only while its
- * content is still what this session last wrote, so user edits always win.
+ * Revision-bound plan reviews layered over the upstream plan-mode tool.
+ * Revisions are allocated when presented, before awaiting an answer. An
+ * approval for an already superseded review is aborted before plan-mode
+ * continues; accepted outcomes are logged against their original revision.
+ * Plan files use a content check before replacement and preserve detected
+ * external edits. Concurrent external writes after that check are not locked.
  *
  * See packages/glm/plan-review/README.md.
- *
  * @module @glm-harness/gh-plan-review
  */
 
 import { createHash, randomUUID } from 'node:crypto'
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { linkSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { z as zod } from 'zod'
@@ -185,6 +170,11 @@ function asRecord(data: unknown): Record<string, unknown> {
 
 /** One in-flight review, keyed by the exit tool call's id. */
 interface ReviewRecord {
+  /** Revision allocated when this session presents the question, before any answer. */
+  revision: number
+  plan: string
+  planPath: string | null
+  planSha256: string
   /** Set when the plan-review question actually reached the answerer. */
   questionSeen: boolean
   /** The reviewer's structured answer, once it settles. */
@@ -196,18 +186,15 @@ interface ReviewRecord {
 }
 
 /**
- * Fold one event into the ledger. Submissions raise `nextRevision`
- * monotonically and carry the newest plan path. Approvals apply only to a
- * revision at least as new as the recorded approval and below
- * `nextRevision` — an approval for an older or unknown revision is folded as
- * history and changes nothing (the X05 replay guard). `writtenSha256` tracks
- * only approvals that actually wrote the file, so a preserved external edit
- * is never mistaken for this session's content later.
+ * Fold contiguous submissions and accept only the newest submitted revision's
+ * first approval. Unknown, duplicate, or superseded approvals change nothing.
+ * `writtenSha256` tracks only approvals that actually wrote the plan file.
  */
 function applyPlanReviewEvent(state: GhPlanReviewUnitState, event: { type: string; data: unknown }): GhPlanReviewUnitState {
   if (event.type === 'gh-plan/submitted') {
     const data = asRecord(event.data)
     const revision = typeof data.revision === 'number' ? data.revision : 0
+    if (!Number.isSafeInteger(revision) || revision !== state.nextRevision) return state
     const planPath = typeof data.planPath === 'string' ? data.planPath : null
     return {
       ...state,
@@ -220,7 +207,7 @@ function applyPlanReviewEvent(state: GhPlanReviewUnitState, event: { type: strin
     const revision = typeof data.revision === 'number' ? data.revision : 0
     const planSha256 = typeof data.planSha256 === 'string' ? data.planSha256 : ''
     const fileWritten = data.fileWritten === true
-    if (revision < (state.approvedRevision ?? 0) || revision >= state.nextRevision) return state
+    if (!Number.isSafeInteger(revision) || revision <= (state.approvedRevision ?? 0) || revision !== state.nextRevision - 1) return state
     return {
       ...state,
       approvedRevision: revision,
@@ -233,7 +220,7 @@ function applyPlanReviewEvent(state: GhPlanReviewUnitState, event: { type: strin
 /** Projection of the plan-review ledger. */
 export const planReviewProjectionDefinition = {
   key: 'ghPlanReview',
-  stateVersion: 1,
+  stateVersion: 2,
   stateSchema: unitStateSchema,
   init: () => ({ nextRevision: 1, approvedRevision: null, writtenSha256: null, planPath: null }),
   apply: applyPlanReviewEvent,
@@ -263,7 +250,8 @@ export class GhPlanReviewService extends Service {
   private readonly plansDir: string
 
   /** In-flight reviews keyed by exit tool call id; cleared when each settles. */
-  private readonly reviews = new Map<string, ReviewRecord>()
+  private reviews = new WeakMap<Session, Map<string, ReviewRecord>>()
+  private disposed = false
 
   /** Newest assigned revision per session, seeded from the projection. */
   private readonly lastRevision = new WeakMap<Session, number>()
@@ -275,17 +263,32 @@ export class GhPlanReviewService extends Service {
 
     ctx.on('user-questions/request', async (request, next) => {
       const question = request.questions.find(item => item.intent?.kind === 'plan-review')
-      if (question?.intent?.kind !== 'plan-review' || question.intent.callId === undefined) return next()
+      if (question?.intent?.kind !== 'plan-review' || question.intent.callId === undefined
+        || request.agent === undefined || question.detail === undefined) return next()
+      const session = request.agent.session
       const callId = question.intent.callId
-      const record = this.reviews.get(callId) ?? { questionSeen: false }
-      record.questionSeen = true
-      this.reviews.set(callId, record)
+      let reviews = this.reviews.get(session)
+      if (reviews === undefined) { reviews = new Map(); this.reviews.set(session, reviews) }
+      if (reviews.has(callId)) throw new UserQuestionError('this plan review is already waiting for an answer', 'DUPLICATE_WAIT')
+      const record: ReviewRecord = {
+        questionSeen: true,
+        revision: this.assignRevision(session),
+        plan: question.detail,
+        planPath: this.planPathOf(session),
+        planSha256: sha256Text(question.detail),
+      }
+      reviews.set(callId, record)
+      session.append('gh-plan/submitted', { revision: record.revision, planPath: record.planPath, planSha256: record.planSha256 })
       try {
         const answer = await next()
         const item = answer.answers.find(entry => entry.id === question.id)
         record.answer = {
-          approved: item !== undefined && item.selected.length === 1 && item.selected[0] === question.intent.approve,
+          approved: item !== undefined && item.selected.length === 1
+            && item.selected[0] === question.intent.approve && item.custom === undefined,
           custom: typeof item?.custom === 'string' && item.custom !== '' ? item.custom : null,
+        }
+        if (record.answer.approved && (this.disposed || record.revision !== this.stateOf(session).nextRevision - 1)) {
+          throw new UserQuestionError('A newer plan needs review; this earlier approval cannot leave plan mode.', 'ASK_ABORTED')
         }
         return answer
       } catch (cause: unknown) {
@@ -298,48 +301,52 @@ export class GhPlanReviewService extends Service {
     ctx.on('tools/post-execute', async (exec, result, next) => {
       const decision = await next()
       if (exec.name !== EXIT_PLAN_MODE || exec.agent === undefined) return decision
-      const plan = (exec.arguments as { plan?: unknown } | undefined)?.plan
-      const record = this.reviews.get(exec.callId)
+      const session = exec.agent.session
+      const reviews = this.reviews.get(session)
+      const record = reviews?.get(exec.callId)
       // A call that never reached the review (mode/heading validation, no
       // answerer channel) is not a plan revision: no events, no file.
-      if (record?.questionSeen !== true || typeof plan !== 'string') {
-        this.reviews.delete(exec.callId)
+      if (record?.questionSeen !== true || this.disposed) {
+        reviews?.delete(exec.callId)
         return decision
       }
-      const session = exec.agent.session
-      const revision = this.assignRevision(session)
-      const planPath = this.planPathOf(session)
-      const planSha256 = sha256Text(plan)
-      session.append('gh-plan/submitted', { revision, planPath, planSha256 })
-      const value = result.isError ? undefined : (result.value as { approved?: unknown } | undefined)
-      if (!result.isError && value?.approved === true) {
-        let fileWritten = false
-        if (planPath !== null) {
-          try {
-            fileWritten = this.writePlanFile(planPath, plan, this.stateOf(session).writtenSha256)
-          } catch (error: unknown) {
-            ctx.logger.warn('gh-plan-review: failed to write the plan file after approval: %o', error)
+      try {
+        const { revision, plan, planPath, planSha256 } = record
+        const rawValue = decision.kind === 'accept' && Object.hasOwn(decision, 'value') ? decision.value : result.value
+        const value = typeof rawValue === 'object' && rawValue !== null ? rawValue as { approved?: unknown } : undefined
+        if (decision.kind === 'accept' && !result.isError && value?.approved === true && record.answer?.approved === true
+          && revision === this.stateOf(session).nextRevision - 1) {
+          let fileWritten = false
+          if (planPath !== null) {
+            try {
+              fileWritten = this.writePlanFile(planPath, plan, this.stateOf(session).writtenSha256)
+            } catch (error: unknown) {
+              ctx.logger.warn('gh-plan-review: failed to write the plan file after approval: %o', error)
+            }
           }
+          session.append('gh-plan/approved', { revision, planPath, planSha256, fileWritten })
+        } else {
+          const outcome: GhPlanRejectionOutcome = record.answer !== undefined && !record.answer.approved && !record.failed
+            ? 'keep-planning'
+            : !result.isError && value?.approved === false && record.dismissed === true
+              ? 'dismissed'
+              : 'failed'
+          session.append('gh-plan/rejected', {
+            revision,
+            outcome,
+            feedback: outcome === 'keep-planning' ? record.answer?.custom ?? null : null,
+          })
         }
-        session.append('gh-plan/approved', { revision, planPath, planSha256, fileWritten })
-      } else {
-        const outcome: GhPlanRejectionOutcome = record.answer !== undefined
-          ? 'keep-planning'
-          : !result.isError && value?.approved === false && record.dismissed === true
-            ? 'dismissed'
-            : 'failed'
-        session.append('gh-plan/rejected', {
-          revision,
-          outcome,
-          feedback: outcome === 'keep-planning' ? record.answer?.custom ?? null : null,
-        })
+        reviews?.delete(exec.callId)
+      } finally {
+        reviews?.delete(exec.callId)
       }
-      this.reviews.delete(exec.callId)
       return decision
     })
 
     ctx.effect(() => () => {
-      this.reviews.clear()
+      this.disposed = true
+      this.reviews = new WeakMap()
     }, 'gh-plan-review: drop in-flight reviews')
   }
 
@@ -381,9 +388,9 @@ export class GhPlanReviewService extends Service {
   }
 
   /**
-   * Write the approved plan text to the plan file, atomically, and only when
-   * the file is absent or still holds what this session last wrote. Any other
-   * content is a user or external edit and is preserved untouched.
+   * Publish the approved plan with exclusive creation or atomic replacement.
+   * Existing files are replaced only if their content matches this session's
+   * last write at the check. External editors do not participate in a lock.
    *
    * @param path - the plan file path.
    * @param plan - the approved plan markdown, written verbatim.
@@ -401,9 +408,20 @@ export class GhPlanReviewService extends Service {
     if (existing !== null && sha256Text(existing) !== previousWrittenSha256) return false
     mkdirSync(dirname(path), { recursive: true })
     const staging = `${path}.tmp-${process.pid.toString(36)}-${randomUUID()}`
-    writeFileSync(staging, plan, 'utf8')
-    renameSync(staging, path)
-    return true
+    writeFileSync(staging, plan, { encoding: 'utf8', flag: 'wx' })
+    try {
+      if (existing === null) {
+        try { linkSync(staging, path) } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'EEXIST') return false
+          throw error
+        }
+      } else {
+        renameSync(staging, path)
+      }
+      return true
+    } finally {
+      rmSync(staging, { force: true })
+    }
   }
 }
 

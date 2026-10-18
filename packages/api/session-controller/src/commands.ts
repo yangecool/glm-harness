@@ -397,12 +397,13 @@ export class SessionCommandController {
     await this.ctx.waterfall('session/new-prompt', {
       sessionId: agent.id,
       requestId: request.requestId,
-    }, () => Promise.resolve())
-    const recordedSource: MessageSource = source.kind === 'user' && 'rpcId' in source
-      ? { ...source, admissionFingerprint: fingerprint } : source
-    await this.placePrompt(agent, request, recordedSource)
-    this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
-    await this.flushAdmission(agent, request.requestId)
+    }, async () => {
+      const recordedSource: MessageSource = source.kind === 'user' && 'rpcId' in source
+        ? { ...source, admissionFingerprint: fingerprint } : source
+      await this.placePrompt(agent, request, recordedSource)
+      this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
+      await this.flushAdmission(agent, request.requestId)
+    })
     return { accepted: true }
   }
 

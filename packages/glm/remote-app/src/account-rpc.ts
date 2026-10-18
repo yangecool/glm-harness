@@ -27,7 +27,8 @@ export class GhAccountRpcService extends TypertRemoteService {
    * @returns one token-free snapshot per domain.
    */
   @Remote
-  status(): GhAccountStatusValue {
+  async status(): Promise<GhAccountStatusValue> {
+    await this.ctx.ghAccount.hydrated
     return {
       accounts: this.ctx.ghAccount.configuredDomains().map(domain => this.ctx.ghAccount.snapshot(domain)),
     }
@@ -39,8 +40,8 @@ export class GhAccountRpcService extends TypertRemoteService {
    * @returns the authorization URL and the pending login's deadline.
    */
   @Remote
-  beginLogin(request: { domain: GhAccountDomain; redirectUrl: string }): GhAccountLoginBeginValue {
-    return this.ctx.ghAccount.beginLogin(request.domain, request.redirectUrl)
+  async beginLogin(request: { domain: GhAccountDomain; redirectUrl: string }): Promise<GhAccountLoginBeginValue> {
+    return await this.ctx.ghAccount.beginLogin(request.domain, request.redirectUrl)
   }
 
   /**

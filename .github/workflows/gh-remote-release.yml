@@ -60,7 +60,10 @@ jobs:
             packages/api/session-controller/tests/admission.host.spec.ts \
             packages/api/session-controller/tests/session-pending-submissions.client.spec.ts \
             packages/session/session-checkpoint-policy/tests/session-checkpoint-policy.spec.ts \
-            packages/glm/remote-supervisor/tests \
+            packages/glm \
+            apps/desktop/tests/product-profile.spec.ts \
+            scripts/gh-remote/bootstrap.spec.ts \
+            scripts/build-gh-remote-archive.spec.ts scripts/verify-product-use.spec.ts \
             packages/test-support/client-runtime/tests/assembly-bundle-roster.client.spec.ts \
             apps/desktop/tests/private-plugin-packages.spec.ts \
             scripts/gh-ci-workflows.spec.ts scripts/client-tsconfig.spec.ts \

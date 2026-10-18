@@ -568,7 +568,7 @@ Source: [`packages/feedback/command-feedback/src/types.ts:40`](../packages/feedb
 'gh-plan/approved': { revision: number; planPath: string | null; planSha256: string; fileWritten: boolean }
 ```
 
-Source: [`packages/glm/plan-review/src/index.ts:62`](../packages/glm/plan-review/src/index.ts)
+Source: [`packages/glm/plan-review/src/index.ts:47`](../packages/glm/plan-review/src/index.ts)
 
 <a id="gh-planrejected--log-only"></a>
 
@@ -584,7 +584,7 @@ Source: [`packages/glm/plan-review/src/index.ts:62`](../packages/glm/plan-review
 'gh-plan/rejected': { revision: number; outcome: 'keep-planning' | 'dismissed' | 'failed'; feedback: string | null }
 ```
 
-Source: [`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-review/src/index.ts)
+Source: [`packages/glm/plan-review/src/index.ts:54`](../packages/glm/plan-review/src/index.ts)
 
 <a id="gh-plansubmitted--log-only"></a>
 
@@ -600,7 +600,7 @@ Source: [`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-review
 'gh-plan/submitted': { revision: number; planPath: string | null; planSha256: string }
 ```
 
-Source: [`packages/glm/plan-review/src/index.ts:55`](../packages/glm/plan-review/src/index.ts)
+Source: [`packages/glm/plan-review/src/index.ts:40`](../packages/glm/plan-review/src/index.ts)
 
 ### `goal/*`
 
@@ -6457,7 +6457,7 @@ Sources: [`packages/llm/llm/src/types.ts:161`](../packages/llm/llm/src/types.ts)
 
 SHA-256: `067c4681e8742f10055c29149cb10a5718baae9b0640e71f7937196ab7317fea`
 
-Sources: [`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-review/src/index.ts)
+Sources: [`packages/glm/plan-review/src/index.ts:54`](../packages/glm/plan-review/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -6471,7 +6471,7 @@ Sources: [`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-revie
 
 SHA-256: `7ac84e1c25694d31532d4b1799930d82bcdb504ee507a6cefc3ecc6bd4d7fb15`
 
-Sources: [`packages/glm/plan-review/src/index.ts:62`](../packages/glm/plan-review/src/index.ts)
+Sources: [`packages/glm/plan-review/src/index.ts:47`](../packages/glm/plan-review/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -8085,7 +8085,7 @@ Sources: [`packages/sandbox/sandbox-policy/src/session-mode.ts:33`](../packages/
 
 SHA-256: `cd021416b00a1611a8618d698b5d253893aed2ee61b61f4a41fca4130b75b8b0`
 
-Sources: [`packages/glm/plan-review/src/index.ts:55`](../packages/glm/plan-review/src/index.ts)
+Sources: [`packages/glm/plan-review/src/index.ts:40`](../packages/glm/plan-review/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|

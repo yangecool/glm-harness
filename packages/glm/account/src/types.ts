@@ -1,7 +1,8 @@
 /**
  * Client-safe type surface of the GH account owner: the two service domains,
  * the public account snapshot, the OAuth grant's persisted shape, and the
- * short-term project token's cached facts. Nothing here carries a secret.
+ * short-term project token's cached facts. Grant payloads contain secrets;
+ * status views omit them.
  *
  * @module @glm-harness/gh-account/types
  */
@@ -21,8 +22,10 @@ export interface GhAccountDomainConfig {
   clientId: string
   /** Optional extra scope string sent with the authorization request. */
   scope?: string
-  /** Poll interval for the standalone (no local callback) login completion, in milliseconds. */
+  /** Reserved polling hint in milliseconds; no polling login driver is implemented. */
   pollMs?: number
+  /** Deadline for each OAuth or PAT exchange, including the response body; defaults to 30 seconds. */
+  requestTimeoutMs?: number
 }
 
 /** The persisted OAuth grant: exactly what the token endpoint issued, nothing derived. */
@@ -59,6 +62,8 @@ export type GhAccountErrorCode =
   | 'gh-account/oauth-rejected'
   | 'gh-account/domain-unknown'
   | 'gh-account/login-in-progress'
+  | 'gh-account/invalid-grant'
+  | 'gh-account/unavailable'
 
 /** One failed account operation, with the stable code clients switch on. */
 export interface GhAccountError {

@@ -76,11 +76,36 @@ it('mints the runtime id once and keeps it stable', async () => {
   const again = await ensureRuntimeId(root)
   expect(again).toBe(first)
   expect(await readFile(runtimeIdPath(root), 'utf8')).toBe(`${first}\n`)
-  // A corrupted file re-mints instead of surfacing garbage as identity.
+  // A corrupt identity must remain diagnosable, rather than silently changing the runtime.
   await writeFile(runtimeIdPath(root), 'not-a-uuid\n')
-  const reminted = await ensureRuntimeId(root)
-  expect(reminted).not.toBe(first)
-  expect(reminted).toMatch(/^[0-9a-f-]{36}$/u)
+  await expect(ensureRuntimeId(root)).rejects.toThrow('runtime id')
+  expect(await readFile(runtimeIdPath(root), 'utf8')).toBe('not-a-uuid\n')
+})
+
+it('publishes one complete persistent identity to concurrent first-start callers', async () => {
+  const root = join(await freshRoot(), 'not-yet-created')
+  const ids = await Promise.all(Array.from({ length: 20 }, () => ensureRuntimeId(root)))
+  expect(new Set(ids).size).toBe(1)
+  expect(await readFile(runtimeIdPath(root), 'utf8')).toBe(`${ids[0]}\n`)
+})
+
+it('refuses an identity that could not be persisted', async () => {
+  const root = await freshRoot()
+  const notDirectory = join(root, 'file')
+  await writeFile(notDirectory, 'not a data root')
+  await expect(ensureRuntimeId(notDirectory)).rejects.toThrow()
+})
+
+it('does not treat a reused pid with a different process birth identity as a live owner', async () => {
+  const root = await freshRoot()
+  await mkdir(join(root, 'locks'), { recursive: true })
+  await writeFile(lifecycleLockPath(root), JSON.stringify({
+    kind: 'gh-remote-lifecycle-lock', pid: process.pid, processIdentity: 'a-previous-boot:0', nonce: 'old',
+    verb: 'update', startedAt: 1, protectedReleases: [],
+  }))
+  expect((await probeLifecycleLock(root)).holderAlive).toBe(false)
+  const held = await acquireLifecycleLock(root, 'gc', { timeoutMs: 500 })
+  await held.release()
 })
 
 it('commit adopts a staged release and switches the current pointer under one transaction', async () => {
@@ -105,6 +130,7 @@ it('commit refuses an id that is already installed and a staging that is absent'
   await writeFile(join(installed, 'gh-release.json'), `${JSON.stringify({ kind: 'gh-remote-release', id: 'r-there', installedAt: 1 }, null, 2)}\n`)
   expect(await supervisorCli(['--root', root, 'commit', '--id', 'r-there'])).toBe(74)
   expect(await supervisorCli(['--root', root, 'commit', '--id', 'r-never-staged'])).toBe(74)
+  expect(await supervisorCli(['--root', root, 'commit', '--id', '../outside'])).toBe(64)
 })
 
 it('status names the interrupted transaction and the runtime id', async () => {

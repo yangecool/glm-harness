@@ -78,6 +78,16 @@ describe('product package use', () => {
     expect(failures(root, declarations())).toBe('')
   })
 
+  it('traces product bundles from GH profile declarations and rejects them when unmounted', () => {
+    const root = fixture()
+    pkg(root, candidateDir, candidate, { dsh: { bundle: { patch: './cordis.patch.yml' } } })
+    write(root, `${candidateDir}/cordis.patch.yml`, [{ insert: [{ id: 'candidate', name: candidate }] }])
+    write(root, 'scripts/gh-init-profiles.ts', `export const GH_PROFILES = { 'gh-remote': ['${candidate}'] }`)
+    expect(failures(root)).toBe('')
+    write(root, 'scripts/gh-init-profiles.ts', 'export const GH_PROFILES = {}')
+    expect(failures(root)).toContain(`${candidateDir} (${candidate}): no product runtime use`)
+  })
+
   it.each([
     `import type { Shape } from '${candidate}'`,
     `import { type Shape } from '${candidate}'`,

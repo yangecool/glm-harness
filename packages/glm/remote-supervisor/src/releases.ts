@@ -44,8 +44,12 @@ export const STAGING_PREFIX = '.staging-'
 /** Manifest file name inside a release directory. */
 export const RELEASE_MANIFEST = 'gh-release.json'
 
-/** Release ids are single directory names, never pointer or staging paths. */
-const validReleaseId = (id: string): boolean => /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(id) && id !== 'current.json'
+/**
+ * Check that a release id names one directory, never a pointer or staging path.
+ * @param id - release id received from argv or a pointer file.
+ * @returns whether the id can name an installed release.
+ */
+export const validReleaseId = (id: string): boolean => /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(id) && id !== 'current.json'
 
 /**
  * Read a root's current-release pointer.
@@ -282,7 +286,7 @@ export interface GcResult {
  * release it runs, so a task still executing on an old version holds it.
  * @param root - the supervisor data root.
  * @param protect - release ids that must survive beyond current and previous.
- * @returns what the pass removed and kept.
+ * @returns removed releases and retained paths; staging is retained until its ownership can be verified.
  */
 export const gcReleases = async (root: string, protect: ReadonlyMap<string, string> = new Map()): Promise<GcResult> => {
   const current = await readCurrent(root)
@@ -300,8 +304,7 @@ export const gcReleases = async (root: string, protect: ReadonlyMap<string, stri
   }
   const removedStaging: string[] = []
   for (const id of await listStaging(root)) {
-    await rm(join(root, 'releases', id), { recursive: true, force: true })
-    removedStaging.push(id)
+    kept[id] = 'staging ownership is unverified; retained for explicit recovery'
   }
   return { removedReleases, removedStaging, kept }
 }

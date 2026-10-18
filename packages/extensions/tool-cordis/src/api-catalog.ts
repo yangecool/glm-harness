@@ -1227,7 +1227,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'every domain this owner was constructed with.',
       },
       {
-        signature: 'domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig',
+        signature: 'domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig & { requestTimeoutMs: number }',
         description: 'One domain\'s endpoint configuration, for owners that mint derived tokens.',
         parameters: [{ name: 'domain', description: 'the account domain.' }],
         returns: 'the endpoint/client configuration the domain was constructed with.',
@@ -1245,7 +1245,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the domain\'s account identity and expiry facts, logged-out included.',
       },
       {
-        signature: 'beginLogin(domain: GhAccountDomain, redirectUrl: string): { verificationUrl: string; expiresAt: number }',
+        signature: 'async beginLogin(domain: GhAccountDomain, redirectUrl: string): Promise<{ verificationUrl: string; expiresAt: number }>',
         description: 'Begin one interactive login: build the PKCE pair and return the authorization URL. The domain keeps the verifier; completeLogin finishes the exchange.',
         parameters: [{ name: 'domain', description: 'the account domain.' }, { name: 'redirectUrl', description: 'the OAuth redirect_uri the authorization round-trip uses.' }],
         returns: 'the user-facing verification URL and the pending login\'s expiry.',
@@ -5734,7 +5734,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'GhAccountDomainConfig',
-    declaration: 'export interface GhAccountDomainConfig {\n    domain: GhAccountDomain;\n    authorizeUrl: string;\n    tokenUrl: string;\n    clientId: string;\n    scope?: string;\n    pollMs?: number;\n}',
+    declaration: 'export interface GhAccountDomainConfig {\n    domain: GhAccountDomain;\n    authorizeUrl: string;\n    tokenUrl: string;\n    clientId: string;\n    scope?: string;\n    pollMs?: number;\n    requestTimeoutMs?: number;\n}',
   },
   {
     name: 'GhAccountSnapshot',

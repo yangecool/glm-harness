@@ -55,9 +55,26 @@ describe('product profile resolution', () => {
     const root = temporaryRoot()
     const override = join(root, 'broken.json')
     for (const document of [{ bundles: [] }, { bundles: ['ok', 'has space'] }, { homeDirName: 'a/b' }, { homeProfiles: { 'x/..': { bundles: ['a'] } } }]) {
-      writeFileSync(override, JSON.stringify(document))
+      writeFileSync(override, JSON.stringify({ bundles: ['valid-bundle'], ...document }))
       expect(() => resolveProductProfile(join(root, 'runtime'), { DSH_DESKTOP_PRODUCT_PROFILE: override })).toThrow(/broken\.json: .*must/)
     }
+  })
+
+  it('refuses a missing explicit product configuration instead of booting the upstream product', () => {
+    const root = temporaryRoot()
+    expect(() => resolveProductProfile(root, { DSH_DESKTOP_PRODUCT_PROFILE: join(root, 'missing.json') })).toThrow()
+    expect(() => resolveProductProfile(root, { DSH_DESKTOP_PRODUCT_PROFILE: 'relative.json' })).toThrow()
+  })
+
+  it('rejects profile names that can escape the profile directory on either host platform', () => {
+    const root = temporaryRoot()
+    const override = join(root, 'product.json')
+    for (const name of ['..', '.', '..\\outside', 'C:outside', 'node_modules', 'NODE_MODULES']) {
+      writeFileSync(override, JSON.stringify({ bundles: ['valid-bundle'], homeProfiles: { [name]: { bundles: ['valid-bundle'] } } }))
+      expect(() => resolveProductProfile(root, { DSH_DESKTOP_PRODUCT_PROFILE: override })).toThrow(/homeProfiles/)
+    }
+    writeFileSync(override, JSON.stringify({ bundles: ['valid-bundle'], homeProfiles: null }))
+    expect(() => resolveProductProfile(root, { DSH_DESKTOP_PRODUCT_PROFILE: override })).toThrow(/homeProfiles/)
   })
 })
 

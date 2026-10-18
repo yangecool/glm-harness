@@ -309,7 +309,7 @@
     {
       "id": "GH-008-B",
       "title": "计划审阅台账：草稿 revision、计划文件与审批绑定",
-      "status": "complete-slice",
+      "status": "partial-integration",
       "planRefs": [
         "E03.2",
         "F13",
@@ -340,7 +340,8 @@
         "拒绝反馈仍按上游同回合工具错误回到模型；ZCode 式反馈成为真实下一条用户消息/无反馈拒绝结束回合延后到工作台切片",
         "子代理无存活应答者无法到达审阅（上游限制），台账不记录；UI 渲染（计划文件路径/revision 历史）待客户端切片",
         "回环 GLM fixture 校验事件/文件/中继行为，不证明真实 GLM 服务（D01 未解除）"
-      ]
+      ],
+      "reviewQualification": "Revision is allocated before awaiting review; Session-scoped call ids and latest-only first approval. The plugin aborts stale reviews, so historical pure-observer/zero-token-failure claims do not describe current behavior."
     },
     {
       "id": "GH-004-B",
@@ -602,7 +603,7 @@
         "D01"
       ],
       "owner": "账号/PAT 与模型路由",
-      "status": "complete-slice",
+      "status": "partial-integration",
       "completed": "2026-10-18",
       "deliverables": [
         "packages/glm/account(新):ghAccount 按域 OAuth 授权码+PKCE S256、credentials seam 持久 grant、单飞刷新、按域 epoch(stale-generation)、epochOf 访问器",
@@ -612,13 +613,13 @@
         "scripts/gh-account-verify.ts:真实监护服务+回环 OAuth/PAT/聊天 fixture 全流验收 4/4"
       ],
       "evidence": "artifacts/gh-validation/gh007-account-20261018",
-      "notes": "回环 fixture 端点;真实 BigModel/Z.AI 套餐联调(D01)未运行;团队/个人 project 真实权益校验属服务侧;桌面账号 UI 随 GH-012;远端配置来源随 GH-011。验收中修复两个真实缺陷:登出后缓存 PAT 存活(epoch 守卫)、驱动窗口陈旧判定(awaitNextTurn 基线 seq)",
+      "notes": "Fixture issuer only: urn:glm-harness:pat is not a verified official grant. Implement actual OAuth/business JWT/PAT/project flows and D01; lifecycle fixes do not qualify actual account support.",
       "unitTests": "account 11 + model-glm 46 = 57 passed;typecheck 5/5;oxlint 0;gh-closure clean"
     },
     {
       "id": "GH-006-G",
       "title": "产品插件/profile、制品和生命周期事务收口",
-      "status": "complete-slice",
+      "status": "partial-integration",
       "planRefs": [
         "11.8 GH-006-G",
         "E04.3",
@@ -637,7 +638,7 @@
       "owner": "常驻远端服务",
       "deliverables": [
         "packages/glm/remote-supervisor-app：gh-supervisor 最小 profile（单行 Cordis 树、Config 可调就绪/退避/排水/熔断、启动失败 exit 70 直写 stderr）",
-        "packages/glm/remote-supervisor：lifecycle-lock 生命周期事务（原子 link 声明、死持有者回收、中断可诊断、gc 保护载荷）+ runtime-id（一次铸造、损坏修复）+ install/commit/use/update/rollback/gc/uninstall/stop/restart/status 统一动词 + 接纳关闭排水（describe 能力握手）",
+        "packages/glm/remote-supervisor：lifecycle-lock 生命周期事务（原子 link 声明、死持有者回收、中断可诊断、gc 保护载荷）+ runtime-id（排他铸造、损坏拒绝）+ install/commit/use/update/rollback/gc/uninstall/stop/restart/status 统一动词 + 接纳关闭排水（describe 能力握手）",
         "packages/api/session-controller：merge-extensible session/new-prompt waterfall；packages/glm/remote-app：ghRemoteControl 准入门 + describe 汇报 runtimeId/releaseId/admission/capabilities",
         "scripts/gh-remote/bootstrap.ts：POSIX 只做解压/校验，install/update/rollback/gc/uninstall/status 全部委托 supervisor CLI；GH-005 归档布局与 GH-006 release/指针统一",
         "scripts/gh-remote-product-verify.ts：真实归档 A/B 10 用例验收（从零安装/握手/断线/崩溃/runtime id/升级排水/回滚/gc/并发/中断/卸载），证据 artifacts/gh-validation/gh006g-product-20261018",
@@ -650,13 +651,15 @@
       "boundaries": [
         "第二 release 为同树变体标记，非不同产品版本；机器重启未模拟（无容器特权）",
         "PTY/全局 lease 与全部资源排水覆盖属 GH-009",
-        "升级接纳关闭以 supervisor 事务报告为权威证据（空闲服务关闭窗口短于轮询节拍）"
+        "升级接纳关闭以 supervisor 事务报告为权威证据（空闲服务关闭窗口短于轮询节拍）",
+        "Install/switch/start and bootstrap extraction are not one fenced transaction; full resource/release leases and interrupted recovery are not complete.",
+        "Corrupt persistent runtime id rejects without replacement; unknown staging ownership is retained."
       ]
     },
     {
       "id": "GH-004-C",
       "title": "干净桌面安装与恢复入口",
-      "status": "complete-slice",
+      "status": "partial-integration",
       "planRefs": [
         "11.8 GH-004-C",
         "E01",
@@ -687,6 +690,26 @@
         "打包发行（product-profile.json 随 runtime 入包、安装器、签名）属发版切片",
         "apps/desktop/tests/macos-notarization-proxy.spec.ts 15 例既有失败（HEAD 复现；addon 探测路径与 pnpm --dir 兼容性）留待 macOS 平台恢复"
       ]
+    },
+    {
+      "id": "GH-008-C",
+      "title": "本地受监督自开发准入",
+      "status": "planned",
+      "dependencies": [
+        "GH-003-B2: real GLM native API-key coding and necessary rules/budgets",
+        "GH-004-C: frozen product runtime with metadata and isolated candidate/home",
+        "GH-008-A/B: permission/plan/durable task continuity for the qualification task"
+      ],
+      "acceptance": [
+        "Running stable N owns immutable artifacts and separate home; N+1 source/build/test never overwrite the active runtime",
+        "Real GLM via desktop locates and fixes one bounded GH task, runs meaningful regression/build, reviews diff and creates recoverable Git commit",
+        "Cold restart reattaches same task without duplicate effects; verified candidate handoff retains startable known-good runtime and data recovery",
+        "Record model/purpose/permission, artifacts, tests, token/quality and memory evidence; fixtures cannot qualify real self-development"
+      ],
+      "after": [
+        "GH-009 resource slices + GH-012 minimal review/terminal/navigation for daily primary use",
+        "GH-006-G full lifecycle/fencing/leases + GH-011 for remote unattended self-development"
+      ]
     }
   ],
   "blocked": [
@@ -700,21 +723,22 @@
     }
   ],
   "currentAssessment": {
-    "updatedAt": "2026-10-18",
+    "updatedAt": "2026-10-19",
     "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
     "productBaseline": "ZCode v3.15.1; GSH selective development reference only",
-    "review": "All 20 GH commits after the DSH import through the GH-006-F commit reviewed, plus the CI fixes; uncommitted GH-007 work preserved and excluded from committed acceptance.",
+    "review": "Reviewed five committed slices after the previous pushed review baseline; confirmed concurrency and lifecycle defects fixed with negative controls. Historical acceptance remains scoped to its original fixture/platform.",
     "GH-001": "base/profile/closure implemented; existing-home product-layer migration pending",
     "GH-002": "sampler and corpus implemented; complete ZCode/native/resident baselines pending",
     "GH-003": "native text/tools, reasoning replay, persona, stable tool order, bounded GH retry and truncation rejection implemented; real GLM/purpose routing/personal rules/accounts/PAT/multimodal/TOK pending",
-    "GH-004": "Source Web/Electron fixture workflows exist. Packager includes private runtime plugin tarballs. Clean packaged first-launch/recovery still uses upstream WEB_PROFILE and must be fixed via a generic product bootstrap/configuration seam in GH-004-C.",
+    "GH-004": "Source Electron product metadata and clean-home fixture exist; packaged/frozen distribution does not yet carry product-profile.json. GH-004-C remains open for artifact startup and recovery.",
     "GH-008-A": "local yolo/guarded/build plus independent Plan and Composer controls implemented; readonly/delegation bypasses fixed; full PER05/06/07/09/10 and plan-file/child/Windows paths pending",
     "GH-BRAND": "brand and existing workbench visuals partial; full workflow replacement remains required",
-    "GH-005": "Archive and direct OpenSSH bootstrap slice implemented/hardened; not yet wired to packaged Supervisor lifecycle. Independent hosts/download/alias/ProxyJump/auth/platform cases pending.",
-    "GH-006": "PARTIAL: A-F service, supervision library, durable admission/query, reattach, release primitives and Linux joint tests exist. Product plugin/profile/artifact integration, stable identities, full leases, admission freeze and serialized lifecycle transactions remain required in G.",
+    "GH-005": "Relocatable archive and direct OpenSSH bootstrap exist and now connect to the resident profiles. Independent hosts, download/alias/jump/auth/platform qualification remain open.",
+    "GH-006": "PARTIAL: product supervisor/profile and unified archive layout exist. Authentication/drain/ACK/identity/GC/teardown regressions fixed. Full lifecycle transaction, admission fencing, all resource/release leases, interrupted recovery and protocol/workspace qualification remain required. Control commands must settle with readiness/transaction receipts independently of the resident instance; the historical SSH rollback driver permits a killed control call when the pointer moved and is not complete transaction evidence.",
     "memory": "Historical Electron idle ~1155 MiB / post-turn ~1038 MiB above candidate. GH-006-F Linux resident PSS idle 111 MiB / synthetic 11,122-event peak 435 MiB, 120s recovery observation; no post-review remeasurement, long-soak, full-resource or matched ZCode comparison.",
-    "next": "GH-006-G / GH-004-C product entrypoints and complete lifecycle semantics, then continue existing GH-007 and other unblocked work.",
-    "GH-007": "Uncommitted account/PKCE/PAT/model/remote-RPC implementation exists in the shared worktree; not committed or accepted by this review. Preserve and inspect before continuing."
+    "next": "GH-008-C local supervised self-development qualification; first GH-003-B2 real GLM + GH-004-C frozen product artifact and runtime/candidate isolation. No-key prerequisite work can proceed independently.",
+    "GH-007": "Committed fixture OAuth/PKCE/PAT lifecycle and RPC; late login/PAT/storage races fixed. No actual BigModel/Z.AI business-JWT/project/PAT protocol adapter qualified; configuration URLs alone do not complete it.",
+    "GH-008-B": "Presented-before-answer revisions scoped by Session; stale approvals aborted and latest-only first approvals folded at projection state version 2. Local filesystem writes detect existing edits, not a lock against concurrent external writes. Provider filesystem and plan continuity pending."
   },
   "review20261017": {
     "status": "code fixes validated",
@@ -890,5 +914,12 @@
       "reason": "User explicitly deferred Windows packaging/release and requested immediate handoff; do not wait for or optimize Windows output as this handoff gate."
     },
     "ciObservedAt": "2026-10-18T10:49:44.773385+00:00"
+  },
+  "selfDevelopment": {
+    "earliest": "GH-008-C (not yet qualified)",
+    "dailyPrimary": "GH-008-C + relevant GH-009 and GH-012 slices",
+    "remoteUnattended": "daily-primary prerequisites + GH-006-G full lifecycle/fencing/leases + GH-011",
+    "invariant": "Stable running N artifacts and home remain independent of mutable N+1 source/build/candidate. No in-place self replacement.",
+    "credentialBoundary": "Native API key may qualify first local path; official OAuth/PAT/Coding Plan remains a separate required product task."
   }
 }

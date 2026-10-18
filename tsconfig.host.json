@@ -477,6 +477,7 @@
     { "path": "./packages/glm/desktop" },
     { "path": "./packages/glm/remote-app" },
     { "path": "./packages/glm/remote-supervisor" },
+    { "path": "./packages/glm/remote-supervisor-app" },
     { "path": "./packages/boot/app-boot" },
     { "path": "./packages/boot/cmdline" },
     { "path": "./packages/sdk/server" },

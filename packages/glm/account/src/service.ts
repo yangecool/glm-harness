@@ -23,7 +23,7 @@ const REFRESH_MARGIN_MS = 60_000
 /** One domain's runtime state. */
 interface DomainState {
   /** Configuration, resolved once at construction. */
-  config: GhAccountDomainConfig
+  config: GhAccountDomainConfig & { requestTimeoutMs: number }
   /** The persisted grant, or null while logged out. */
   grant: GhGrantPayload | null
   /** Monotonic generation; bumped by every login and logout. */
@@ -31,7 +31,9 @@ interface DomainState {
   /** The in-flight refresh shared by every concurrent caller, if any. */
   refresh: Promise<GhGrantPayload> | null
   /** The login awaiting user authorization, if any. */
-  pending: { state: string; codeVerifier: string; expiresAt: number; epochAtStart: number } | null
+  pending: { state: string; codeVerifier: string; redirectUrl: string; expiresAt: number; epochAtStart: number; exchanging: boolean } | null
+  /** Credential mutations settle in invocation order, including logout deletion. */
+  writes: Promise<void>
 }
 
 /** Login completion result. */
@@ -53,6 +55,8 @@ export class GhAccountService extends Service {
   static inject = ['credentials']
 
   private readonly domains = new Map<GhAccountDomain, DomainState>()
+  private readonly lifetime = new AbortController()
+  private readonly operations = new Set<Promise<unknown>>()
   /** Change notifications for snapshot surfaces. */
   readonly watchers: Array<(domain: GhAccountDomain) => void> = []
   /** Cold-start hydration of persisted grants; awaits nothing at construction time. */
@@ -61,18 +65,39 @@ export class GhAccountService extends Service {
   constructor(ctx: Context, configs: readonly GhAccountDomainConfig[]) {
     super(ctx, 'ghAccount')
     for (const config of configs) {
-      this.domains.set(config.domain, { config, grant: null, epoch: 0, refresh: null, pending: null })
+      const requestTimeoutMs = config.requestTimeoutMs ?? 30_000
+      if (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs <= 0 || requestTimeoutMs > 2_147_483_647) {
+        throw new Error('gh-account requestTimeoutMs must be a positive timer budget')
+      }
+      if (this.domains.has(config.domain)) throw new Error(`gh-account domain ${config.domain} is configured twice`)
+      new URL(config.authorizeUrl)
+      new URL(config.tokenUrl)
+      if (config.clientId.trim() === '') throw new Error('gh-account clientId must be non-empty')
+      this.domains.set(config.domain, {
+        config: { ...config, requestTimeoutMs }, grant: null, epoch: 0, refresh: null, pending: null, writes: Promise.resolve(),
+      })
     }
-    this.hydrated = (async (): Promise<void> => {
+    this.hydrated = this.own((async (): Promise<void> => {
       for (const [domain, state] of this.domains) {
+        const epoch = state.epoch
         const record = await this.credentials().readRecord(this.keyOf(domain))
-        const payload = record !== undefined && record.kind === 'grant' ? record.payload as GhGrantPayload | null : null
-        if (payload !== null && typeof payload.refreshToken === 'string' && typeof payload.accessToken === 'string') {
-          state.grant = payload
+        if (this.lifetime.signal.aborted || state.epoch !== epoch) continue
+        if (record?.kind === 'grant') {
+          state.grant = parseStoredGrant(record.payload)
           state.epoch += 1
         }
       }
-    })()
+    })())
+    ctx.effect(() => async () => {
+      this.lifetime.abort(new GhAccountFailure('gh-account/unavailable', 'the account service was unloaded'))
+      for (const state of this.domains.values()) {
+        state.epoch += 1
+        state.grant = null
+        state.pending = null
+      }
+      await Promise.allSettled([...this.operations])
+      this.watchers.length = 0
+    })
   }
 
   /** The credentials service, narrowed for internal use. */
@@ -100,7 +125,7 @@ export class GhAccountService extends Service {
    * @param domain - the account domain.
    * @returns the endpoint/client configuration the domain was constructed with.
    */
-  domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig {
+  domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig & { requestTimeoutMs: number } {
     return this.domainOf(domain).config
   }
 
@@ -136,6 +161,7 @@ export class GhAccountService extends Service {
 
   /** Resolve one domain's state or fail with the stable domain error. */
   private domainOf(domain: GhAccountDomain): DomainState {
+    this.lifetime.signal.throwIfAborted()
     const state = this.domains.get(domain)
     if (state === undefined) throw new GhAccountFailure('gh-account/domain-unknown', `no ${domain} domain is configured`)
     return state
@@ -149,7 +175,8 @@ export class GhAccountService extends Service {
    * @param redirectUrl - the OAuth redirect_uri the authorization round-trip uses.
    * @returns the user-facing verification URL and the pending login's expiry.
    */
-  beginLogin(domain: GhAccountDomain, redirectUrl: string): { verificationUrl: string; expiresAt: number } {
+  async beginLogin(domain: GhAccountDomain, redirectUrl: string): Promise<{ verificationUrl: string; expiresAt: number }> {
+    await this.hydrated
     const state = this.domainOf(domain)
     if (state.pending !== null && state.pending.expiresAt > Date.now()) {
       throw new GhAccountFailure('gh-account/login-in-progress', `a ${domain} login is already awaiting authorization`)
@@ -165,7 +192,7 @@ export class GhAccountService extends Service {
     url.searchParams.set('state', csrf)
     if (state.config.scope !== undefined) url.searchParams.set('scope', state.config.scope)
     const expiresAt = Date.now() + 600_000
-    state.pending = { state: csrf, codeVerifier: pkce.codeVerifier, expiresAt, epochAtStart: state.epoch }
+    state.pending = { state: csrf, codeVerifier: pkce.codeVerifier, redirectUrl, expiresAt, epochAtStart: state.epoch, exchanging: false }
     return { verificationUrl: url.href, expiresAt }
   }
 
@@ -180,6 +207,7 @@ export class GhAccountService extends Service {
    * @returns the logged-in snapshot.
    */
   async completeLogin(domain: GhAccountDomain, code: string, returnedState: string, redirectUrl: string): Promise<LoginOutcome> {
+    await this.hydrated
     const state = this.domainOf(domain)
     const pending = state.pending
     if (pending === null || pending.expiresAt <= Date.now()) {
@@ -188,21 +216,34 @@ export class GhAccountService extends Service {
     if (returnedState !== pending.state) {
       throw new GhAccountFailure('gh-account/oauth-rejected', `authorization state mismatch for ${domain}`)
     }
-    const granted = await this.exchange(domain, () => exchangeCode(
-      state.config.tokenUrl, state.config.clientId, code, pending.codeVerifier, redirectUrl))
-    const grant: GhGrantPayload = {
-      refreshToken: granted.refreshToken ?? '',
-      accessToken: granted.accessToken,
-      accessExpiresAt: Date.now() + granted.expiresInSeconds * 1_000,
-      accountId: granted.accountId,
-      plan: granted.plan,
-    }
-    state.epoch += 1
-    state.pending = null
-    state.grant = grant
-    await this.persist(domain, grant)
-    this.announce(domain)
-    return { snapshot: this.snapshot(domain) }
+    if (redirectUrl !== pending.redirectUrl) throw new GhAccountFailure('gh-account/oauth-rejected', 'authorization redirect mismatch')
+    if (pending.exchanging) throw new GhAccountFailure('gh-account/login-in-progress', 'this authorization code is already being exchanged')
+    pending.exchanging = true
+    return await this.own((async () => {
+      try {
+        const granted = await this.exchange(domain, signal => exchangeCode(
+          state.config.tokenUrl, state.config.clientId, code, pending.codeVerifier, pending.redirectUrl, signal))
+        const grant: GhGrantPayload = {
+          refreshToken: granted.refreshToken ?? '',
+          accessToken: granted.accessToken,
+          accessExpiresAt: Date.now() + granted.expiresInSeconds * 1_000,
+          accountId: granted.accountId,
+          plan: granted.plan,
+        }
+        return await this.serializeWrite(state, async () => {
+          this.assertGeneration(state, pending.epochAtStart)
+          if (state.pending !== pending) throw new GhAccountFailure('gh-account/stale-generation', 'this login was superseded')
+          await this.persist(domain, grant)
+          this.assertGeneration(state, pending.epochAtStart)
+          state.epoch += 1
+          state.grant = grant
+          this.announce(domain)
+          return { snapshot: this.snapshot(domain) }
+        })
+      } finally {
+        if (state.pending === pending) state.pending = null
+      }
+    })())
   }
 
   /**
@@ -215,7 +256,8 @@ export class GhAccountService extends Service {
     state.pending = null
     state.grant = null
     state.refresh = null
-    await this.credentials().deleteRecord(this.keyOf(domain))
+    await this.hydrated
+    await this.own(this.serializeWrite(state, () => this.credentials().deleteRecord(this.keyOf(domain))))
     this.announce(domain)
   }
 
@@ -229,13 +271,18 @@ export class GhAccountService extends Service {
    * @returns a currently valid access token.
    */
   async accessToken(domain: GhAccountDomain, signal?: AbortSignal): Promise<string> {
+    signal?.throwIfAborted()
+    await this.hydrated
+    signal?.throwIfAborted()
     const state = this.domainOf(domain)
+    const epoch = state.epoch
     if (state.grant === null) {
       throw new GhAccountFailure('gh-account/not-logged-in', `no ${domain} account is logged in`)
     }
     if (state.grant.accessExpiresAt - REFRESH_MARGIN_MS > Date.now()) return state.grant.accessToken
     const shared = state.refresh ?? this.refreshNow(domain)
     const settled = await this.withCallerCancel(shared, signal)
+    this.assertGeneration(state, epoch)
     // A newer login may have landed while this caller waited; its grant wins.
     const grant = state.grant
     if (grant.accessExpiresAt - REFRESH_MARGIN_MS > Date.now()) return grant.accessToken
@@ -265,7 +312,8 @@ export class GhAccountService extends Service {
     if (current === null) throw new GhAccountFailure('gh-account/not-logged-in', `no ${domain} account is logged in`)
     const epochAtStart = state.epoch
     const run = (async (): Promise<GhGrantPayload> => {
-      const granted = await this.exchange(domain, () => exchangeRefresh(state.config.tokenUrl, state.config.clientId, current.refreshToken))
+      const granted = await this.exchange(domain, signal => exchangeRefresh(
+        state.config.tokenUrl, state.config.clientId, current.refreshToken, signal))
       // A login or logout finished while the exchange was in flight: its
       // outcome is authoritative and this rotation is discarded.
       if (state.epoch !== epochAtStart) {
@@ -278,23 +326,30 @@ export class GhAccountService extends Service {
         accountId: granted.accountId,
         plan: granted.plan ?? current.plan,
       }
-      state.grant = merged
-      await this.persist(domain, merged)
-      return merged
+      if (granted.accountId !== current.accountId) throw new GhAccountFailure('gh-account/oauth-rejected', 'refresh changed the account identity')
+      return await this.serializeWrite(state, async () => {
+        this.assertGeneration(state, epochAtStart)
+        await this.persist(domain, merged)
+        this.assertGeneration(state, epochAtStart)
+        state.grant = merged
+        return merged
+      })
     })()
     state.refresh = run
     try {
-      return await run
+      return await this.own(run)
     } finally {
       if (state.refresh === run) state.refresh = null
     }
   }
 
   /** Wrap one OAuth rejection with the stable account error code. */
-  private async exchange(domain: GhAccountDomain, operation: () => Promise<TokenGrant>): Promise<TokenGrant> {
+  private async exchange(domain: GhAccountDomain, operation: (signal: AbortSignal) => Promise<TokenGrant>): Promise<TokenGrant> {
+    const signal = AbortSignal.any([this.lifetime.signal, AbortSignal.timeout(this.domainOf(domain).config.requestTimeoutMs)])
     try {
-      return await operation()
+      return await operation(signal)
     } catch (error) {
+      if (signal.aborted) throw new GhAccountFailure('gh-account/unavailable', `${domain} token exchange was cancelled or timed out`)
       if (error instanceof OAuthRejection) {
         throw new GhAccountFailure('gh-account/oauth-rejected', `${domain} token exchange failed: ${error.message}`)
       }
@@ -309,7 +364,46 @@ export class GhAccountService extends Service {
 
   /** Notify snapshot surfaces without leaking why. */
   private announce(domain: GhAccountDomain): void {
-    for (const watcher of this.watchers) watcher(domain)
+    for (const watcher of this.watchers) {
+      try { watcher(domain) } catch (error) {
+        this.ctx.logger.warn('gh-account snapshot observer failed: %o', error)
+      }
+    }
+  }
+
+  /** Reject late results before publishing or returning account credentials. */
+  private assertGeneration(state: DomainState, epoch: number): void {
+    this.lifetime.signal.throwIfAborted()
+    if (state.epoch !== epoch) throw new GhAccountFailure('gh-account/stale-generation', 'the account changed during the operation')
+  }
+
+  /** Keep credential writes ordered without letting a failed write poison later logout. */
+  private serializeWrite<T>(state: DomainState, operation: () => Promise<T>): Promise<T> {
+    const pending = state.writes.then(operation)
+    state.writes = pending.then(() => undefined, () => undefined)
+    return pending
+  }
+
+  /** Keep owned I/O alive through cancellation and await it during service teardown. */
+  private own<T>(operation: Promise<T>): Promise<T> {
+    this.operations.add(operation)
+    void operation.then(() => this.operations.delete(operation), () => this.operations.delete(operation))
+    return operation
+  }
+}
+
+/** Validate a durable grant without exposing its token material in errors. */
+function parseStoredGrant(payload: unknown): GhGrantPayload {
+  if (typeof payload !== 'object' || payload === null) throw new GhAccountFailure('gh-account/invalid-grant', 'stored account grant is invalid')
+  const value = payload as Partial<GhGrantPayload>
+  if (typeof value.refreshToken !== 'string' || typeof value.accessToken !== 'string' || value.accessToken === ''
+    || typeof value.accessExpiresAt !== 'number' || !Number.isFinite(value.accessExpiresAt) || value.accessExpiresAt < 0
+    || typeof value.accountId !== 'string' || value.accountId === '' || value.plan !== null && typeof value.plan !== 'string') {
+    throw new GhAccountFailure('gh-account/invalid-grant', 'stored account grant is invalid')
+  }
+  return {
+    refreshToken: value.refreshToken, accessToken: value.accessToken, accessExpiresAt: value.accessExpiresAt,
+    accountId: value.accountId, plan: value.plan,
   }
 }
 

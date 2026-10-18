@@ -10,7 +10,7 @@ kind: "package-reference"
 <a id="summary"></a>
 ## 概述
 
-拥有 GH 的账号生命周期与由它派生的短期凭据。每个服务域（`bigmodel`、`zai`）各持一份 OAuth 授权，经凭据缝的记录半边持久化；刷新单飞且按调用方取消，每次登录或注销都会提升该域的代次并丢弃被取代的结果。短期项目令牌（PAT）按物理模型请求解析，一旦传输层报告拒绝即被丢弃——下一次尝试重新铸造。所有公开面在构造上就不含令牌。
+拥有 GH 的账号生命周期与由它派生的短期凭据。每个服务域（`bigmodel`、`zai`）各持一份 OAuth 授权，经凭据缝的记录半边持久化；刷新单飞且按调用方取消，每次登录或注销都会提升该域的代次并丢弃被取代的结果。短期项目令牌（PAT）按物理模型请求解析，一旦传输层报告拒绝即被丢弃——下一次尝试重新铸造。客户端状态与 RPC 视图不含令牌；凭据解析方法只向请求 owner 返回秘密。
 
 <a id="table-of-contents"></a>
 ## 目录
@@ -30,7 +30,7 @@ kind: "package-reference"
 
 ### 何时选择它
 
-每个 profile 都携带该行；它是否起作用取决于配置。未配置任何域时 owner 空挂载——其余功能照常启动，模型调用走静态密钥路径（或以 `MISSING_CREDENTIAL` 显式失败）。
+每个 profile 都携带该行；不配置域时为空服务，不影响其他功能启动。模型调用使用已配置的静态 API key，或显式 `MISSING_CREDENTIAL`。配置的域必须有有效 URL、client id 和 `requestTimeoutMs`（默认 30,000 ms），期限覆盖 token 请求与响应体。
 
 ### 最小配置
 
@@ -39,12 +39,12 @@ kind: "package-reference"
   config:
     domains:
       - domain: bigmodel
-        authorizeUrl: https://account.bigmodel.cn/oauth/authorize
-        tokenUrl: https://account.bigmodel.cn/oauth/token
+        authorizeUrl: https://issuer.example.invalid/oauth/authorize
+        tokenUrl: https://issuer.example.invalid/oauth/token
         clientId: gh-harness
 ```
 
-端点是配置而非代码：生产指向真实服务，验证指向回环 fixture。PAT 授权为同一 token 端点上的 `urn:glm-harness:pat`，由 access token 认证、按 `project_id` 限定。GLM 路由以 `preferAccountPat` 加 `accountDomain` 与 `patProjectId` 启用；未登录的域回落到静态密钥路径，绝不回落到上游实现。
+当前签发协议为 fixture：授权码/PKCE，以及 token 端点上的 `urn:glm-harness:pat` 与 `project_id`。这些不是已验证的 BigModel/Z.AI 端点或 grant。真实适配器需依据已核实的官方协议实现业务 JWT、个人/团队项目选择等，不能只改 URL。GLM 路由通过 `preferAccountPat`、`accountDomain` 与 `patProjectId` 启用；只有未登录的域可回落已配置的静态 API key。
 
 -----
 
@@ -54,7 +54,7 @@ kind: "package-reference"
 <details>
 <summary>实现 internals——点击展开</summary>
 
-`src/service.ts` 为每个域保存一份状态：持久化授权、单调代次、共享的在途刷新、以及待完成登录的 PKCE verifier。`beginLogin` 构造带 S256 challenge 的授权 URL；`completeLogin` 校验 CSRF state、交换 code、提升代次（取代前一授权的在途刷新）并把轮换后的授权写入 `gh-account/<domain>` 凭据记录。`accessToken` 在距过期超过刷新余量时直接返回缓存令牌；否则所有并发调用方共享一次刷新交换，每个调用方的 `AbortSignal` 只停止自己的等待——交换为其他调用方跑完。`src/pat.ts` 按域缓存一枚 PAT 直到过期余量；`rejectPat` 只移除被服务端拒绝的那枚令牌，被拒凭据绝不复用。`src/oauth.ts` 以纯 `fetch` 函数承载 PKCE 助手与两种 token 交换。
+`src/service.ts` 在登录或解析凭据前等待冷启动恢复。每域的登录完成、刷新与注销串行写入凭据存储，网络结果和持久化前后均检查代次；旧登录、刷新或 PAT 签发不能在注销或新登录后发布。持久化成功后才发布内存凭据。调用方只取消自己的共享刷新等待；owner 为交换设期限，卸载时取消并等待完成。缺失或非法 TTL 明确拒绝，观察者异常不回滚已接受的账号状态。
 
 | 文件 | 角色 |
 |---|---|
@@ -79,10 +79,10 @@ kind: "package-reference"
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 未接触任何真实 BigModel 或 Z.AI 服务：所有流程均以回环签发方验证；真实账号联测（D01）需要真实凭据。
+- 真实 BigModel/Z.AI 适配器尚未验收；回环签发方仅验证生命周期机制。实际 OAuth/JWT/PAT 协议、Coding Plan 与真实账号联调仍待完成（D01）。
 - 权益事实仅为 token 端点返回的展示性 plan 字符串；额度、计费与套餐执行（E02.7）是独立 owner。
 - AUTH 拒绝会使 PAT 失效但不会自动重试请求；用新 PAT 做一次有界重试属于重试策略 owner（E02.5）。
-- 桌面本地回调登录（相对于经 RPC 驱动的轮询/重定向流）随桌面账号 UI 到来。
+- RPC 支持获取授权 URL 与手动提交 code；尚无桌面回调监听或轮询登录驱动，桌面账号 UI 需要实现经验证的流程。
 
 <a id="dev-note"></a>
 ### 开发备注

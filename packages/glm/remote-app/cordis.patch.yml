@@ -46,7 +46,6 @@
 # acknowledged; lost ACKs reconcile through session/admission and idempotent
 # resubmission by the same requestId.
 - id: session-controller
-  name: '@deepseek-ai/dsh-api-session-controller'
   config:
     durableAdmission: true
 

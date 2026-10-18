@@ -26,6 +26,7 @@ import type { GhAccountDomainConfig, GhGrantPayload } from '../src/types.ts'
 /** In-memory record half; the account owner only uses the record methods. */
 class MemoryCredentials extends CredentialProvider {
   readonly records = new Map<CredentialKey, CredentialRecord>()
+  beforeWrite?: () => Promise<void>
 
   override async resolve(_ref: CredentialRef): Promise<ResolvedCredential | undefined> {
     return undefined
@@ -57,6 +58,7 @@ class MemoryCredentials extends CredentialProvider {
     mutate: (current: CredentialRecord | undefined) => Promise<CredentialRecord | undefined>,
   ): Promise<CredentialRecord | undefined> {
     const next = await mutate(this.records.get(key))
+    await this.beforeWrite?.()
     if (next !== undefined) this.records.set(key, next)
     return next
   }
@@ -74,6 +76,8 @@ interface Fixture {
   counts: { authorize: number; codeExchanges: number; refreshes: number; patMints: number }
   /** Milliseconds each refresh exchange takes. */
   refreshDelayMs: number
+  beforeCode?: () => Promise<void>
+  beforePat?: () => Promise<void>
   /** The refresh tokens the issuer currently honors, mapped to accounts. */
   accounts: Map<string, { accountId: string; plan: string | null }>
   /** Authorization codes awaiting exchange, mapped to their PKCE challenge. */
@@ -125,6 +129,7 @@ async function startFixture(): Promise<Fixture> {
         const grantType = form.get('grant_type') ?? ''
         if (grantType === 'authorization_code') {
           fixture.counts.codeExchanges += 1
+          await fixture.beforeCode?.()
           const code = form.get('code') ?? ''
           const challenge = fixture.pendingCodes.get(code)
           if (challenge === undefined) {
@@ -174,6 +179,7 @@ async function startFixture(): Promise<Fixture> {
             return
           }
           fixture.counts.patMints += 1
+          await fixture.beforePat?.()
           const pat = `pat-${fixture.counts.patMints}`
           fixture.livePats.add(pat)
           response.writeHead(200, { 'content-type': 'application/json' })
@@ -217,16 +223,15 @@ async function harness(overrides: Partial<GhAccountDomainConfig> = {}): Promise<
     ...overrides,
   }
   const ctx = new Context()
-  const credentialsFiber = await ctx.plugin(MemoryCredentials)
+  await ctx.plugin(MemoryCredentials)
   const memory = ctx.credentials as MemoryCredentials
   const account = new GhAccountService(ctx, [config])
-  const tokensFiber = await ctx.plugin(GhProjectTokenService)
+  await ctx.plugin(GhProjectTokenService)
   const tokens = ctx.ghProjectToken
   cleanups.push(async () => {
-    await tokensFiber.dispose().catch(() => undefined)
-    await credentialsFiber.dispose().catch(() => undefined)
-    fixture.server.close()
+    await ctx.fiber.dispose()
     fixture.server.closeAllConnections()
+    await new Promise<void>((resolve, reject) => fixture.server.close((error) => { if (error) reject(error); else resolve() }))
   })
   return { ctx, account, tokens, memory, fixture, config }
 }
@@ -234,7 +239,7 @@ async function harness(overrides: Partial<GhAccountDomainConfig> = {}): Promise<
 /** Drive one full login through the fixture's redirect. */
 async function login(account: GhAccountService, domain: 'bigmodel' | 'zai' = 'bigmodel'): Promise<void> {
   const redirect = 'http://127.0.0.1:1/callback'
-  const begin = account.beginLogin(domain, redirect)
+  const begin = await account.beginLogin(domain, redirect)
   const visited = await fetch(begin.verificationUrl, { redirect: 'manual' })
   const location = new URL(visited.headers.get('location') ?? '', begin.verificationUrl)
   await account.completeLogin(domain, location.searchParams.get('code') ?? '', location.searchParams.get('state') ?? '', redirect)
@@ -299,7 +304,8 @@ it('hydrates a persisted grant on a cold start', async () => {
   new MemoryCredentials(second)
   ;(second.credentials as MemoryCredentials).records.set(credentialKey('gh-account', 'bigmodel'), persisted as CredentialRecord)
   const revived = new GhAccountService(second, [world.config])
-  await revived.hydrated
+  cleanups.push(() => second.fiber.dispose())
+  await expect(revived.accessToken('bigmodel')).resolves.toMatch(/^access-/)
   expect(revived.snapshot('bigmodel').accountId).toBe('acct-a')
 })
 
@@ -349,10 +355,102 @@ it('refuses PAT mint without an account', async () => {
 
 it('keeps the PKCE verifier bound to its challenge', async () => {
   const { account } = await harness()
-  const begin = account.beginLogin('bigmodel', 'http://127.0.0.1:1/callback')
+  const begin = await account.beginLogin('bigmodel', 'http://127.0.0.1:1/callback')
   await expect(account.completeLogin('bigmodel', 'code-x', 'wrong-state', 'http://127.0.0.1:1/callback'))
     .rejects.toThrow('state mismatch')
   const pair = pkcePair()
   expect(pair.codeChallenge).toMatch(/^[A-Za-z0-9_-]{43}$/)
   void begin
+})
+
+it('does not restore a login whose code exchange finishes after logout', async () => {
+  const { account, memory, fixture } = await harness()
+  const entered = Promise.withResolvers<undefined>()
+  const release = Promise.withResolvers<undefined>()
+  fixture.beforeCode = async () => { entered.resolve(undefined); await release.promise }
+  const pending = login(account)
+  const outcome = pending.then(() => 'accepted', () => 'rejected')
+  try {
+    await entered.promise
+    await account.logout('bigmodel')
+  } finally {
+    release.resolve(undefined)
+  }
+  expect(await outcome).toBe('rejected')
+  expect(account.snapshot('bigmodel').accountId).toBe('')
+  expect(memory.records.has(credentialKey('gh-account', 'bigmodel'))).toBe(false)
+})
+
+it('does not cache or return a PAT minted under a logged-out generation', async () => {
+  const { account, tokens, fixture } = await harness()
+  await login(account)
+  const entered = Promise.withResolvers<undefined>()
+  const release = Promise.withResolvers<undefined>()
+  fixture.beforePat = async () => { entered.resolve(undefined); await release.promise }
+  const pending = tokens.resolvePat('bigmodel', 'proj-1').then(() => 'accepted', () => 'rejected')
+  try {
+    await entered.promise
+    await account.logout('bigmodel')
+  } finally {
+    release.resolve(undefined)
+  }
+  expect(await pending).toBe('rejected')
+  expect(tokens.patFacts('bigmodel')).toBeNull()
+})
+
+it('finishes an older credential write before logout deletes the persisted grant', async () => {
+  const { account, memory } = await harness()
+  await login(account)
+  const entered = Promise.withResolvers<undefined>()
+  const release = Promise.withResolvers<undefined>()
+  memory.beforeWrite = async () => { entered.resolve(undefined); await release.promise }
+  const refreshing = account.accessToken('bigmodel').then(() => 'accepted', () => 'rejected')
+  let loggingOut: Promise<void> | undefined
+  try {
+    await entered.promise
+    loggingOut = account.logout('bigmodel')
+  } finally {
+    release.resolve(undefined)
+  }
+  await loggingOut
+  expect(await refreshing).toBe('rejected')
+  expect(account.snapshot('bigmodel').accountId).toBe('')
+  expect(memory.records.has(credentialKey('gh-account', 'bigmodel'))).toBe(false)
+})
+
+it('does not publish a login whose credential write fails', async () => {
+  const { account, memory } = await harness()
+  memory.beforeWrite = () => Promise.reject(new Error('credential store unavailable'))
+  await expect(login(account)).rejects.toThrow('credential store unavailable')
+  expect(account.snapshot('bigmodel').accountId).toBe('')
+  expect(memory.records.size).toBe(0)
+})
+
+it('bounds a stalled OAuth exchange and permits a fresh login afterward', async () => {
+  const { account, fixture } = await harness({ requestTimeoutMs: 1000 })
+  const entered = Promise.withResolvers<undefined>()
+  const release = Promise.withResolvers<undefined>()
+  fixture.beforeCode = async () => { entered.resolve(undefined); await release.promise }
+  const pending = login(account)
+  const rejected = expect(pending).rejects.toMatchObject({ code: 'gh-account/unavailable' })
+  try { await entered.promise; await rejected } finally { release.resolve(undefined) }
+  delete fixture.beforeCode
+  await login(account)
+  expect(account.snapshot('bigmodel').accountId).not.toBe('')
+})
+
+it('cancels owned exchanges and waits for settlement during account teardown', async () => {
+  const { ctx, account, memory, fixture } = await harness()
+  const entered = Promise.withResolvers<undefined>()
+  const release = Promise.withResolvers<undefined>()
+  fixture.beforeCode = async () => { entered.resolve(undefined); await release.promise }
+  const pending = login(account).then(() => 'accepted', () => 'rejected')
+  try {
+    await entered.promise
+    await ctx.fiber.dispose()
+    expect(await pending).toBe('rejected')
+    expect(memory.records.size).toBe(0)
+  } finally {
+    release.resolve(undefined)
+  }
 })

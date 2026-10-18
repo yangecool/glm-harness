@@ -209,6 +209,15 @@ export function verifyProductUse(
     if (!isRecord(value)) throw new Error(`${PROFILE_SOURCE}: invalid ${name} profile`)
     return stringList(value.bundles, `${PROFILE_SOURCE} ${name}`)
   }), fallback]
+  const ghProfilePath = resolve(root, 'scripts/gh-init-profiles.ts')
+  if (existsSync(ghProfilePath)) {
+    const ghFile = ts.createSourceFile(ghProfilePath, readFileSync(ghProfilePath, 'utf8'), ts.ScriptTarget.Latest, true)
+    const ghProfiles = literalDeclaration(ghFile, 'GH_PROFILES')
+    if (!isRecord(ghProfiles)) throw new Error('scripts/gh-init-profiles.ts: GH_PROFILES must be a literal object')
+    for (const [name, bundles] of Object.entries(ghProfiles)) {
+      profiles.push(stringList(bundles, `scripts/gh-init-profiles.ts ${name}`))
+    }
+  }
   for (const names of profiles) {
     if (names.length === 0) failures.push(`${PROFILE_SOURCE}: shipped profile has no bundles`)
     scanEntries(composeEntries(layers(names, defaults)), profilePath, defaults)

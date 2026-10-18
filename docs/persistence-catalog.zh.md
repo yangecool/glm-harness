@@ -570,7 +570,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'gh-plan/approved': { revision: number; planPath: string | null; planSha256: string; fileWritten: boolean }
 ```
 
-来源：[`packages/glm/plan-review/src/index.ts:62`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:47`](../packages/glm/plan-review/src/index.ts)
 
 <a id="gh-planrejected--log-only"></a>
 
@@ -586,7 +586,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'gh-plan/rejected': { revision: number; outcome: 'keep-planning' | 'dismissed' | 'failed'; feedback: string | null }
 ```
 
-来源：[`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:54`](../packages/glm/plan-review/src/index.ts)
 
 <a id="gh-plansubmitted--log-only"></a>
 
@@ -602,7 +602,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'gh-plan/submitted': { revision: number; planPath: string | null; planSha256: string }
 ```
 
-来源：[`packages/glm/plan-review/src/index.ts:55`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:40`](../packages/glm/plan-review/src/index.ts)
 
 ### `goal/*`
 
@@ -6459,7 +6459,7 @@ SHA-256: `693f4952fb5565da96c06bace8924b098ac2fbc915fde0ff8019701183abc057`
 
 SHA-256: `067c4681e8742f10055c29149cb10a5718baae9b0640e71f7937196ab7317fea`
 
-来源：[`packages/glm/plan-review/src/index.ts:69`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:54`](../packages/glm/plan-review/src/index.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -6473,7 +6473,7 @@ SHA-256: `067c4681e8742f10055c29149cb10a5718baae9b0640e71f7937196ab7317fea`
 
 SHA-256: `7ac84e1c25694d31532d4b1799930d82bcdb504ee507a6cefc3ecc6bd4d7fb15`
 
-来源：[`packages/glm/plan-review/src/index.ts:62`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:47`](../packages/glm/plan-review/src/index.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -8087,7 +8087,7 @@ SHA-256: `9890113e97dd3541787bfe6704f2b223d3a890b5325ca0acae2b0398909b413e`
 
 SHA-256: `cd021416b00a1611a8618d698b5d253893aed2ee61b61f4a41fca4130b75b8b0`
 
-来源：[`packages/glm/plan-review/src/index.ts:55`](../packages/glm/plan-review/src/index.ts)
+来源：[`packages/glm/plan-review/src/index.ts:40`](../packages/glm/plan-review/src/index.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

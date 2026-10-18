@@ -102,10 +102,10 @@
     # The plan-review ledger beside the plan gate above: every presented
     # plan becomes a numbered gh-plan/* revision under the session log, an
     # approval writes the approved text to <workspace>/.glm/plans/plan-<id>.md
-    # atomically (never over an externally edited file), and each outcome —
+    # after checking for external edits, and each outcome —
     # approval, keep-planning feedback, dismissal, failure — is recorded
-    # bound to its revision. A pure observer of the upstream exit tool: no
-    # second question, no result rewriting.
+    # bound to its revision. Superseded approvals abort; the plugin adds no
+    # second question or replacement tool result.
     - id: gh-plan-review
       name: '@glm-harness/gh-plan-review'
 

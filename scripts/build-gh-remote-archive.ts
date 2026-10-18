@@ -9,6 +9,7 @@
  *   node --import tsx/esm scripts/build-gh-remote-archive.ts [--output dist-exe/gh-remote] [--skip-smoke]
  */
 import { spawn, spawnSync } from 'node:child_process'
+import { drainChild } from '../packages/glm/remote-supervisor/src/index.ts'
 import { existsSync, globSync } from 'node:fs'
 import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
@@ -94,6 +95,11 @@ async function copyLicenses(staging: string, product: string): Promise<void> {
   await writeFile(join(destination, 'packages.json'), `${JSON.stringify(inventory, null, 2)}\n`)
 }
 
+/** The ghRemote/describe envelope the supervisor smoke handshake reads. */
+interface SmokeDescribe {
+  result?: { ok?: boolean; value?: { runtimeId?: string | null; releaseId?: string | null; admission?: string } }
+}
+
 /**
  * Boot the staged closure through the real gh-headless profile against a
  * loopback GLM fixture; a closure missing anything fails the build here.
@@ -165,11 +171,6 @@ async function smokeStagedClosure(staging: string, home: string): Promise<void> 
  * @param staging - staged runtime root (lib/bin.js + node_modules).
  * @param home - fixture GH home with initialized profiles.
  */
-/** The ghRemote/describe envelope the supervisor smoke handshake reads. */
-interface SmokeDescribe {
-  result?: { ok?: boolean; value?: { runtimeId?: string | null; releaseId?: string | null; admission?: string } }
-}
-
 async function smokeSupervisorProfile(staging: string, home: string): Promise<void> {
   // The smoke's release is a fresh multi-gigabyte copy; a cold boot can outrun
   // the default ready budget. Overriding the tunable through the profile patch
@@ -239,13 +240,9 @@ async function smokeSupervisorProfile(staging: string, home: string): Promise<vo
       throw new Error(`gh-remote build: supervisor smoke handshake failed: ${JSON.stringify(described).slice(0, 200)}`)
     }
   } finally {
-    runner.kill('SIGTERM')
-    await Promise.race([once(runner, 'close'), new Promise(resolveKill => setTimeout(resolveKill, 15_000))])
-    await new Promise<void>((resolveStop) => {
-      const stop = spawnSync(process.execPath, [supervisorCli, '--root', root, 'stop'], { encoding: 'utf8' })
-      void stop
-      resolveStop()
-    })
+    await drainChild(runner, 15_000)
+    const stopped = spawnSync(process.execPath, [supervisorCli, '--root', root, 'stop'], { encoding: 'utf8', timeout: 30_000 })
+    if (stopped.status !== 0) throw new Error(`gh-remote build: supervisor smoke cleanup failed: ${stopped.stderr}`)
   }
 }
 
@@ -259,6 +256,9 @@ export async function buildGhRemoteArchive(argv: string[]): Promise<void> {
     variant: { type: 'string' },
   } })
   const variant = values.variant
+  if (variant !== undefined && !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/u.test(variant)) {
+    throw new Error('archive variant must be one safe filename segment')
+  }
   const host = `${process.platform}-${process.arch}`
   const selected = (values.target ?? host) as GhRemoteTarget
   if (!GH_REMOTE_TARGETS.some(target => target === selected)) throw new Error(`Unsupported GH remote target: ${selected}`)

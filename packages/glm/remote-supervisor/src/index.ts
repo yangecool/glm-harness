@@ -19,7 +19,7 @@ import { dirname, join } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import {
   gcReleases, installRelease, listReleases, listStaging, readCurrent,
-  releaseEntry, serviceCommandFor, STAGING_PREFIX, uninstallRoot, useRelease,
+  releaseEntry, serviceCommandFor, STAGING_PREFIX, uninstallRoot, useRelease, validReleaseId,
 } from './releases.ts'
 import {
   acquireLifecycleLock, LifecycleLockBusy, lifecycleProtectedReleases, probeLifecycleLock,
@@ -734,90 +734,93 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
       await tx.release()
     }
   }
-  /** The live service's RPC session: an authenticated cookie over its URL. */
-  const serviceSession = async (timeoutMs: number): Promise<{ origin: string; cookie: string } | { error: string }> => {
+  /** Authenticate one live service; only a verified absence skips drain. */
+  const serviceSession = async (signal: AbortSignal): Promise<
+    { kind: 'absent' } | { kind: 'ready'; origin: string; cookie: string } | { kind: 'failed'; error: string }
+  > => {
     const identity = await readIdentity(paths)
-    const readyUrl = identity?.readyUrl ?? null
-    if (identity === null || !isPidAlive(identity.pid)) return { error: 'no live service to drain' }
-    if (readyUrl === null) return { error: 'live service is not ready; refusing version switch' }
+    if (identity === null || !isPidAlive(identity.pid)) {
+      const lock = await probeLock(paths)
+      if (lock.locked || identity === null && existsSync(paths.identityFile)) {
+        return { kind: 'failed', error: 'the service state is unverified or restarting; refusing version switch' }
+      }
+      return { kind: 'absent' }
+    }
+    const readyUrl = identity.readyUrl
+    if (readyUrl === null) return { kind: 'failed', error: 'live service is not ready; refusing version switch' }
     try {
-      const signal = AbortSignal.timeout(Math.max(1, timeoutMs))
       const exchange = await fetch(readyUrl, { redirect: 'manual', signal })
       if (!exchange.ok && exchange.status !== 302 && exchange.status !== 303) {
-        return { error: 'service authentication failed; refusing version switch' }
+        return { kind: 'failed', error: 'service authentication failed; refusing version switch' }
       }
       const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
-      return { origin: new URL(readyUrl).origin, cookie }
+      return { kind: 'ready', origin: new URL(readyUrl).origin, cookie }
     } catch (error) {
-      return { error: `service session unavailable (${(error as Error).message}); refusing version switch` }
+      void error
+      return { kind: 'failed', error: 'service authentication is unavailable or timed out; refusing version switch' }
     }
   }
-  /** One authenticated ghRemote RPC exchange; the envelope shape the gateway serves. */
-  const ghRemoteCall = async <V>(
-    session: { origin: string; cookie: string },
-    method: string,
-    payload: unknown,
-    timeoutMs: number,
+  /** One authenticated RPC; callers validate the operation-specific fields. */
+  const ghRemoteCall = async <V extends object>(
+    session: { origin: string; cookie: string }, method: string, payload: unknown, signal: AbortSignal,
   ): Promise<V | { error: string }> => {
     try {
       const response = await fetch(new URL(`/api/${method}`, session.origin), {
         method: 'POST',
         headers: { 'content-type': 'application/json', cookie: session.cookie },
         body: JSON.stringify({ type: 'client-request', rpcId: `supervisor-${randomUUID()}`, method, payload: { args: payload } }),
-        signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
+        signal,
       })
-      const envelope = await response.json() as { result?: { ok?: boolean; value?: unknown; error?: { message?: string } } }
-      if (envelope.result?.ok !== true) {
-        return { error: `rpc ${method} failed: ${envelope.result?.error?.message ?? response.status}` }
+      const envelope = await response.json() as { result?: { ok?: boolean; value?: unknown } } | null
+      if (!response.ok || typeof envelope !== 'object' || envelope === null || envelope.result?.ok !== true) {
+        return { error: `rpc ${method} failed with HTTP ${String(response.status)}` }
       }
-      return envelope.result.value as V
+      const value = envelope.result.value
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) return { error: `rpc ${method} returned invalid data` }
+      return value as V
     } catch (error) {
-      return { error: `rpc ${method} unavailable (${(error as Error).message})` }
+      void error
+      return { error: `rpc ${method} is unavailable or timed out` }
     }
   }
-  /**
-   * Drain the live service before a version switch: close new admissions
-   * (when the running release advertises the capability), then wait for the
-   * activity the service owns to reach zero. Unknown results refuse the
-   * switch; a closed drain that stays busy refuses it too.
-   */
+  /** Close new work, then drain within one deadline; a failed drain restores its prior open gate. */
   const drainActivity = async (timeoutMs: number): Promise<{ ok: boolean; detail: string }> => {
-    const session = await serviceSession(timeoutMs)
-    if ('error' in session) {
-      // No live service: nothing to close or drain; the switch is safe.
-      return { ok: true, detail: session.error }
-    }
-    const describe = await ghRemoteCall<{ capabilities?: string[]; admission?: string }>(session, 'ghRemote/describe', {}, timeoutMs)
-    if ('error' in describe) {
-      return { ok: false, detail: `${describe.error}; refusing version switch` }
-    }
-    let closedNote = 'admission close unavailable on this release'
-    if (describe.capabilities?.includes('admission-close') === true) {
-      const closed = await ghRemoteCall<{ admission: string }>(session, 'ghRemote/admission', { request: { action: 'close' } }, timeoutMs)
-      if ('error' in closed || closed.admission !== 'closed') {
-        return { ok: false, detail: 'admission close failed; refusing version switch' }
-      }
-      closedNote = 'new admissions closed'
-    }
+    if (timeoutMs <= 0) return { ok: false, detail: 'the drain budget is exhausted; refusing version switch' }
     const deadline = Date.now() + timeoutMs
-    const signal = AbortSignal.timeout(Math.max(1, timeoutMs))
+    const signal = AbortSignal.timeout(timeoutMs)
+    const session = await serviceSession(signal)
+    if (session.kind === 'absent') return { ok: true, detail: 'no live service to drain' }
+    if (session.kind === 'failed') return { ok: false, detail: session.error }
+    const describe = await ghRemoteCall<{ capabilities?: unknown; admission?: unknown }>(session, 'ghRemote/describe', {}, signal)
+    if ('error' in describe) return { ok: false, detail: `${describe.error}; refusing version switch` }
+    if (!Array.isArray(describe.capabilities) || !describe.capabilities.includes('admission-close')
+      || describe.admission !== 'open' && describe.admission !== 'closed') {
+      return { ok: false, detail: 'live release cannot prove admission closure; stop it explicitly before switching' }
+    }
+    const fail = async (detail: string): Promise<{ ok: false; detail: string }> => {
+      if (describe.admission === 'open') {
+        const restored = await ghRemoteCall<{ admission?: unknown }>(session, 'ghRemote/admission', { request: { action: 'open' } }, AbortSignal.timeout(timeoutMs))
+        detail += !('error' in restored) && restored.admission === 'open'
+          ? '; prior open admissions restored'
+          : '; admission recovery is unverified; query or restart the service before sending new work'
+      }
+      return { ok: false, detail }
+    }
+    const closed = await ghRemoteCall<{ admission?: unknown }>(session, 'ghRemote/admission', { request: { action: 'close' } }, signal)
+    if ('error' in closed || closed.admission !== 'closed') return await fail('admission close failed; refusing version switch')
     let last = -1
     while (Date.now() < deadline) {
-      const counts = await ghRemoteCall<{ runningAgents?: number; ownedActivity?: number }>(session, 'ghRemote/activity', {}, 5_000)
-      if ('error' in counts
-        || counts.runningAgents === undefined || counts.ownedActivity === undefined
+      const counts = await ghRemoteCall<{ runningAgents?: number; ownedActivity?: number }>(session, 'ghRemote/activity', {}, signal)
+      if ('error' in counts || counts.runningAgents === undefined || counts.ownedActivity === undefined
         || !Number.isSafeInteger(counts.runningAgents) || !Number.isSafeInteger(counts.ownedActivity)
         || counts.runningAgents < 0 || counts.ownedActivity < 0) {
-        return { ok: false, detail: 'activity query failed or omitted owned work; refusing version switch' }
+        return await fail('activity query failed or omitted owned work; refusing version switch')
       }
       last = counts.runningAgents + counts.ownedActivity
-      if (last === 0) break
-      await new Promise((resolve) => { setTimeout(resolve, 500) })
+      if (last === 0 && Date.now() < deadline) return { ok: true, detail: 'new admissions closed; activity idle before switch' }
+      if (Date.now() < deadline) await sleep(Math.min(500, deadline - Date.now()))
     }
-    void signal
-    return last === 0
-      ? { ok: true, detail: `${closedNote}; activity idle before switch` }
-      : { ok: false, detail: `activity still busy (${String(last)} resources) after ${String(timeoutMs)}ms; refusing version switch` }
+    return await fail(`activity did not drain (${String(last)} resources) within ${String(timeoutMs)}ms; refusing version switch`)
   }
   /** The supervision loop behind run-style verbs, ending in a process exit code. */
   const supervise = async (command: SupervisorCommand, releaseId: string | null): Promise<number> => {
@@ -871,7 +874,7 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
   if (verb === 'commit') {
     const { flags } = readFlags(verbArgs)
     const id = flags.get('id')
-    if (id === undefined) {
+    if (id === undefined || !validReleaseId(id)) {
       process.stderr.write('commit requires --id ID (the staging release bootstrap extracted)\n')
       return 64
     }
@@ -919,13 +922,16 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
     return 0
   }
   if (verb === 'gc') {
-    const protect = new Map<string, string>()
-    const identity = await readIdentity(paths)
-    if (identity?.releaseId !== null && identity?.releaseId !== undefined && isPidAlive(identity.pid)) {
-      protect.set(identity.releaseId, 'live service runs it')
-    }
-    for (const [id, reason] of await lifecycleProtectedReleases(root)) protect.set(id, reason)
-    const result = await runLifecycle('gc', {}, async () => gcReleases(root, protect))
+    const result = await runLifecycle('gc', {}, async () => {
+      const protect = new Map<string, string>()
+      const identity = await readIdentity(paths)
+      const owner = await probeLock(paths)
+      if (identity?.releaseId !== null && identity?.releaseId !== undefined && (isPidAlive(identity.pid) || owner.locked)) {
+        protect.set(identity.releaseId, 'service or supervisor still owns the release')
+      }
+      for (const [id, reason] of await lifecycleProtectedReleases(root)) protect.set(id, reason)
+      return await gcReleases(root, protect)
+    })
     if (!result.ok) return result.code
     process.stdout.write(`${JSON.stringify(result.value)}\n`)
     return 0
@@ -1020,7 +1026,9 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
     return await supervise({ ...later.command, env: childEnvironment(later.releaseId) }, later.releaseId)
   }
   if (verb === 'stop') {
-    const stopped = await runLifecycle('stop', {}, async () => performStop(root))
+    const { flags } = readFlags(verbArgs)
+    const timeout = flags.has('timeout') ? readMillis(flags.get('timeout'), 15_000) : undefined
+    const stopped = await runLifecycle('stop', {}, async () => performStop(root, timeout))
     return stopped.ok ? stopped.value : stopped.code
   }
   if (verb === 'status') {
@@ -1054,7 +1062,7 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
  * holder, escalate to SIGKILL if it wedges, then kill any child a SIGKILLed
  * supervisor left behind (per its identity file), and clear the leftovers.
  */
-const performStop = async (root: string): Promise<number> => {
+const performStop = async (root: string, timeoutMs?: number): Promise<number> => {
   const paths = supervisorPaths(root)
   const probed = await probeLock(paths)
   const identity = await readIdentity(paths)
@@ -1076,7 +1084,7 @@ const performStop = async (root: string): Promise<number> => {
     }
     try {
       process.kill(holder, 'SIGTERM')
-      const deadline = Date.now() + 15_000
+      const deadline = Date.now() + (timeoutMs ?? 15_000)
       while (isPidAlive(holder) && Date.now() < deadline) await new Promise((resolve) => { setTimeout(resolve, 100) })
       if (isPidAlive(holder)) {
         if (await readProcessIdentity(holder) !== expected) return 69
@@ -1098,7 +1106,7 @@ const performStop = async (root: string): Promise<number> => {
     }
     try {
       process.kill(identity.pid, 'SIGTERM')
-      const deadline = Date.now() + 10_000
+      const deadline = Date.now() + (timeoutMs ?? 10_000)
       while (isPidAlive(identity.pid) && Date.now() < deadline) await new Promise((resolve) => { setTimeout(resolve, 100) })
       if (isPidAlive(identity.pid)) {
         if (await readProcessIdentity(identity.pid) !== expected) return 69

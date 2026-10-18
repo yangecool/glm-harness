@@ -47,7 +47,7 @@ profile 的 Config 承载看护契约：`root`（数据根；留空依次读 `GH
 <details>
 <summary>实现内部 — 点击展开</summary>
 
-`GhSupervisorAppService` 启动时解析数据根、调用库的 `ensureRuntimeId` 并读取当前 release 指针；没有当前 release 的数据根是一次响亮的启动失败（exit 70 直写 stderr——该 profile 不组合任何 logger 控制台出口）。子进程通过 `launcherFor(releaseDir)` 拉起（优先使用 release 自带的 `bin/node`），并导出 `GH_REMOTE_ROOT`、`GH_REMOTE_RELEASE_ID` 与解析出的 `DSH_HOME`，让服务子进程在 `ghRemote/describe` 握手中报告自己的 release 身份。看护结果映射到 CLI 的退出码契约（0 已停止、69 锁被拒、75 熔断打开、76 拉起失败），并经由注入的 `appExit` 可调用接口结束 runner；销毁时停止看护器并排水子进程。
+`GhSupervisorAppService` 启动时解析数据根、调用库的 `ensureRuntimeId` 并读取当前 release 指针；没有当前 release 的数据根是一次响亮的启动失败（exit 70 直写 stderr——该 profile 不组合任何 logger 控制台出口）。子进程通过 `launcherFor(releaseDir)` 拉起（优先使用 release 自带的 `bin/node`），并导出 `GH_REMOTE_ROOT`、`GH_REMOTE_RELEASE_ID` 与解析出的 `DSH_HOME`，让服务子进程在 `ghRemote/describe` 握手中报告自己的 release 身份。看护结果映射到 CLI 的退出码契约（0 已停止、69 锁被拒、75 熔断打开、76 拉起失败），并经由注入的 `appExit` 可调用接口结束 runner；销毁先等待启动完成并阻止迟到启动，随后停止并等待看护循环，直到子进程退出和锁释放。
 
 | 文件 | 职责 |
 |---|---|

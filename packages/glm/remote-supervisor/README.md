@@ -52,7 +52,11 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` uses a unique staging directory and refuses unsafe release names. Every mutating verb — install, commit, use, update, rollback, gc, uninstall, stop, restart — runs inside one lifecycle transaction: a `<root>/locks/lifecycle.lock` claim created by atomic `link()`, carrying the verb, holder pid, and protected releases; a live foreign holder is waited for, a dead holder's claim is reclaimed, and an interrupted transaction stays queryable (`status` names the verb and marks it interrupted) until the next verb reclaims it. `update` and `rollback` drain before switching: they close new admissions through the service's `ghRemote/admission` RPC, then wait for running turns, pending inboxes, and activity reported by composed Workspace providers to reach zero; timeout, authentication failure, and missing counts refuse the switch. The root also carries a persistent `runtimeId` (`ensureRuntimeId` mints it once and repairs corruption), so the service identity survives crashes and version switches. A corrupt current pointer refuses mutation, and selecting the same release preserves its rollback target. `gc` keeps current, rollback, live-pinned, and lifecycle-protected releases. `uninstall` stops the supervisor before removing runtime state and preserves data unless `--purge` is explicit.
+`install`, `commit`, `use`, `stop`, `restart`, `gc`, and uninstall mutations acquire `<root>/locks/lifecycle.lock` through exclusive publication. The claim carries pid, process birth identity, nonce, verb, and protected releases. Reclaim verifies the old nonce under a separate exclusive reclaim claim; unreadable or corrupt claims refuse mutation. `status` diagnoses an interrupted holder but does not recover its transaction automatically.
+
+`update` and `rollback` authenticate, check admission-close support, close new admissions, and wait for running turns, pending inboxes, admitted prompts through their durable ACK, and composed Workspace activity to reach zero. One deadline covers authentication and RPCs. Unknown activity, failed authentication, or timeout refuses the switch. On failure after closure, the command attempts to restore the prior open posture and reports when recovery cannot be verified; a previously closed service stays closed. A live legacy release without admission-close support must be stopped explicitly first.
+
+`ensureRuntimeId` exclusively publishes one complete persistent id. Corruption or failed persistence rejects without minting a replacement. GC reads protection under the lifecycle lock, preserves a release while its supervisor is alive even during child backoff, and retains staging of unverified ownership. A corrupt current pointer refuses mutation; selecting the same release preserves its rollback target. `uninstall` preserves data unless `--purge` is explicit. Bootstrap stop delegates to verified process control; its advisory `runner.pid` is never a signal target.
 
 -----
 
@@ -69,7 +73,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 | [`src/index.ts`](src/index.ts) | Lock, identity, readiness, backoff, circuit breaker, drain ladder, CLI verbs, admission-closing activity drain |
 | [`src/releases.ts`](src/releases.ts) | Immutable release installs, atomic current pointer, gc pinning, uninstall split |
 | [`src/lifecycle-lock.ts`](src/lifecycle-lock.ts) | Lifecycle transactions: atomic claims, stale-holder reclaim, protected-release payloads, interrupted-holder diagnosis |
-| [`src/runtime-id.ts`](src/runtime-id.ts) | Persistent runtime id: mint once, validate, repair corruption |
+| [`src/runtime-id.ts`](src/runtime-id.ts) | Persistent runtime id: exclusive publication, validation, fail closed on corruption |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | Lock races, identity lifecycle, ready-line edge cases, backoff caps, circuit, drain escalation, CLI verbs |
 | [`tests/releases.spec.ts`](tests/releases.spec.ts) | Install immutability, pointer chaining, staging diagnosis, gc pins, uninstall data retention |
 | [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) | Foreign-holder waits, reentrancy refusals, stale reclaims, commit transactions, interrupted-verb diagnosis, runtime-id stability |
@@ -92,6 +96,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 - POSIX only: supervision is built on SIGTERM/SIGKILL and atomic directory creation; a Windows service-control port is future work.
 - Linux control commands verify boot ID, process-start ticks, and the owning nonce before signaling. Older or unverifiable identities refuse control instead of signaling a possibly reused pid; other platforms require their own identity verification. Identity files contain the launch token and are owner-readable only.
 - Taking over a root whose supervisor was SIGKILLed is refused while the orphaned service still runs (a second service over one data root would double-write its journal); `stop` drains the orphan and clears the root first. Adoption of a running orphan is not supported.
+- Lifecycle operations are not yet one fenced transaction: `update --from` installs and switches in separate acquisitions; target selection, supervisor startup, and bootstrap extraction have gaps between locks. Complete resource/release leases, admission fencing, and interrupted-transaction recovery remain required. GC retains staging conservatively; interrupted reclaim markers require diagnosis rather than silent deletion.
 - Circuit state lives in the supervisor process; a restarted supervisor begins a fresh crash window.
 - The readiness contract is one stdout line, so a service that buffers or redirects stdout needs the `printUrl` path kept on stdout.
 - OS-level autostart (systemd/launchd units) is deployment work documented separately, not part of this module.

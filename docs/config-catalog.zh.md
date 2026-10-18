@@ -4581,8 +4581,10 @@ export interface Config {
     clientId: string
     /** Extra scopes appended to the authorization request, when the domain needs them. */
     scope?: string
-    /** Poll cadence for a pending login's completion, milliseconds. */
+    /** Reserved polling hint in milliseconds; no polling login driver is implemented. */
     pollMs?: number
+    /** Deadline for an OAuth or PAT exchange, including the response body. */
+    requestTimeoutMs?: number
   }>
 }
 ```
@@ -4684,7 +4686,7 @@ export interface PermissionRule {
 ## `@glm-harness/gh-plan-review`
 
 - `inject`: `tools` · `sessionProjections`
-- `source`: [`packages/glm/plan-review/src/index.ts:89`](../packages/glm/plan-review/src/index.ts)
+- `source`: [`packages/glm/plan-review/src/index.ts:74`](../packages/glm/plan-review/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: where plan files live inside the session's workspace cwd. */

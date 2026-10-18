@@ -23,10 +23,8 @@
     # Upstream desktop OTel exporter; disabled regardless of the profile-name
     # check, so a GH desktop composition reports nothing upstream.
     - id: desktop-product-telemetry
-      name: '@deepseek-ai/dsh-host-product-telemetry-otel'
       disabled: true
 
     # Upstream client analytics beacon riding the reserved desktop profile.
     - id: product-analytics
-      name: '@deepseek-ai/dsh-client-product-analytics'
       disabled: true

@@ -52,7 +52,11 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` 使用独享暂存目录并拒绝不安全的 release 名。每个变更动词——install、commit、use、update、rollback、gc、uninstall、stop、restart——都运行在一个生命周期事务内：以原子 `link()` 创建的 `<root>/locks/lifecycle.lock` 声明，携带动词、持有者 pid 与受保护 release；存活的外部持有者被等待，已死持有者的声明被回收，被中断的事务保持可查询（`status` 点名动词并标记 interrupted）直到下一个动词回收它。`update` 与 `rollback` 切换前先排水：经服务的 `ghRemote/admission` RPC 关闭新接纳，再等待运行回合、pending inbox 和 Workspace 插件报告的活动归零；超时、鉴权失败或缺少计数都拒绝切换。数据根还携带持久 `runtimeId`（`ensureRuntimeId` 一次铸造并修复损坏），服务身份因此熬过崩溃与版本切换。损坏的 current 指针拒绝变更，重复选择同一 release 保留回滚目标。`gc` 保留 current、回滚、存活服务钉住与生命周期事务保护的版本。`uninstall` 先停止监护再移除运行时状态；仅显式 `--purge` 删除数据。
+`install`、`commit`、`use`、`stop`、`restart`、`gc` 与卸载变更通过排他发布获取 `<root>/locks/lifecycle.lock`。声明包含 pid、进程出生身份、nonce、动词与受保护 release。回收在独立排他回收声明下复核旧 nonce；不可读或损坏声明拒绝变更。`status` 可诊断中断持有者，不会自动恢复事务。
+
+`update` 与 `rollback` 先鉴权、确认支持关闭接纳，再关闭新接纳，等待运行回合、pending inbox、直到持久 ACK 的在途 prompt 及组合的 Workspace 活动归零。单一期限覆盖鉴权和 RPC。活动未知、鉴权失败或超时均拒绝切换。关闭后的失败会尝试恢复原先的开放状态，无法确认恢复时明确报告；原本关闭的服务保持关闭。存活的旧版本若不支持关闭接纳，必须先显式停止。
+
+`ensureRuntimeId` 排他发布一个完整持久 id，损坏或持久化失败时拒绝，不重铸替代身份。GC 在生命周期锁内读取保护信息，即使子进程处于退避也保留存活监护器占用的 release，并保留无法确认归属的 staging。损坏的 current 指针拒绝变更；重复选择当前 release 保留回滚目标。只有显式 `--purge` 才删除数据。Bootstrap stop 委托已验证的进程控制，诊断性 `runner.pid` 永不作为信号目标。
 
 -----
 
@@ -69,7 +73,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 | [`src/index.ts`](src/index.ts) | 锁、identity、就绪、退避、断路器、排水阶梯、CLI 动词、关闭接纳的 activity 排水 |
 | [`src/releases.ts`](src/releases.ts) | 不可变 release 安装、原子 current 指针、gc 钉住、卸载分离 |
 | [`src/lifecycle-lock.ts`](src/lifecycle-lock.ts) | 生命周期事务：原子声明、死持有者回收、受保护 release 载荷、中断诊断 |
-| [`src/runtime-id.ts`](src/runtime-id.ts) | 持久 runtime id：一次铸造、校验、修复损坏 |
+| [`src/runtime-id.ts`](src/runtime-id.ts) | 持久 runtime id：排他发布、校验、损坏时拒绝 |
 | [`tests/supervisor.spec.ts`](tests/supervisor.spec.ts) | 锁竞争、identity 生命周期、就绪行边界、退避封顶、断路、排水升级、CLI 动词 |
 | [`tests/releases.spec.ts`](tests/releases.spec.ts) | 安装不可变、指针链、暂存诊断、gc 钉住、卸载数据保留 |
 | [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) | 外部持有者等待、重入拒绝、死锁回收、commit 事务、中断动词诊断、runtime id 稳定性 |
@@ -92,6 +96,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 - 仅 POSIX：监护建立在 SIGTERM/SIGKILL 与原子目录创建之上；Windows 服务控制移植是后续工作。
 - Linux 控制命令在发信号前核对 boot ID、进程启动 ticks 与所属 nonce；旧记录或无法证明身份时拒绝控制，其他平台需独立验证。identity 含启动令牌，仅 owner 可读。
 - 监护被 SIGKILL 后，孤儿服务仍存活时拒绝接管同一数据根，避免并发写同一日志；先用 `stop` 排空孤儿，再重新启动。不支持收养存活孤儿。
+- 生命周期尚非一个具有 fencing 的完整事务：`update --from` 安装与切换分次加锁，目标选择、监护器启动与 bootstrap 解压仍存在锁间隙。全量资源/版本 lease、接纳 fencing 与中断事务恢复仍须完成。GC 保守保留 staging；中断回收标记须诊断处理，不静默删除。
 - 断路状态在监护进程内；重启后的监护从全新崩溃窗口开始。
 - 就绪契约是一行 stdout，缓冲或重定向 stdout 的服务需要保持 `printUrl` 路径在 stdout 上。
 - OS 级自启（systemd/launchd 单元）属于另行记录的部署工作，不在本模块内。

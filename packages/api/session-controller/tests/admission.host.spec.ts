@@ -250,4 +250,25 @@ describe('Durable prompt admission', () => {
       .resolves.toEqual({ accepted: true })
     expect(flushed).toHaveBeenCalledOnce()
   })
+
+  it('keeps a new-prompt owner active through placement and the durable ACK', async () => {
+    const { ctx, controller } = await admissionHarness({ durableAdmission: true })
+    const entered = Promise.withResolvers<undefined>()
+    const release = Promise.withResolvers<undefined>()
+    let active = 0
+    ctx.on('session/new-prompt', async (_request, next) => {
+      active += 1
+      try { await next() } finally { active -= 1 }
+    })
+    ctx.on('session/flush', async () => { entered.resolve(undefined); await release.promise })
+    const pending = controller.prompt(promptRequest([{ type: 'text', text: 'owned until ACK' }]), USER_SOURCE)
+    try {
+      await entered.promise
+      expect(active).toBe(1)
+    } finally {
+      release.resolve(undefined)
+      await pending
+    }
+    expect(active).toBe(0)
+  })
 })

@@ -102,14 +102,14 @@
   en: aa97b69b6b0650be
   zh: aa97b69b6b0650be
 /session-persistence-event-catalog/events/gh-plan/gh-plan-approved-log-only:
-  en: 99d2eb5a5fb0ac5a
-  zh: 7906a95a473e041b
+  en: 058ed75f2b36284e
+  zh: ab1a5d5ceb4a029e
 /session-persistence-event-catalog/events/gh-plan/gh-plan-rejected-log-only:
-  en: 90f403f95ac4c131
-  zh: 6cf22552e0ff90ce
+  en: 101efbe94a8225d4
+  zh: efa06e19908f3029
 /session-persistence-event-catalog/events/gh-plan/gh-plan-submitted-log-only:
-  en: d07e382221ddaffa
-  zh: dd209254ffc82e10
+  en: d6d0f100943bbc70
+  zh: 413018428300e4b6
 /session-persistence-event-catalog/events/goal:
   en: d990c355971ee24c
   zh: d990c355971ee24c
@@ -1551,11 +1551,11 @@
   en: 5add6bc66cf76d6e
   zh: 965be15a67e0aae2
 /session-persistence-event-catalog/resolved-persistence-types/feedback-outcome-revision:
-  en: 98b5c9ca1ff474ea
-  zh: 97078562b24aa583
+  en: fd750e3f8dbd9fc9
+  zh: 913b982f87cf4b43
 /session-persistence-event-catalog/resolved-persistence-types/filewritten-planpath-plansha256-revision:
-  en: a4b8c1b512b914d2
-  zh: 9f815126b89dcbfc
+  en: 9d115b0c0d61874f
+  zh: a15c092cebd1d980
 /session-persistence-event-catalog/resolved-persistence-types/header-reason-startsseries:
   en: 93fc281a6ea5d4c5
   zh: 7b900a11590d9976
@@ -1965,8 +1965,8 @@
   en: 19c4f21ccf8e0604
   zh: 033e1447b61277cb
 /session-persistence-event-catalog/resolved-persistence-types/planpath-plansha256-revision:
-  en: 932de9f3ea3d6986
-  zh: c13a20b8da7d2550
+  en: 6a4ef97992da75dc
+  zh: d4e49300cb8393c2
 /session-persistence-event-catalog/resolved-persistence-types/policy-source:
   en: 00f1d435f82d2753
   zh: c2ab108ad2748a6c
