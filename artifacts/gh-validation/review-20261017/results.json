@@ -74,7 +74,7 @@
       "exitCode": 1,
       "passed": 42,
       "failed": 1,
-      "failure": "verify-repository-references: 11 existing historical evidence/base-provenance/uv.lock commit pins",
+      "failure": "verify-repository-references: 11 existing historical evidence/base-commit-pin/uv.lock pins",
       "evidence": "doc-sync-final.log"
     }
   ],
@@ -90,7 +90,7 @@
   ],
   "additionalCorrections": [
     "Removed three Client-only UI peer declarations and root-provided @types/react from gh-brand; its public dsh.client.inject entries and dev dependencies remain. Published dependency gate now passes.",
-    "Repaired GH README contracts, stale generated documentation, and source/translation links; kept historical provenance and dependency lock pins intact."
+    "Repaired GH README contracts, stale generated documentation, and source/translation links; kept historical source records and dependency lock pins intact."
   ],
   "scope": "synthetic fixtures / built profile, no real provider",
   "remainingGate": {

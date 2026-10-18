@@ -64,7 +64,11 @@ export async function connectDesktopWelcome(
     const envelope: unknown = await response.json()
     if (!record(envelope) || envelope.type !== 'server-response' || envelope.rpcId !== rpcId
       || !record(envelope.result) || envelope.result.ok !== true) {
-      throw new Error('desktop welcome: Web RPC failed')
+      const failure = record(envelope) && record(envelope.result) && envelope.result.ok === false
+        && record(envelope.result.error) && typeof envelope.result.error.message === 'string'
+        ? `: ${envelope.result.error.message}`
+        : ''
+      throw new Error(`desktop welcome: Web RPC failed (${method})${failure}`)
     }
     return envelope.result.value
   }
@@ -113,8 +117,18 @@ export async function connectDesktopWelcome(
       Object.assign(states, batch)
     }
     if (ref !== undefined && !record(states[ref])) throw new Error('desktop welcome: missing credential metadata')
+    // Compositions without an account namespace (GH ships none until its own
+    // account work lands) read as signed-out; a composed-but-failing account
+    // service keeps its hard failure instead of masquerading as signed-out.
+    let loggedIn = false
+    try {
+      loggedIn = (await account.state()).status === 'credential-stored'
+    } catch (error) {
+      if (!/account|namespace|method/iu.test(error instanceof Error ? error.message : String(error))) throw error
+      loggedIn = false
+    }
     return {
-      loggedIn: (await account.state()).status === 'credential-stored',
+      loggedIn,
       hasApiKey: Object.values(states).some(value => record(value) && value.configured === true),
       writable: ref !== undefined && record(states[ref]) && states[ref].writable === true,
       localePreference: localePreference(namespaces),

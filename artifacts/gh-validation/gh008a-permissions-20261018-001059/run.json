@@ -1,0 +1,11 @@
+{
+  "runId": "gh008a-permissions-20261018-001059",
+  "unit": "GH-008-A",
+  "title": "ZCode three permission modes with an independent plan gate, enforced at the tool executor",
+  "date": "2026-10-18",
+  "branch": "main",
+  "baseCommit": "0813632f52",
+  "scope": "local, keyless: real ToolRuntime/AgentLoop composition via ctx.tools.execute and the built gh-headless profile against a loopback GLM fixture; no real GLM (D01), no Electron, no remote",
+  "zcodeBaseline": "aac4755666d09fdcd70272fcf063c077a639015f (v3.15.1)",
+  "gates": "see gates.log"
+}

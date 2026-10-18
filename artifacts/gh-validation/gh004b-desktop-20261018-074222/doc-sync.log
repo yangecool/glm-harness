@@ -1,0 +1,75 @@
+$ tsx scripts/run-gates.ts doc-quick
+run-gates: doc-quick running 21 gate(s) with 8 worker(s) from 12 local default worker(s) of 14 CPU(s), doc-quick cap 8.
+run-gates: start markdown links
+run-gates: start type equivalence
+run-gates: start translation pairing
+run-gates: start markdown wrap
+run-gates: start npm dependency catalog
+run-gates: start Session format references
+run-gates: start public repository links
+run-gates: start repository references
+run-gates: PASS npm dependency catalog (0.67s)
+run-gates: start concrete terms
+run-gates: PASS concrete terms (1.62s)
+run-gates: start doc refs
+run-gates: PASS type equivalence (2.90s)
+run-gates: start package README Summaries
+run-gates: PASS public repository links (3.04s)
+run-gates: start package README model experience
+run-gates: PASS doc refs (1.16s)
+run-gates: start agent note classification
+run-gates: PASS package README Summaries (0.69s)
+run-gates: start agent note format
+run-gates: PASS agent note classification (0.79s)
+run-gates: start archived agent notes
+run-gates: PASS agent note format (0.75s)
+run-gates: start skill invocation metadata
+run-gates: PASS Session format references (4.53s)
+run-gates: start translation prompt
+run-gates: PASS archived agent notes (0.86s)
+run-gates: start doc budgets
+run-gates: PASS skill invocation metadata (0.78s)
+run-gates: start upgrade guides
+run-gates: PASS translation prompt (0.68s)
+run-gates: start documentation standard tests
+
+== FAILED repository references (5.67s) ==
+command: pnpm run verify-repository-references
+outcome: exit 1
+$ tsx scripts/verify-repository-references.ts
+verify-repository-references: use release tags or maintained repository links:
+  artifacts/gh-validation/gh008a-permissions-20261018-001059/cases.json:13 commit-hash
+  artifacts/gh-validation/gh008a-permissions-20261018-001059/gates.log:1 commit-hash
+  artifacts/gh-validation/gh008a-permissions-20261018-001059/gates.log:12 commit-hash
+  artifacts/gh-validation/gh008a-permissions-20261018-001059/run.json:7 commit-hash
+  artifacts/gh-validation/gh008a-permissions-20261018-001059/summary.md:3 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:8 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/run.json:14 commit-hash
+  artifacts/gh-validation/gh001-20261017-171001/summary.md:7 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:28 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:29 commit-hash
+  artifacts/gh-validation/gh002-20261017-180858/run.json:47 commit-hash
+  artifacts/gh-validation/gh003-20261017-184634/run.json:25 commit-hash
+  artifacts/gh-validation/gh003b-work-policy-20261017-224500/run.json:5 commit-hash
+  artifacts/gh-validation/gh003b-work-policy-20261017-224500/summary.md:3 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:9 commit-hash
+  artifacts/gh-validation/gh004-20261017-200400/run.json:10 commit-hash
+  docs/glm/delivery-status.json:7 commit-hash
+  docs/glm/delivery-status.json:304 commit-hash
+  python/sdk/uv.lock:113 commit-hash
+[ELIFECYCLE] Command failed with exit code 1.
+run-gates: start package README limitations
+run-gates: PASS doc budgets (0.69s)
+run-gates: PASS upgrade guides (0.79s)
+run-gates: PASS package README model experience (3.42s)
+run-gates: PASS documentation standard tests (1.60s)
+run-gates: PASS package README limitations (2.65s)
+run-gates: PASS markdown links (12.49s)
+run-gates: PASS markdown wrap (12.51s)
+run-gates: PASS translation pairing (14.39s)
+
+run-gates: 20 passed, 1 failed, 0 skipped in 14.40s.
+run-gates: unsuccessful gates:
+  - FAILED repository references (5.67s, exit 1)
+    pnpm run verify-repository-references
+[ELIFECYCLE] Command failed with exit code 1.

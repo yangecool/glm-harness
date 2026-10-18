@@ -201,7 +201,11 @@ export class DesktopHostProcess {
     })
     this.child = child
     child.stderr?.setEncoding('utf8')
+    // The buffer stays private for failure reports, but the stream also flows
+    // through: host-side persistence failures (locked stores, EACCES) surface
+    // in the app log as they happen instead of only after a launch failure.
     child.stderr?.on('data', (chunk: string) => { this.stderr = (this.stderr + chunk).slice(-MAX_HOST_DIAGNOSTIC_CHARS) })
+    child.stderr?.pipe(process.stderr)
     child.stdout?.pipe(process.stdout)
     child.on('message', (message: unknown) => {
       if (!isDesktopHostEvent(message)) {

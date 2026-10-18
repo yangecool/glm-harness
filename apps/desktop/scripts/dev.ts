@@ -1,6 +1,7 @@
 /** Build and launch the unpackaged Electron shell against the current workspace. */
 
 import { spawn, execFileSync } from 'node:child_process'
+import { mkdir } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
@@ -120,7 +121,16 @@ async function main(): Promise<void> {
     release,
     target: resolveDesktopBuildTarget(),
   })
-  await preparePrimaryRuntime()
+  if (resolveDesktopBuildTarget() === 'linux-x64') {
+    // No packaged primary runtime exists for Linux (a development-run target):
+    // an empty directory satisfies the unpackaged shell's env contract, and
+    // desktop-office skips itself without its bundled payload.
+    const runtimeDir = developmentRuntimeDirectory()
+    await mkdir(join(runtimeDir, 'primary-runtime'), { recursive: true })
+    console.log('desktop development: linux-x64 target, skipping packaged primary-runtime preparation')
+  } else {
+    await preparePrimaryRuntime()
+  }
   await launchElectron()
 }
 

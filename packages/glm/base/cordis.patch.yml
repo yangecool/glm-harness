@@ -69,6 +69,28 @@
     - id: gh-persona
       name: '@glm-harness/gh-persona'
 
+    # GH's ZCode-aligned permission modes: full access (yolo), autonomous
+    # (guarded), confirm-before-changes (build), with plan kept independent
+    # through dsh-plan-mode. The gate decides every tool call at the
+    # executor; the sandbox and approval rows below stay the underlying
+    # public services (no mechanical mode→preset mapping). Sessions without
+    # a logged selection use `build`; GH_PERMISSION_MODE overrides the
+    # composition default (an invalid value fails plugin load rather than
+    # being ignored).
+    - id: gh-permissions
+      name: '@glm-harness/gh-permissions'
+      config:
+        defaultMode: !!js "process.env.GH_PERMISSION_MODE"
+
+    # The GH composer permission control, browser half: the three modes plus
+    # an independent plan toggle over the ghPermissions/plan projections,
+    # writing through /permission and /plan. The upstream ui-permission row
+    # (dsh-client-ui-permission-presets) stays inert here because its host
+    # preset service is disabled above, so this is the composer's sole
+    # permission occupant in GH profiles.
+    - id: ui-gh-permissions
+      name: '@glm-harness/gh-ui-permissions'
+
     - id: session
       name: '@deepseek-ai/dsh-session'
 
@@ -242,21 +264,22 @@
     - id: approval
       name: '@deepseek-ai/dsh-user-approval'
       config:
-        policy: !!js "(process.env.DSH_PERMISSION_MODE ?? 'workspace-write') === 'danger-full-access' ? 'never' : 'ask'"
+        # The GH permission modes (gh-permissions row above) confirm through
+        # this chain; an ask no answerer takes settles as a denial, so
+        # unattended runs degrade safely. Tool-owned escalation approvals
+        # route here too and must survive even under yolo, hence a literal
+        # 'ask' rather than the old preset coupling.
+        policy: ask
 
+    # Replaced by the gh-permissions row above: the DSH preset menu bundled a
+    # sandbox mode with an approval policy and wrote both knobs. GH's three
+    # modes are executor decisions, not knob bundles, and the underlying
+    # sandbox/approval services keep their own rows. Disabled here so the
+    # `/permission` command and its projection come from the GH plugin; the
+    # web composer mode control lands with the GH UI slice.
     - id: permission
       name: '@deepseek-ai/dsh-permission-presets'
-      config:
-        presets:
-          read-only:
-            sandbox: read-only
-            approval: ask
-          workspace-write:
-            sandbox: workspace-write
-            approval: ask
-          danger-full-access:
-            sandbox: danger-full-access
-            approval: never
+      disabled: true
 
     - id: shell-env
       name: '@deepseek-ai/dsh-shell-env'

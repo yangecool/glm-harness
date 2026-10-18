@@ -1,0 +1,67 @@
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+$ tsc -b && pnpm run bundle
+$ tsdown --config-loader native
+ℹ tsdown v0.22.2 powered by rolldown v1.1.1
+ℹ config file: /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/apps/desktop/tsdown.config.ts
+ℹ entry: lib/types/command-manager-entry.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/preload-app.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/main.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/preload-welcome.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/preload-platform-account.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/preload-mandatory.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ entry: lib/types/preload-update-dialog.js
+ℹ target: es2024
+ℹ tsconfig: tsconfig.json
+ℹ Build start
+ℹ [CJS] lib/preload-platform-account.cjs  2.08 kB │ gzip: 0.90 kB
+ℹ [CJS] 1 files, total: 2.08 kB
+ℹ [CJS] lib/preload-mandatory.cjs  1.03 kB │ gzip: 0.47 kB
+ℹ [CJS] 1 files, total: 1.03 kB
+ℹ [CJS] lib/preload-update-dialog.cjs  1.11 kB │ gzip: 0.52 kB
+ℹ [CJS] 1 files, total: 1.11 kB
+✔ Build complete in 50ms
+✔ Build complete in 50ms
+ℹ [CJS] lib/preload-welcome.cjs  21.39 kB │ gzip: 6.88 kB
+ℹ [CJS] 1 files, total: 21.39 kB
+✔ Build complete in 51ms
+ℹ [CJS] lib/preload-app.cjs  40.99 kB │ gzip: 12.75 kB
+ℹ [CJS] 1 files, total: 40.99 kB
+✔ Build complete in 52ms
+✔ Build complete in 52ms
+ℹ [ESM] lib/command-manager-entry.js  23.00 kB │ gzip: 6.88 kB
+ℹ [ESM] 1 files, total: 23.00 kB
+✔ Build complete in 64ms
+ℹ Hint: consider adding deps.onlyBundle option to avoid unintended bundling of dependencies, or set deps.onlyBundle: false to disable this hint.
+See more at https://tsdown.dev/options/dependencies#deps-onlybundle
+Detected dependencies in bundle:
+- js-yaml
+ℹ [ESM] lib/main.js  517.13 kB │ gzip: 136.34 kB
+ℹ [ESM] 1 files, total: 517.13 kB
+✔ Build complete in 118ms
+vite v6.4.3 building for production...
+transforming...
+✓ 34 modules transformed.
+rendering chunks...
+computing gzip size...
+lib/welcome/Montserrat-OFL.txt          4.40 kB │ gzip:  1.98 kB
+lib/welcome/montserrat-light.woff2     61.55 kB
+lib/welcome/montserrat-regular.woff2   62.01 kB
+lib/welcome/montserrat-medium.woff2    62.15 kB
+lib/welcome/brand-font.css              0.55 kB │ gzip:  0.20 kB
+lib/welcome/welcome.css                37.44 kB │ gzip:  5.20 kB
+lib/welcome/welcome.js                154.71 kB │ gzip: 49.91 kB
+✓ built in 457ms

@@ -1,0 +1,11 @@
+gh004b gates (all run 2026-10-18, uncommitted working tree over 0813632f52)
+- vitest packages/glm + check-gh-closure.spec + gh-resource-sampler.spec + apps/desktop-host: PASS (12 files / 156 tests; permissions 66)
+- host bundle (tsdown DSH_BUILD_FACE=host): PASS (permissions lib carries plan-projection read + composed gate)
+- apps/desktop full build (tsc + bundle): PASS (host stderr passthrough in lib/main.js)
+- check-gh-closure: PASS
+- workspace constraints: PASS
+- oxlint touched packages/scripts/apps files: PASS (0 warnings 0 errors; fixed one unnecessary assertion in welcome-backend.ts, one arrow-paren in permissions)
+- gh-product-smoke: PASS 5/5 (tool-round, rate-limit-retry, rate-limit-exhaust, permission-build-denied, permission-yolo-writes)
+- vitest scripts/doc-standard.spec.ts: PASS 22/22 (new ui-permissions README pair + i18n record; kind package-bundle; zh anchors normalized)
+- doc-sync: 20 PASS / 1 FAIL — only verify-repository-references (pre-existing 11 historical commit pins recorded for GH-018; unchanged by this slice)
+- desktop full flow: PASS x4 (runs 16, 17, 18, 2026-10-18; identical assertions)

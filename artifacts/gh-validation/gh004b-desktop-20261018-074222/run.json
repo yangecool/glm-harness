@@ -1,0 +1,19 @@
+{
+  "slice": "GH-004-B 原生桌面、视觉与资源收口",
+  "date": "2026-10-18",
+  "baseline": "uncommitted working tree over 0813632f52 (GH-008-A included)",
+  "environment": {
+    "machine": "yangecool-NUC15CRHU5, Ubuntu 24.04, linux-x64",
+    "display": "Xvnc :99 1440x900 localhost",
+    "electron": "via ELECTRON_MIRROR npmmirror; unpackaged dev launch (linux-x64 development-only target)",
+    "runtimeRoot": "apps/desktop/.desktop-build/development/project (synthesized from apps/cli + desktop-host + .pnpm hoist)",
+    "llm": "loopback GLM fixture (glm-4.6 wire shape, synthetic-desktop-key)",
+    "homes": "per-run mkdtemp fixtures; XDG_CONFIG_HOME redirected so the first-use Documents workspace stays inside the fixture"
+  },
+  "scripts": {
+    "flow": "scripts/gh-desktop-run.mjs — full Electron flow over CDP (Lexical insertText submit, approval click, chip/menu/yolo/plan)",
+    "mem": "scripts/gh-desktop-mem.mjs — full-descendant-tree RSS sampler at 1s",
+    "repro": "scripts/gh-desktop-repro.mjs — changed-files visibility boots + locked-stores late-report timing"
+  },
+  "repeatability": "full flow passed on 2026-10-18 runs 16, 17, 18, 19 (identical assertions; stop control and approval panel sighted each time)"
+}

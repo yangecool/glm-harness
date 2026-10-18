@@ -1,0 +1,94 @@
+{
+  "idle": {
+    "name": "MEM01 idle (post-boot, pre-turn)",
+    "samples": 25,
+    "medianMiB": 1618.4,
+    "peakMiB": 1685.6,
+    "peakPerClassMiB": {
+      "launcher": 523.1,
+      "electron-main": 354.9,
+      "host": 322.9,
+      "renderer": 226.4,
+      "gpu": 164.7,
+      "utility": 90.6,
+      "other": 3.3
+    }
+  },
+  "turn": {
+    "name": "turn (approval + tool round)",
+    "samples": 1,
+    "medianMiB": 1575.1,
+    "peakMiB": 1575.1,
+    "peakPerClassMiB": {
+      "launcher": 428.4,
+      "electron-main": 353.5,
+      "host": 283,
+      "renderer": 248.7,
+      "gpu": 167.6,
+      "utility": 90.6,
+      "other": 3.3
+    }
+  },
+  "settled": {
+    "name": "MEM02 settled (post-turn)",
+    "samples": 24,
+    "medianMiB": 1466.2,
+    "peakMiB": 1575.1,
+    "peakPerClassMiB": {
+      "launcher": 428.4,
+      "electron-main": 353.5,
+      "host": 283,
+      "renderer": 248.7,
+      "gpu": 167.6,
+      "utility": 91.3,
+      "other": 3.3
+    }
+  },
+  "historicalWebMiB": {
+    "mem01": 577,
+    "mem02": 562,
+    "candidate": 450
+  },
+  "note": "RSS of the full descendant tree of the launcher (pnpm/tsx dev scaffolding included), sampled every second; productExcludingLauncher drops the dev-run scaffolding a packaged build does not carry. Historical web numbers (577/562) measured server+browser only.",
+  "productExcludingLauncher": {
+    "MEM01-idle": {
+      "samples": 25,
+      "medianProductMiB": 1154.6,
+      "peakProductMiB": 1162.5,
+      "peakPerClassMiB": {
+        "electron-main": 354.9,
+        "host": 322.9,
+        "renderer": 226.4,
+        "gpu": 164.7,
+        "utility": 90.6,
+        "other": 3.3
+      }
+    },
+    "MEM02-settled": {
+      "samples": 24,
+      "medianProductMiB": 1037.9,
+      "peakProductMiB": 1146.8,
+      "peakPerClassMiB": {
+        "electron-main": 353.5,
+        "host": 283.0,
+        "renderer": 248.7,
+        "gpu": 167.6,
+        "utility": 91.3,
+        "other": 3.3
+      }
+    },
+    "turn-peak": {
+      "samples": 1,
+      "medianProductMiB": 1146.8,
+      "peakProductMiB": 1146.8,
+      "peakPerClassMiB": {
+        "electron-main": 353.5,
+        "host": 283.0,
+        "renderer": 248.7,
+        "gpu": 167.6,
+        "utility": 90.6,
+        "other": 3.3
+      }
+    }
+  }
+}

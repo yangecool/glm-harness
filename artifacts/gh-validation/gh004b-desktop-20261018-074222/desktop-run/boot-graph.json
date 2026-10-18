@@ -1,0 +1,215 @@
+{
+  "bootGraph": {
+    "present": true,
+    "rows": [
+      {
+        "id": "@glm-harness/gh-ui-permissions"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-gateway"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-open-in-app"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-job-controller"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-terminal-controller"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-workspace-files"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-account"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-hmr"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-modules"
+      },
+      {
+        "id": "@deepseek-ai/dsh-cordis-client-runner"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-theme"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-locale"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-shortcuts"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-shortcuts"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-layout"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-renderer"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-session"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-resources"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar-right"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar-browser"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar-terminal"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-sidebar-files"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-general"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-models"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-plugin-manager"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-conversation"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-approval"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-chat"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-attachment"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-tool"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-cordis"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-workspace"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-workflow-run"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-input-trigger"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-commands"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-skill"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-subagent"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-reference"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-secret-mask"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-jobs"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-schedule"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-goal"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-message-feedback"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-model-selection"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-agent-preset"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-session-log"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-plugins"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-shell"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-agent-loop"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-subagent"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-settings-web-search"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-plan"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-user-questions"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-trajectory"
+      },
+      {
+        "id": "@glm-harness/gh-brand"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-remote-access"
+      },
+      {
+        "id": "@deepseek-ai/dsh-session-log-export"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-file-upload"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-remotes"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-deliverables"
+      },
+      {
+        "id": "@deepseek-ai/dsh-typert-registry"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-connection"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-workspace-controller"
+      },
+      {
+        "id": "@deepseek-ai/dsh-api-session-controller"
+      },
+      {
+        "id": "@deepseek-ai/dsh-client-ui-directory-picker-browse"
+      }
+    ]
+  },
+  "consoleErrors": []
+}

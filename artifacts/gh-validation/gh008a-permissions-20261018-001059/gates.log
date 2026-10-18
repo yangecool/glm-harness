@@ -1,0 +1,12 @@
+gh008a gates (all run 2026-10-18, branch main, uncommitted working tree over 0813632f52)
+- vitest glm+closure+approval+plan-mode+token-meter+ui-chat: PASS (17 files / 445 tests; permissions package alone 66)
+- pnpm build (9 build/typecheck gates + client artifacts): PASS
+- check-gh-closure: PASS (no banned upstream business packages in closures or composed profiles)
+- persistence-changes --check: PASS (66 roots / 16 records; new record 2026-10-17-gh-permission-mode)
+- persistence-formats: PASS (v0-v4 verified; facts refreshed)
+- constraints (workspace): PASS
+- oxlint packages/glm/permissions + touched scripts: PASS (0 warnings 0 errors)
+- gh-product-smoke: PASS 5/5 scenarios incl. permission-build-denied + permission-yolo-writes
+- doc-sync: 42 PASS / 1 FAIL — only verify-repository-references (pre-existing 11 historical
+  commit pins recorded for GH-018; unchanged by this slice; also fixed two blocked-term
+  lines in the committed review-20261017/results.json that had failed verify-concrete-terms since 0813632f52)

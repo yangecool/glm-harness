@@ -4596,6 +4596,50 @@ export type Config = Readonly<Record<string, never>>
 ```
 <!-- END GENERATED config-catalog:@glm-harness/gh-model-retry -->
 
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-permissions -->
+<a id="glm-harnessgh-permissions"></a>
+
+## `@glm-harness/gh-permissions`
+
+- `inject`: `tools` · `systemPrompt` · `sessionProjections` · `planMode`
+- `refs`: `Volatile` (`@deepseek-ai/cordis`)
+- `source`: [`packages/glm/permissions/src/index.ts:124`](../packages/glm/permissions/src/index.ts)
+
+```ts config-catalog
+/** Plugin config: composition default mode and the rule table. */
+export interface Config {
+  /** Mode for sessions without a logged selection; `build` when unset. */
+  readonly defaultMode: Volatile<GhPermissionMode | undefined>
+  /** Structured rules consulted in `build` mode (and recorded for all modes). */
+  readonly rules: PermissionRules
+}
+
+/** The three ZCode-aligned permission modes. */
+export type GhPermissionMode = 'yolo' | 'guarded' | 'build'
+
+/** The rule table: `deny` wins over `ask`, which wins over `allow`. */
+export interface PermissionRules {
+  /** Calls matching a `deny` rule are refused before dispatch (build mode). */
+  readonly deny?: readonly PermissionRule[]
+  /** Calls matching an `ask` rule require one approval before running (build mode). */
+  readonly ask?: readonly PermissionRule[]
+  /** Calls matching an `allow` rule skip the read-only proofs (build mode). */
+  readonly allow?: readonly PermissionRule[]
+}
+
+/** One user/deployment rule: a tool plus an optional argument-subject pattern. */
+export interface PermissionRule {
+  /** Tool name the rule scopes to. */
+  readonly tool: string
+  /**
+   * Argument subject the rule content-matches: exact, `prefix:*` (bash-style
+   * command prefixes), or `*` wildcards. Omitted matches every call of the tool.
+   */
+  readonly subject?: string
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-permissions -->
+
 ## 无配置的可加载插件
 
 这些插件通过 `cordis.yml` 中不含 `config:` 块的条目加载；它们未声明任何配置接口。

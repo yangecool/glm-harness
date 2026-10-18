@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/ui-permissions/README.md
+/:
+  en: cd09d131d3225e61
+  zh: e20cc5fcd8106361
+/glm-harness-gh-ui-permissions:
+  en: f3f77bb73c60962a
+  zh: fe898e0ff8090f2f
+/glm-harness-gh-ui-permissions/summary:
+  en: 3ef45c491a143a93
+  zh: d72652ec19fb26df
+/glm-harness-gh-ui-permissions/table-of-contents:
+  en: 07f3642294ee905d
+  zh: 34e603def1644340
+/glm-harness-gh-ui-permissions/use-this-package:
+  en: 1eaa0ef49fe351ad
+  zh: 04bbc66030664a31
+/glm-harness-gh-ui-permissions/use-this-package/when-to-choose-it:
+  en: 675f23c3076559b6
+  zh: cab562f1c74b1c4c
+/glm-harness-gh-ui-permissions/use-this-package/minimal-configuration:
+  en: 8fefbc00444e3c89
+  zh: 72a005d09029f219
+/glm-harness-gh-ui-permissions/understand-the-implementation:
+  en: 2de3a69271e490eb
+  zh: df0b03a1593c1d62
+/glm-harness-gh-ui-permissions/further-exploration:
+  en: 942af37c1d89fd2e
+  zh: cb044d19f27fdf64
+/glm-harness-gh-ui-permissions/dev-note:
+  en: cd07671032afe396
+  zh: ff335a92e2180758
+/glm-harness-gh-ui-permissions/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/glm-harness-gh-ui-permissions/model-experience/composer-chip-is-user-facing:
+  en: b718996d09c16603
+  zh: f8f9eacb0b16515c
+/glm-harness-gh-ui-permissions/model-experience/composer-chip-is-user-facing/what-the-model-sees:
+  en: a442cfaf738ec562
+  zh: 10468216f151d97b
+/glm-harness-gh-ui-permissions/model-experience/composer-chip-is-user-facing/token-effect:
+  en: 98e96bd90bb5ca9e
+  zh: 712f225006ba5adf
+/glm-harness-gh-ui-permissions/model-experience/composer-chip-is-user-facing/kv-cache-effect:
+  en: 88896480be96ef6b
+  zh: 3f733374191b9d55
+/glm-harness-gh-ui-permissions/known-limitations-and-deferred-work:
+  en: 5930ba82ba7d80ec
+  zh: 05a298cf31b5b637

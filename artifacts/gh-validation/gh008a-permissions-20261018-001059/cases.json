@@ -1,0 +1,14 @@
+[
+  {"id": "PER01-menu-default", "verdict": "pass-local", "evidence": "permissions.spec.ts: default build; three modes only; /permission lists yolo|guarded|build; legacy edit/read-only/workspace-write/danger-full-access migrate interpretably and never re-offer"},
+  {"id": "PER02-execution-decision", "verdict": "pass-local", "evidence": "66-test matrix: read/mutate/unknown classes x three modes; bash read-only proofs; guarded dangerous ask (allowed-once runs, rejected denies, fail-closed unavailable denies); exit_plan_mode outside plan denied"},
+  {"id": "PER03-risk-rules", "verdict": "pass-local", "evidence": "structured rule table (deny/ask/allow, prefix:wildcard/exact on command/url/file_path); POSIX dangerous grammar incl. rm/git/find/dd/rsync families; $() and shell -c payload recursion; unsupported never safe (build asks). pwsh/CMD/Git-Bash dialects and sandbox symlink enforcement remain open"},
+  {"id": "PER04-plan", "verdict": "pass-local", "evidence": "writes denied under plan in build/guarded/yolo; read + proven read-only shell allowed; exit_plan_mode gated; approval-bound plan review is the existing dsh-plan-mode exit flow (revision-bound plan-file writes land with the workflow-draft work)"},
+  {"id": "PER05-draft-queue", "verdict": "open", "evidence": "switch appends durable event + one narration; in-flight calls keep their decision. Composer draft/frozen-queue semantics need the web UI slice"},
+  {"id": "PER06-receipts", "verdict": "partial-local", "evidence": "allowed-once grants exactly one execution (next call asks again); asked/decided audit pairs durable. once/project persistence, replay/restart windows open"},
+  {"id": "PER07-workspace-identity", "verdict": "open", "evidence": "per-session fold verified; multi-window/machine identity needs remote work"},
+  {"id": "PER08-child-background", "verdict": "partial-local", "evidence": "fresh child session defaults to build (no mode inheritance; unit-tested). Child approval routing to the user and CLI/automation entries open"},
+  {"id": "PER09-real-sandbox", "verdict": "open", "evidence": "sandbox stays the underlying service (workspace-write default kept); honest reporting asserted in build-denied smoke (denial text reaches the model). Full sandbox-boundary matrix not re-verified here"},
+  {"id": "PER10-end-to-end", "verdict": "partial-local", "evidence": "built gh-headless profile end-to-end: permission-build-denied (write fails closed, file absent, mode stated in runtime context) and permission-yolo-writes (file written). Native desktop and real remote PER10 open"},
+  {"id": "smoke", "verdict": "pass", "evidence": "smoke-report.json: 5/5 scenarios"},
+  {"id": "docsync", "verdict": "pass-with-known-failure", "evidence": "42 pass / 1 fail: verify-repository-references pre-existing 11 historical pins (GH-018); also repaired two blocked-term lines in review-20261017 results.json that had broken verify-concrete-terms since 0813632f52"}
+]

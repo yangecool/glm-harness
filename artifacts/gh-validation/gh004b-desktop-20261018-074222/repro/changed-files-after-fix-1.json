@@ -1,0 +1,40 @@
+[
+  {
+    "scenario": "changed-files",
+    "boot": 1,
+    "turnSeconds": 4.7,
+    "changedFilesCard": "appeared +0s",
+    "fileWritten": true,
+    "eaccesInLog": false,
+    "deepProbe": {
+      "sessionId": "session-77e9b398-b26b-4ecd-aa04-086b2cdb40eb",
+      "summary": {
+        "status": 400,
+        "body": "Invalid change summary coordinates."
+      },
+      "expanded": true,
+      "cardAfterExpand": true
+    },
+    "sessionLog": {
+      "logCount": 1,
+      "hasChanges": true,
+      "hasPresented": false,
+      "tail": [
+        "approval/decided",
+        "tool/result",
+        "step/end",
+        "step/start",
+        "assistant/message",
+        "step/end",
+        "workspace/changes",
+        "turn/end"
+      ]
+    }
+  },
+  {
+    "scenario": "locked-late-report",
+    "bootSeconds": 92.2,
+    "uiErrorAfterSubmitSeconds": "none-90s",
+    "logEaccesAfterSubmitSeconds": "none"
+  }
+]

@@ -1206,6 +1206,30 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'ghPermissions',
+    summary: '`ctx.ghPermissions`: the durable mode selection, its narration and prompt statement, the `/permission` command, and the executor-level gate.',
+    description: '`ctx.ghPermissions`: the durable mode selection, its narration and prompt statement, the `/permission` command, and the executor-level gate.',
+    methods: [
+      {
+        signature: 'effectiveMode(session: Session): GhPermissionMode',
+        description: 'The session\'s effective mode: its folded selection (migrated when legacy), else the composition default.',
+        parameters: [{ name: 'session', description: 'the exact accepted session.' }],
+        returns: 'the mode every gate decision for this session uses right now.',
+      },
+      {
+        signature: 'get(agent: Agent): { mode: GhPermissionMode; plan: boolean }',
+        description: 'Read one agent\'s current mode and plan state for display.',
+        parameters: [{ name: 'agent', description: 'the agent whose session is read.' }],
+        returns: 'the effective mode and whether plan mode is logged active.',
+      },
+      {
+        signature: 'set(agent: Agent, mode: GhPermissionMode): void',
+        description: 'Switch one live agent\'s mode: append the durable selection and narrate the change for the next model step. Switching does not touch an in-flight call — already-dispatched tools keep their decision.',
+        parameters: [{ name: 'agent', description: 'the live agent whose mode changes.' }, { name: 'mode', description: 'the new effective mode.' }],
+      },
+    ],
+  },
+  {
     key: 'goals',
     summary: 'Goal service (`ctx.goals`) backed exclusively by the owning session log.',
     description: 'Goal service (`ctx.goals`) backed exclusively by the owning session log.',
@@ -5576,6 +5600,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GenericResultView',
     declaration: 'export interface GenericResultView {\n    card: \'generic\';\n    title?: string;\n    content?: ContentBlock[];\n}',
+  },
+  {
+    name: 'GhPermissionMode',
+    declaration: 'export type GhPermissionMode = \'yolo\' | \'guarded\' | \'build\';',
   },
   {
     name: 'GoalActivation',

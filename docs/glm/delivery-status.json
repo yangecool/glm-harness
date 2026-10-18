@@ -6,7 +6,7 @@
     "baseTag": "dsh-v0.2.1-rc.1",
     "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
   },
-  "updatedAt": "2026-10-17",
+  "updatedAt": "2026-10-18",
   "tasks": [
     {
       "id": "GH-001",
@@ -250,6 +250,104 @@
         "工具轮失败后的会话连续性重放、内存重测、Electron 原生运行不在本切片"
       ],
       "next": "GH-008-A:ZCode 三种权限与 Plan(共享真实工具/工作区事实);GH-003-B 其余(purpose 预算/preserved-thinking 全边界)随路由与账号工作推进"
+    },
+    {
+      "id": "GH-008-A",
+      "title": "ZCode 三种权限(完全访问/自主模式/变更前确认)与独立 Plan,落到真实工具执行器(本地切片)",
+      "planRefs": [
+        "6.1",
+        "E03.5 部分",
+        "E03 部分",
+        "F13 部分",
+        "F60 部分",
+        "PER01",
+        "PER02 部分",
+        "PER03 部分",
+        "PER04 部分",
+        "PER06 部分",
+        "PER08 部分",
+        "PER10 部分(本地)"
+      ],
+      "owner": "权限",
+      "status": "complete-slice",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "packages/glm/permissions (@glm-harness/gh-permissions):permission/mode 持久事件+ghPermissions 投影(含 permission/preset 旧值迁移,edit/read-only→build、workspace-write→guarded、danger-full-access→yolo);glm:permission-mode 运行时上下文语句(历史后,不破坏前缀缓存);/permission 命令;tools/pre-execute 执行门,判定顺序对齐 ZCode permission service(plan-exit 策略→plan 只读门(全模式)→guarded 危险询问→yolo 直通→deny/ask/allow 规则→build 只读证明,未解析一律询问)",
+        "src/analysis.ts:原生 POSIX 分析器(引号/转义/展开/通配词法、分段+控制关键字剥离、env/time/sudo wrapper 解包、重定向与静态 heredoc 跳过、$()/反引号/shell -c 载荷递归);危险文法 rm(递归/多目标/通配)/git(reset --hard、clean -f、强推、checkout/restore 树丢弃、stash clear、worktree remove -f)/find -delete 与 -exec 载荷/dd/mkfs 族/rsync --delete;help/dry-run/查询豁免;unsupported 绝不判安全",
+        "组合:gh-base 挂 gh-permissions 行(GH_PERMISSION_MODE 覆盖默认,非法值加载失败;默认 build);dsh-permission-presets 行禁用;approval 行改字面 ask(yolo 下工具自有升级审批仍询问);sandbox 行保持独立(不做 build=read-only 式机械映射);dsh-plan-mode 继续拥有独立 Plan 状态",
+        "smoke 新场景 permission-build-denied(默认 build,write 询问→无应答者失败关闭,文件未创建,拒绝理由作为工具结果回到模型,运行时上下文声明 confirm before changes)与 permission-yolo-writes(yolo 直写,文件落盘)",
+        "文档与记录:persistence 记录 2026-10-17-gh-permission-mode;subsystems/gh-permissions(.zh).md 新页并索引;README 双语+配对;config-catalog/cordis-catalog/事件图/插件包清单/known-event-types/type-equiv manifest 再生成"
+      ],
+      "verification": {
+        "runIds": [
+          "gh008a-permissions-20261018-001059"
+        ],
+        "gatesPassed": [
+          "受影响 17 文件 445 测试(permissions 66:文法表+真实 ctx.tools.execute 组合门禁,跨三模式×类别矩阵)",
+          "typecheck host 聚合 0 错误",
+          "build 9/9+328 制品",
+          "check-gh-closure(闭包与组合 profile 无上游业务包)",
+          "oxlint 0 警告 0 错误",
+          "constraints",
+          "persistence 66 roots/16 记录+persistence-formats v0-v4",
+          "pairing 1021 对",
+          "doc-sync 42 过/1 既有失败(repository references 11 处历史 pin,GH-018 台账项)",
+          "smoke 5/5 场景(含两个权限场景)"
+        ],
+        "compositionEvidence": "built gh-headless 真实组合经回环 GLM 驱动:build 拒绝/yolo 直写均端到端验证;运行时上下文语句出现在请求消息流(runtime-context 用户消息,非系统前缀)"
+      },
+      "deviations": [
+        "PER05/07/09 与 PER06 大部、PER10 原生桌面/真实远端保持开放:Composer 草稿/冻结队列语义、once/project 持久规则、多窗口/跨机身份、真实沙箱边界矩阵、端到端审批/恢复流未做",
+        "分析器仅 POSIX bash:pwsh 参数不获得危险命中或只读证明(保守:build 询问);CMD/Git Bash 方言未做;只读证明是保守表,未知命令/未知 git 子命令在 build 下一律询问",
+        "委派子代理保持组合默认模式+上游 never 审批钉死:子代理向用户的审批路由随 GH 子代理切片;headless 确认流(非交互默认/排队审批)随远端工作",
+        "ZCode 判定顺序的偏离仅在更安全方向:控制结构体内分段仍匹配(如 if...; then rm -rf)、$()/shell -c 载荷递归、find -exec 载荷分析——ZCode 对这些返回 unsupported",
+        "修复 0813632f52 引入的 verify-concrete-terms 失败:review-20261017/results.json 两处含糊来源措辞改为具体来源表述(证据语义不变)",
+        "真实 GLM 未联调(D01);Electron 与远端未测;Web Composer 三选项菜单+独立 Plan 勾选未接线(ui-permission-presets 客户端在宿主服务缺失时安全未激活)"
+      ],
+      "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT 与 purpose 级模型配置;PER05/06/07/10 随 UI/远端切片;GH-003-B 其余"
+    },
+    {
+      "id": "GH-004-B",
+      "title": "原生桌面、视觉与资源一起收口——真实 Electron 全链路 + 历史 changed-files/锁定迟报修复 + MEM01/02 全进程树重测(本地切片)",
+      "planRefs": [
+        "6.2",
+        "E01",
+        "E05",
+        "E12 部分",
+        "F08-11/18/20-23/51-53/57/61 部分",
+        "MEM01",
+        "MEM02",
+        "VIS01 部分",
+        "VIS03 部分",
+        "VIS05 部分"
+      ],
+      "owner": "桌面/资源",
+      "status": "complete-slice",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "启动链路:linux-x64 开发目标(desktop-build-paths/dev.ts)+office 载荷容忍+welcome 账号域降级+上游 preset chip 行禁用;dev 桌面宿主经合成 project 解析 GH 组合",
+        "packages/glm/permissions:去掉 planMode 静态注入改读 plan 会话投影(修复桌面/web 面 fiber 停车,ghPermissions 投影恢复发布);tools/pre-execute 改 next() 后组合判定(ask/deny 不再饿死后置观察者,下游 deny/cancel 保留)",
+        "apps/desktop host-process:desktop host stderr 直通应用日志(锁定态 EACCES 启动期可见)",
+        "scripts/gh-desktop-run|mem|repro|fixture(.mjs):CDP 全流程(双语探测)、全后代树内存采样、changed-files/锁定复现与修复后验证、相对路径写入",
+        "packages/glm/ui-permissions README 双语+i18n 记录(kind package-bundle);gh-permissions README 限制更新;delivery-status 措辞修正",
+        "证据 gh-validation/gh004b-desktop-20261018-074222:9 相位截图+result/boot-graph/stop-control/app-log、mem-report(含 productExcludingLauncher 口径)、repro 前后对照 JSON、cases DESK01-09+REPRO01/02+MEM01/02、gates/tests/closure/constraints/doc-sync 日志"
+      ],
+      "evidence": "artifacts/gh-validation/gh004b-desktop-20261018-074222",
+      "verification": [
+        "全流程四跑可重复(run16/17/18/19 passed:true;stopSeen+approvalSeen 每跑为真)",
+        "修复前 changed-files 3/3 缺失且无 workspace/changes 事件;修复后 3/3 事件入日志且卡片 +0s 出现",
+        "锁定态:修复前 0 条 EACCES 可见;修复后 EACCES 启动期入日志(提交前 ~105s);UI 仍无用户可见错误(上游缺口,如实登记)",
+        "MEM01 空闲产品口径中位 1154.6 MiB;MEM02 回合后 1037.9 MiB;未达 450 MiB 候选,削减归 GH-009",
+        "vitest 156(permissions 66)+doc-standard 22;闭包/约束/lint/smoke 5/5;doc-sync 20 过/1 失败(仅既有 repository references 11 处历史 pin,GH-018 台账项)"
+      ],
+      "remaining": [
+        "锁定态 UI 用户可见错误与 boot 重试 92s 收敛(上游客户端面,GH-009/上游)",
+        "VIS02/04(恢复流/远端页)未及;视觉全量重设计随 GH-006/008 UI 切片",
+        "真实 GLM(D01)未联调,回环 fixture 仅证 wire 形状与 persona",
+        "打包发行(mac/win、签名、自动更新)未动;GH 默认工作区仍为上游 deepseek-harness 路径(改名待议)",
+        "MEM 削减(按需激活/装配裁剪)归 GH-009"
+      ],
+      "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT;MEM 优化与 UI 切片随后"
     }
   ],
   "blocked": [

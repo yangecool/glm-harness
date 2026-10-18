@@ -63,6 +63,13 @@ const GH_WEB_PROFILE_PATCH = `
 # exists. gh-persona owns the model identity in every profile.
 - id: harness-dev-context
   disabled: true
+
+# The web-app bundle's preset-menu client cannot activate here: its host
+# permissionPresets service is disabled (gh-permissions owns the modes), and a
+# client entry that never activates fails the web boot gate. The GH composer
+# control (ui-gh-permissions, inserted by gh-base) is the sole occupant.
+- id: ui-permission
+  disabled: true
 `
 
 /** Profiles that compose the web surface bundle and its dev-context rows. */

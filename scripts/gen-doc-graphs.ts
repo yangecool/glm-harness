@@ -582,6 +582,13 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Folds logged plan/mode state, flushes user selections at turn boundaries, renders deployment-owned guidance, registers /plan, and keeps the plan-exit schema stable across transitions.',
   },
   {
+    key: 'ghPermissions',
+    pkg: 'glm/permissions',
+    title: 'GH permission modes',
+    mode: 'core',
+    note: 'Folds the durable permission/mode selection with legacy migration, states the live mode in the runtime context, registers /permission, and enforces the yolo/guarded/build decision order plus the plan read-only gate in tools/pre-execute.',
+  },
+  {
     key: 'agentPresets',
     pkg: 'agent-preset-registry',
     title: 'Per-session agent composition',

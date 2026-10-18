@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for gh-permissions.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/subsystems/gh-permissions.md
+/gh-permission-modes:
+  en: 84f62c10c7e2f310
+  zh: 8913ca05cd9fb93d
+/gh-permission-modes/logged-state-and-recovery:
+  en: 8ff5e28c60d1b9b0
+  zh: 02bbd1f672b6cdbd
+/gh-permission-modes/the-decision-order:
+  en: 15d79e3aa283e5bd
+  zh: 383d3dc7dbbc3b81
+/gh-permission-modes/shell-analysis:
+  en: c03b9eaf6f4e1c16
+  zh: 4de9b1fff0d21c72
+/gh-permission-modes/configuration:
+  en: aba9de11782c0719
+  zh: 130bf54dd013f092
+/gh-permission-modes/the-permission-command:
+  en: 2128100cbd324b10
+  zh: e0afdcd2a3ef5041
+/gh-permission-modes/the-service:
+  en: 3db19e6af0d2f49c
+  zh: a4fa8f45c627e6e4

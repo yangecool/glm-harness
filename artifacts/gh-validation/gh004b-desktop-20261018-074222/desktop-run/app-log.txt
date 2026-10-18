@@ -1,0 +1,28 @@
+$ pnpm --filter @deepseek-ai/dsh-desktop run start
+native/system/packages/darwin-arm64      | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/darwin-x64        | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["darwin"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+native/system/packages/linux-arm64       | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"linux","cpu":"x64","libc":"glibc"})
+$ tsx scripts/dev.ts --skip-build
+desktop development: linux-x64 target, skipping packaged primary-runtime preparation
+desktop development: DSH_HOME=/tmp/gh-desktop-run-GRvrUo/home
+desktop development: userData=/disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime/apps/desktop/.desktop-build/development/electron-user-data
+desktop development: inspectors main=9231, renderer=9232, host=9233
+Debugger listening on ws://127.0.0.1:9231/348b0f97-6c01-4668-8971-cdfc4ed39986
+For help, see: https://nodejs.org/learn/getting-started/debugging
+
+DevTools listening on ws://127.0.0.1:9232/devtools/browser/809584f2-19e4-4345-87be-8d38c4e6352b
+[2958384:1018/073429.848621:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.
+[2958384:1018/073429.849959:WARNING:ui/gfx/linux/gbm_support_x11.cc:48] dri3 extension not supported.
+Debugger listening on ws://127.0.0.1:9233/614e9b80-e898-415c-a744-c400ae13b3ca
+For help, see: https://nodejs.org/learn/getting-started/debugging
+[2958348:1018/073430.057789:INFO:CONSOLE:2] "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.", source: node:electron/js2c/sandbox_bundle (2)
+dsh: warning: 1 entry did not activate
+account-controller (@deepseek-ai/dsh-api-account-controller): pending (waiting for service: deepseekAccount)
+dsh web: http://127.0.0.1:34519/?token=ZNrihTcWAfhYubJ0IVXbyltrCd5s-d3r14ATTpnEoSc

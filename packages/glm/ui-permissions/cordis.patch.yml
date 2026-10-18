@@ -1,0 +1,11 @@
+# The gh-ui-permissions bundle patch: the GH composer permission control over
+# the dsh web-app surface. The chip reads the session's `ghPermissions` and
+# `plan` projections (key absence hides it), picks write through the /permission
+# and /plan host commands, and the yolo option carries the same explicit risk
+# confirmation as every full-access surface. The upstream ui-permission row
+# stays inert in GH compositions (its host preset service is disabled), so
+# this row is the sole permission occupant of the composer seat.
+
+- insert:
+    - id: ui-gh-permissions
+      name: '@glm-harness/gh-ui-permissions'

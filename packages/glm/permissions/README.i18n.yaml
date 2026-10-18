@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/permissions/README.md
+/:
+  en: cd0451f1baf3ffea
+  zh: e2ad6a2c34c9e2e2
+/glm-harness-gh-permissions:
+  en: 7a149fe6e0d1fe36
+  zh: 7153b247f74030c6
+/glm-harness-gh-permissions/summary:
+  en: 72ad7d7e127f3625
+  zh: 56f72bd21c303649
+/glm-harness-gh-permissions/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: ffab54373e9e61f0
+/glm-harness-gh-permissions/use-this-package:
+  en: 9dddad4e44181d1e
+  zh: f792ca1ec498039b
+/glm-harness-gh-permissions/use-this-package/when-to-choose-it:
+  en: 0a0c6df521e9d407
+  zh: aabbfd95487d0cf0
+/glm-harness-gh-permissions/use-this-package/minimal-configuration:
+  en: fc23151f6ae871ac
+  zh: 7d0bccb04653fefa
+/glm-harness-gh-permissions/understand-the-implementation:
+  en: 2a4c6e0792790648
+  zh: c6622bedbc3aa952
+/glm-harness-gh-permissions/further-exploration:
+  en: 820ecda218e6ee3c
+  zh: 75fec7847bbe104c
+/glm-harness-gh-permissions/model-experience:
+  en: 215e7ba838619b7b
+  zh: 215e7ba838619b7b
+/glm-harness-gh-permissions/model-experience/gh-permission-mode-statement:
+  en: 5ec3d7d511e381a3
+  zh: ece1bc96741c1afa
+/glm-harness-gh-permissions/model-experience/gh-permission-mode-statement/what-the-model-sees:
+  en: 64ea3bf13ff0c4db
+  zh: c46a769e45c7ff6b
+/glm-harness-gh-permissions/model-experience/gh-permission-mode-statement/token-effect:
+  en: 70171d179daf8214
+  zh: db54076a023c87e8
+/glm-harness-gh-permissions/model-experience/gh-permission-mode-statement/kv-cache-effect:
+  en: d35bdd824d835b72
+  zh: 4720623cb3166599
+/glm-harness-gh-permissions/known-limitations-and-deferred-work:
+  en: 528c7c2d63515272
+  zh: 7688ddf8c6aabfa2
+/glm-harness-gh-permissions/known-limitations-and-deferred-work/dev-note:
+  en: d9805284ebe45e84
+  zh: ede54cb3e664f359

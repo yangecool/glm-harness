@@ -1,0 +1,1 @@
+$ tsx scripts/check-workspace-constraints.ts

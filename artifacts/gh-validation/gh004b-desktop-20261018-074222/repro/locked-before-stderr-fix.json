@@ -1,0 +1,8 @@
+[
+  {
+    "scenario": "locked-late-report",
+    "bootSeconds": 92.2,
+    "uiErrorAfterSubmitSeconds": "none-90s",
+    "logEaccesAfterSubmitSeconds": "none"
+  }
+]

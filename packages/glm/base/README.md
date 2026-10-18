@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-GH profiles share sessions, tools, workspace execution, settings, and the GH-native GLM adapter through this explicit public DSH composition. `scripts/gh-init-profiles.ts` selects the layer for shipped GH homes. The closure gate excludes upstream model, retry, account, and telemetry implementations. Missing GLM credentials fail explicitly. GH account, retry, and ZCode permission policies remain separate implementation work.
+GH profiles share sessions, tools, workspace execution, settings, and the GH-native GLM adapter through this explicit public DSH composition. `scripts/gh-init-profiles.ts` selects the layer for shipped GH homes. The closure gate excludes upstream model, retry, account, and telemetry implementations. Missing GLM credentials fail explicitly. GH account integration remains separate implementation work; the ZCode permission modes ship as `gh-permissions`.
 
 ## Table of Contents
 
@@ -73,7 +73,7 @@ This layer does not serialize requests. Changes to selected model-facing capabil
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The GH-native text/tool GLM adapter is composed here. Full model configuration and account/PAT integration remain pending (plan E02); GH-owned bounded retry ships here, and per-purpose model budgets arrive with the model-work-policy work. Current permission presets still inherit DSH behavior; ZCode’s three permission modes require a separate policy/UI implementation.
+- The GH-native text/tool GLM adapter is composed here. Full model configuration and account/PAT integration remain pending (plan E02); GH-owned bounded retry ships here, and per-purpose model budgets arrive with the model-work-policy work. The ZCode three permission modes (`yolo`/`guarded`/`build`, plan independent) now ship here through `gh-permissions`, enforced at the tool executor; the DSH preset row is disabled and the web composer mode control arrives with the GH UI slice.
 - No telemetry ships here. GH diagnostics and feedback (plan E09) will provide their own exporters with GH-owned endpoints; upstream OTel packages stay out of the closure.
 - Web search is providerless until the GH search decision; `web_fetch` works through the anonymous HTTP fetch provider.
 

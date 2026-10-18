@@ -32,9 +32,21 @@ const endpoint = createServer(async (request, response) => {
     const assistant = body.messages.find(message => message.role === 'assistant' && message.tool_calls?.length > 0)
     const system = body.messages.find(message => message.role === 'system')?.content ?? ''
     const mainCount = observations.filter(item => item.scenario === scenario && item.main).length
+    const toolResults = body.messages.filter(message => message.role === 'tool').map(message => message.content)
+    // The live permission mode travels as the post-history runtime context (a
+    // user message), never inside the cached system prefix.
+    let permissionMode
+    for (const message of body.messages) {
+      const text = typeof message.content === 'string' ? message.content : JSON.stringify(message.content)
+      const found = /Permission mode: (full access|autonomous|confirm before changes)/.exec(text)
+      if (found) {
+        permissionMode = found[1]
+        break
+      }
+    }
     observations.push({
       scenario, main, model: body.model, toolResult, reasoning: assistant?.reasoning_content,
-      system, tools: main ? body.tools.map(tool => tool.function.name) : undefined,
+      system, tools: main ? body.tools.map(tool => tool.function.name) : undefined, toolResults, permissionMode,
     })
     if (body.model !== 'glm-4.6') {
       response.writeHead(400).end(JSON.stringify({ error: { message: 'unknown model' } }))
@@ -66,7 +78,7 @@ const endpoint = createServer(async (request, response) => {
   }
 })
 
-async function run(name) {
+async function run(name, { ghPermissionMode } = {}) {
   scenario = name
   const home = join(fixture, name, 'home')
   const workspace = join(fixture, name, 'workspace')
@@ -77,8 +89,14 @@ async function run(name) {
   assert(address !== null && typeof address === 'object')
   const child = spawn(process.execPath, [join(root, 'apps/cli/lib/bin.js'), '--profile', 'gh-headless', 'Write the fixture and verify it.'], {
     cwd: workspace,
-    env: { ...process.env, DSH_HOME: home, GLM_API_KEY: 'synthetic-smoke-key',
-      GLM_BASE_URL: `http://127.0.0.1:${address.port}`, DSH_PERMISSION_MODE: 'danger-full-access' },
+    env: {
+      ...process.env,
+      DSH_HOME: home,
+      GLM_API_KEY: 'synthetic-smoke-key',
+      GLM_BASE_URL: `http://127.0.0.1:${address.port}`,
+      DSH_PERMISSION_MODE: 'danger-full-access',
+      ...ghPermissionMode === undefined ? {} : { GH_PERMISSION_MODE: ghPermissionMode },
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let stdout = ''
@@ -103,6 +121,7 @@ async function run(name) {
       assert.match(first.system, /AI coding agent powered by GLM Harness/)
       assert.match(first.system, /Verify your own work before reporting completion/)
       assert.doesNotMatch(first.system, /DeepSeek Harness/)
+      assert.equal(first.permissionMode, 'full access', 'yolo states itself in the runtime context')
       assert.ok(first.system.indexOf('GLM Harness') < first.system.indexOf('Work toward'), 'identity precedes the work policy')
       const order = first.tools
       const curated = ['read', 'edit', 'write', 'bash', 'grep', 'glob']
@@ -115,6 +134,22 @@ async function run(name) {
       // One rejected attempt, then the bounded retry recovers: the retool
       // request, its tool-result continuation, and the final text.
       assert.equal(calls.length, 3)
+    } else if (name === 'permission-build-denied') {
+      // Default build mode: the scripted write is confirmed through the
+      // approval chain, and a headless run with no answerer fails closed —
+      // the file is never created, the denial reaches the model as the tool
+      // result, and the run still completes cleanly.
+      assert.equal(code, 0, stderr)
+      assert.match(stdout, /GH_SMOKE_DONE/)
+      await assert.rejects(() => readFile(target))
+      assert.equal(first.permissionMode, 'confirm before changes')
+      const denial = calls.at(-1)?.toolResults.at(-1) ?? ''
+      assert.match(typeof denial === 'string' ? denial : JSON.stringify(denial), /requires approval/)
+    } else if (name === 'permission-yolo-writes') {
+      assert.equal(code, 0, stderr)
+      assert.match(stdout, /GH_SMOKE_DONE/)
+      assert.equal(await readFile(target, 'utf8'), expected)
+      assert.equal(first.permissionMode, 'full access')
     } else {
       assert.equal(code, 1, stderr)
       assert.match(stderr, /RATE_LIMIT|fixture rate limit/)
@@ -135,9 +170,11 @@ async function run(name) {
 try {
   endpoint.listen(0, '127.0.0.1')
   await once(endpoint, 'listening')
-  await run('tool-round')
-  await run('rate-limit-retry')
-  await run('rate-limit-exhaust')
+  await run('tool-round', { ghPermissionMode: 'yolo' })
+  await run('rate-limit-retry', { ghPermissionMode: 'yolo' })
+  await run('rate-limit-exhaust', { ghPermissionMode: 'yolo' })
+  await run('permission-build-denied')
+  await run('permission-yolo-writes', { ghPermissionMode: 'yolo' })
   const report = { scope: 'built gh-headless profile / synthetic loopback, no real GLM', results, observations }
   if (process.argv[2] !== undefined) await writeFile(resolve(process.argv[2]), `${JSON.stringify(report, null, 2)}\n`)
   console.log(JSON.stringify({ passed: true, results }))

@@ -1,0 +1,72 @@
+[
+  {
+    "scenario": "changed-files",
+    "boot": 1,
+    "turnSeconds": 4.8,
+    "changedFilesCard": "appeared +0s",
+    "fileWritten": true,
+    "eaccesInLog": false,
+    "deepProbe": {
+      "sessionId": "session-e39cc0c8-bbdc-44ab-80a5-2b2aeff10abd",
+      "summary": {
+        "status": 400,
+        "body": "Invalid change summary coordinates."
+      },
+      "expanded": true,
+      "cardAfterExpand": true
+    },
+    "sessionLog": {
+      "logCount": 1,
+      "hasChanges": true,
+      "hasPresented": false,
+      "tail": [
+        "approval/decided",
+        "tool/result",
+        "step/end",
+        "step/start",
+        "assistant/message",
+        "step/end",
+        "workspace/changes",
+        "turn/end"
+      ]
+    }
+  },
+  {
+    "scenario": "changed-files",
+    "boot": 2,
+    "turnSeconds": 4.7,
+    "changedFilesCard": "appeared +0s",
+    "fileWritten": true,
+    "eaccesInLog": false,
+    "deepProbe": {
+      "sessionId": "session-fe4c27a3-07af-4c66-b21e-1a1fc971f554",
+      "summary": {
+        "status": 400,
+        "body": "Invalid change summary coordinates."
+      },
+      "expanded": true,
+      "cardAfterExpand": true
+    },
+    "sessionLog": {
+      "logCount": 1,
+      "hasChanges": true,
+      "hasPresented": false,
+      "tail": [
+        "approval/decided",
+        "tool/result",
+        "step/end",
+        "step/start",
+        "assistant/message",
+        "step/end",
+        "workspace/changes",
+        "turn/end"
+      ]
+    }
+  },
+  {
+    "scenario": "locked-late-report",
+    "bootSeconds": 92.2,
+    "uiErrorAfterSubmitSeconds": "none-90s",
+    "logEaccesAfterSubmitSeconds": -104.7
+  }
+]

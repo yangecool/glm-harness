@@ -1,6 +1,6 @@
 /** Desktop Office skills and bundled authoring dependencies. */
 
-import { realpathSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runtimeArchivePath } from './office-engine.ts'
@@ -26,6 +26,14 @@ export interface Config {
  * @param config - Bundled payload source and Harness-home installation root.
  */
 export async function apply(ctx: Context, config: Config): Promise<void> {
+  const payloadNode = join(config.source, 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')
+  if (!existsSync(payloadNode) || !existsSync(join(dirname(config.source), 'office-skills'))) {
+    // Unpackaged Linux development runs carry no bundled payload: Office
+    // authoring stays unavailable instead of failing Host startup. Packaged
+    // mac/win payloads always provide both, keeping their fail-hard contract.
+    ctx.logger.warn('desktop-office: bundled office payload absent, Office skills stay unavailable')
+    return
+  }
   await ctx.plugin(workspaceDependencies, config)
   const archive = runtimeArchivePath(config.runtimeDir) === undefined ? undefined : dirname(realpathSync(config.runtimeDir))
   const manifest = fileURLToPath(import.meta.resolve('@deepseek-ai/libreoffice-kit/package.json'))

@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-GH profile 通过这层显式公共 DSH 组合共享会话、工具、工作区执行、设置和 GH 原生 GLM 适配器。`scripts/gh-init-profiles.ts` 为 GH home 选择此层。闭包门禁排除上游模型、重试、账号和遥测实现。无 GLM 凭据时显式失败。GH 账号与 ZCode 权限策略仍需分别实现;GH 自有有界重试已随本层交付。
+GH profile 通过这层显式公共 DSH 组合共享会话、工具、工作区执行、设置和 GH 原生 GLM 适配器。`scripts/gh-init-profiles.ts` 为 GH home 选择此层。闭包门禁排除上游模型、重试、账号和遥测实现。无 GLM 凭据时显式失败。GH 账号集成仍需单独实现；ZCode 三种权限模式已作为 `gh-permissions` 随本层交付，GH 自有有界重试同前。
 
 ## 目录
 
@@ -78,7 +78,7 @@ dsh 核心减去上游业务行：会话、工具、沙箱与审批策略、技�
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 此处已组合 GH 原生文本/工具 GLM 适配器。完整模型配置与账号/PAT 集成尚待完成(计划 E02);GH 自有有界重试已在此交付,purpose 级模型预算随模型工作方式工作交付。当前权限预设仍继承 DSH 行为；ZCode 三种权限需要独立实现策略与 UI。
+- 此处已组合 GH 原生文本/工具 GLM 适配器。完整模型配置与账号/PAT 集成尚待完成(计划 E02);GH 自有有界重试已在此交付,purpose 级模型预算随模型工作方式工作交付。ZCode 三种权限模式（`yolo`/`guarded`/`build`，Plan 独立）现经 `gh-permissions` 在本层交付，裁决落在工具执行器；DSH 预设行已禁用，Web Composer 模式控件随 GH UI 切片交付。
 - 此处不携带遥测。GH 诊断与反馈（计划 E09）将提供带 GH 自有端点的导出器；上游 OTel 包保持闭包之外。
 - 在 GH 搜索决策落地前没有网页搜索供应方；`web_fetch` 通过匿名 HTTP fetch 供应方工作。
 

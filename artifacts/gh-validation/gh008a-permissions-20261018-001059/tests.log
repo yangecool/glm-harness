@@ -1,0 +1,28 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+ ✓ |thread-safe| packages/interaction/user-approval/tests/approval.spec.ts (32 tests) 65ms
+ ✓ |thread-safe| packages/llm/token-meter/tests/route-pricing.spec.ts (9 tests) 36ms
+ ✓ |thread-safe| packages/llm/token-meter/tests/token-meter.spec.ts (25 tests) 60ms
+ ✓ |thread-safe| packages/glm/brand/tests/browser-plugin.client.spec.tsx (3 tests) 81ms
+ ✓ |thread-safe| packages/llm/token-meter/tests/token-usage-projection.spec.ts (21 tests) 73ms
+ ✓ |thread-safe| packages/llm/token-meter/tests/context-breakdown-projection.spec.ts (20 tests) 87ms
+ ✓ |thread-safe| packages/glm/model-glm/tests/runtime.spec.ts (18 tests) 238ms
+ ✓ |thread-safe| packages/llm/token-meter/tests/turn-usage.spec.ts (47 tests) 10ms
+ ✓ |thread-safe| packages/plan/plan-mode/tests/projection.spec.ts (9 tests) 49ms
+ ✓ |thread-safe| packages/glm/persona/tests/persona.spec.ts (5 tests) 24ms
+ ✓ |thread-safe| packages/plan/plan-mode/tests/integration.spec.ts (4 tests) 80ms
+ ✓ |thread-safe| packages/glm/model-retry/tests/retry.spec.ts (8 tests) 99ms
+ ✓ |thread-safe| packages/glm/model-glm/tests/stream.spec.ts (28 tests) 25ms
+ ✓ |thread-safe| packages/glm/permissions/tests/permissions.spec.ts (66 tests) 141ms
+ ✓ |thread-safe| packages/plan/plan-mode/tests/plan-mode.spec.ts (65 tests) 179ms
+ ✓ |thread-safe| scripts/check-gh-closure.spec.ts (2 tests) 94ms
+ ✓ |thread-safe| packages/client/ui-chat/tests/conversation-node-definitions.client.spec.ts (83 tests) 78ms
+
+ Test Files  17 passed (17)
+      Tests  445 passed (445)
+   Start at  00:11:05
+   Duration  2.63s (transform 13.05s, setup 797ms, import 17.46s, tests 1.42s, environment 386ms)

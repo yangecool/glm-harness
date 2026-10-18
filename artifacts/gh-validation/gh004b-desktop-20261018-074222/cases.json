@@ -1,0 +1,15 @@
+[
+  {"case": "DESK01 真实 Electron 启动 GH desktop profile", "verdict": "pass", "evidence": "Xvnc :99 + linux-x64 dev target + office payload 容忍 + welcome 账号域降级;boot graph 69 行全部激活(gh-ui-permissions 首行);01-home.png 显示 GLM 品牌 hero 与 composer;app-log dsh web 起服"},
+  {"case": "DESK02 模型选择", "verdict": "pass", "evidence": "页头 'Select model, current GLM-4.6, reasoning effort Thinking';菜单展开含多条 GLM 条目;02-model-menu.png;fixture 校验请求 model=glm-4.6"},
+  {"case": "DESK03 回合执行与停止控件", "verdict": "pass", "evidence": "Lexical composer 经 CDP Input.insertText 输入并提交;03-turn-running.png 含停止控件(stop-control.json stopSeen=true);回合 4.7s 完成"},
+  {"case": "DESK04 build 模式审批面板", "verdict": "pass", "evidence": "write 工具触发 GH gate ask;04-approval-panel.png:'Waiting for approval — Build mode confirms before changes: \"write\" needs your approval to run.' + Reject/Allow once;点 Allow once 后工具执行;会话日志含 approval/asked+approval/decided"},
+  {"case": "DESK05 完成与落盘", "verdict": "pass", "evidence": "GH_DESKTOP_DONE 到达;文件写入 <docs>/deepseek-harness/default-workspace/desktop-review.txt 逐字校验;主请求 2 次;system prompt 含 'AI coding agent powered by GLM Harness';write 在工具目录"},
+  {"case": "DESK06 权限 chip 与菜单", "verdict": "pass", "evidence": "chip aria-label 'Permission mode: Confirm before changes'(zh 运行 '权限模式：变更前确认');06-permission-menu.png:Plan mode/分隔线/Read-only/Workspace write/Full access 三模式;默认 build"},
+  {"case": "DESK07 yolo 切换风险确认", "verdict": "pass", "evidence": "菜单选 Full access→RiskConfirmation(07-yolo-confirm.png);勾选确认+Switch to full access;chip 变 'Permission mode: Full access'(08-yolo-active.png)"},
+  {"case": "DESK08 独立 Plan 开关", "verdict": "pass", "evidence": "同一菜单点 Plan mode→/plan 执行→上游 ui-plan chip 标题 'Plan mode on/计划模式已开启' 出现(09-plan-active.png);再经 /plan off 可关"},
+  {"case": "DESK09 全流程可重复", "verdict": "pass", "evidence": "run16/17(修复后初版)与 run18/19(最终代码)四跑 passed:true;每跑 stopSeen+approvalSeen=true"},
+  {"case": "REPRO01 changed-files 卡片桌面缺失复现与修复", "verdict": "pass", "evidence": "修复前 3/3 boot 卡片 90s 不出现且会话日志无 workspace/changes 事件(会话 cwd=default workspace 而写入在 /tmp fixture 外;且 gate ask 短路后置 pre-execute 观察者使 capture 注册不达);修复=写入相对路径落会话工作区(XDG 重定向)+gate 组合改为 next() 后判定;修复后 3/3 boot 事件入日志且卡片 +0s 出现(repro/changed-files-after-fix-*.json sessionLog.hasChanges=true)"},
+  {"case": "REPRO02 锁定态迟报复现与可观测性修复", "verdict": "pass-with-finding", "evidence": "chmod 000 sessions+storages 后应用仍启动(boot 40s→92.2s);提交的消息无声消失(回空 hero,无任何错误反馈,90s 无 UI 错误)——比 web 38.6s 迟报更差;唯一痕迹为渲染器 console 'sessionController is unavailable';修复=desktop host stderr 直通应用日志(host-process.ts pipe),修复后 EACCES 启动期即入日志(提交前 ~105s,此前 0 条);遗留=UI 面错误提示属上游客户端缺口,如实登记"},
+  {"case": "MEM01 空闲内存(进程树)", "verdict": "measured", "evidence": "产品口径(排除 dev 脚手架 pnpm+tsx ~450-520MiB)中位 1154.6 MiB:electron-main 354.9+host 322.9+renderer 226.4+gpu 164.7+utility 90.6;历史 web 口径 577 MiB(服务端 167.5+浏览器 409.7);远高于 450 MiB 候选,未达标,优化归 GH-009"},
+  {"case": "MEM02 回合后内存", "verdict": "measured", "evidence": "产品口径中位 1037.9 MiB(回合峰值 1146.8);回合后 host 283(较空闲 323 回落)、renderer 248.7;无逐轮增长趋势(单轮样本);泄漏证明需长程进程内测试,不在本切片"}
+]
