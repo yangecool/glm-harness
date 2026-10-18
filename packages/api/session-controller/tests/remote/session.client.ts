@@ -139,6 +139,7 @@ export const sessionWorld: RemoteTable = {
     'session/prompt': ok({ accepted: true }),
     'session/cancel': ok({ accepted: true }),
     'session/updateQueue': ok({ accepted: true }),
+    'session/admission': ok({ found: false }),
     'session/rename': ok({ title: 'fk-renamed', seq: 0 }),
     'session/attachment': ok({
       attachment: { attachmentId: 'a', mediaType: 'image/png', bytes: 1, width: 1, height: 1 },

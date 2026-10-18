@@ -218,6 +218,7 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/request-conflict': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/no-durable-writer': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/flush-failed': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
+    'session/admission-unknown': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/invalid-time-zone': { readonly value: string }
     'session/workspace-attach-failed': { readonly sessionId: SessionId; readonly workspaceId: string }
     'agent-preset/conflict': {

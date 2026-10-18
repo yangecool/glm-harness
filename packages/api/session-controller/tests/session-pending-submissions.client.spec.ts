@@ -11,8 +11,10 @@ import { SessionSeq, type SessionEvent } from '@deepseek-ai/dsh-session/types'
 import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { createClientTest, webApp } from '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
+import { ok } from '@deepseek-ai/dsh-remote-mock'
 import type { PendingSubmissionRetirement } from '../src/client/contract/session.ts'
-import type { SessionRequestId } from '../src/types.ts'
+import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
+import type { SessionAdmissionValue, SessionPromptValue, SessionRequestId } from '../src/types.ts'
 import { ev, historyValue } from './event-script.client.ts'
 import { sessionBench } from './remote/bench.client.ts'
 import {
@@ -65,6 +67,12 @@ function queuedItem(rpcId: SessionRequestId, refs: readonly AttachmentRef[] = []
 /** Let the frame-delayed retirement (setTimeout fallback in this node environment) run. */
 async function settleFrames(): Promise<void> {
   await Promise.resolve()
+  await new Promise(resolve => setTimeout(resolve, 0))
+}
+
+/** Settle frames for retirements scheduled by an admission answer resolving during the wait. */
+async function reconcileFrames(): Promise<void> {
+  await settleFrames()
   await new Promise(resolve => setTimeout(resolve, 0))
 }
 
@@ -628,5 +636,115 @@ describe('disposal', () => {
       { text: '已观察', retirement: { reason: 'observed', attachments: [] } },
     ])
     expect(session.getSnapshot().pendingSubmissions).toEqual([])
+  })
+})
+
+describe('admission reconciliation', () => {
+  /** The carrier-folded failure `invoke` produces when the round-trip is lost. */
+  function carrierLost(): RemoteResult<SessionPromptValue> {
+    return err(new RemoteError(
+      'gateway/internal',
+      'client api: session/prompt failed: fetch failed',
+      {},
+    ))
+  }
+
+  it('a carrier loss keeps the echo pending and reports admission-unknown without promptError', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    mock.remote.session.prompt.mockResolvedValue(carrierLost())
+    // The admission query stays unanswered while the client is offline.
+    mock.remote.session.admission.mockImplementation(() => new Promise(() => {}))
+    const onRetire = vi.fn()
+    const handle = session.beginSubmission({ mode: 'queue', text: '未知', attachments: [], onRetire })
+    const result = await session.prompt([{ type: 'text', text: '未知' }], 'queue', undefined, handle.requestId)
+    expect(result).toMatchObject({ ok: false, error: { code: 'session/admission-unknown' } })
+    expect(session.getSnapshot().pendingSubmissions).toHaveLength(1)
+    expect(session.getSnapshot().promptError).toBeNull()
+    expect(onRetire).not.toHaveBeenCalled()
+    expect(mock.log.requests('session/admission')).toEqual([{ sessionId: SID, requestId: handle.requestId }])
+  })
+
+  it('reconciliation with no durable admission retires the echo as failed', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    mock.remote.session.prompt.mockResolvedValue(carrierLost())
+    mock.remote.session.admission.mockResolvedValue(ok<SessionAdmissionValue>({ found: false }))
+    const retirements: PendingSubmissionRetirement[] = []
+    const handle = session.beginSubmission({ mode: 'queue', text: '未达', attachments: [], onRetire: retirement => retirements.push(retirement) })
+    await session.prompt([{ type: 'text', text: '未达' }], 'queue', undefined, handle.requestId)
+    await reconcileFrames()
+    expect(session.getSnapshot().pendingSubmissions).toEqual([])
+    expect(retirements).toEqual([{ reason: 'failed' }])
+  })
+
+  it('reconciliation finding a consumed admission retires the echo as observed', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    mock.remote.session.prompt.mockResolvedValue(carrierLost())
+    mock.remote.session.admission.mockResolvedValue(ok<SessionAdmissionValue>({ found: true, fingerprint: 'f', admittedAt: 1 }))
+    const retirements: PendingSubmissionRetirement[] = []
+    const handle = session.beginSubmission({ mode: 'queue', text: '已达', attachments: [], onRetire: retirement => retirements.push(retirement) })
+    await session.prompt([{ type: 'text', text: '已达' }], 'queue', undefined, handle.requestId)
+    await reconcileFrames()
+    expect(session.getSnapshot().pendingSubmissions).toEqual([])
+    expect(retirements).toEqual([{ reason: 'observed', attachments: [] }])
+  })
+
+  it('reconciliation leaves a still-queued admission to observation retirement with its refs', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    mock.remote.session.prompt.mockResolvedValue(carrierLost())
+    mock.remote.session.admission.mockResolvedValue(ok<SessionAdmissionValue>({ found: true, fingerprint: 'f', admittedAt: 1 }))
+    const onRetire = vi.fn()
+    await session.open()
+    const handle = session.beginSubmission({ mode: 'queue', text: '在队', attachments: [], onRetire })
+    const refs = [imageRef('queued-att')]
+    // The reconnected Inbox projection already holds the admitted occurrence.
+    session.projections.apply('inbox', {
+      'next-turn': [queuedItem(handle.requestId, refs)],
+      'next-step': [],
+    }, SessionSeq(0))
+    await session.prompt([{ type: 'text', text: '在队' }], 'queue', undefined, handle.requestId)
+    await session.reconcilePendingAdmissions()
+    expect(session.getSnapshot().pendingSubmissions).toHaveLength(1)
+    expect(onRetire).not.toHaveBeenCalled()
+    // The Inbox claim clearing plus the durable event retire with real refs.
+    session.projections.apply('inbox', { 'next-turn': [], 'next-step': [] }, SessionSeq(1))
+    const message = queuedItem(handle.requestId, refs)
+    await pushEvent(mock, {
+      type: 'agent/inbox/spliced', seq: SessionSeq(0), time: 1,
+      data: { target: 'next-turn', start: 0, inserted: [message] },
+    })
+    await pushEvent(mock, {
+      type: 'agent/inbox/spliced', seq: SessionSeq(1), time: 2,
+      data: { target: 'next-turn', start: 0, removedCount: 1, inserted: [] },
+    })
+    await pushEvent(mock, promptEvent(SessionSeq(2), handle.requestId, refs))
+    await settleFrames()
+    expect(session.getSnapshot().pendingSubmissions).toEqual([])
+    expect(onRetire).toHaveBeenCalledExactlyOnceWith({ reason: 'observed', attachments: refs })
+  })
+
+  it('reconcilePendingAdmissions sweeps echoes serially and skips settled ones', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    const first = session.beginSubmission({ mode: 'queue', text: '一', attachments: [] })
+    const second = session.beginSubmission({ mode: 'queue', text: '二', attachments: [] })
+    first.abandon()
+    const answers: string[] = []
+    mock.remote.session.admission.mockImplementation(async (request) => {
+      answers.push(request.requestId)
+      return ok({ found: false })
+    })
+    await session.reconcilePendingAdmissions()
+    expect(answers).toEqual([second.requestId])
+    expect(session.getSnapshot().pendingSubmissions).toEqual([])
+    expect(mock.log.requests('session/admission')).toEqual([
+      { sessionId: SID, requestId: second.requestId },
+    ])
+  })
+
+  it('a subagent-addressed session skips ordinary admission reconciliation', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID, {
+      address: { parentSessionId: 'fk-parent' as SessionId, childSessionId: SID, mode: 'continuable' },
+    })
+    await session.reconcilePendingAdmissions()
+    expect(mock.log.requests('session/admission')).toEqual([])
   })
 })

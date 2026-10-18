@@ -29,7 +29,7 @@ import type {
   SessionEventLike, SessionEventLikeEntry, SessionLiveEventEntry,
 } from '../contract/events.ts'
 import { Notifier } from './notifier.ts'
-import { isRemoteFailure } from '@deepseek-ai/dsh-api-gateway/client'
+import { isCarrierFailure, isRemoteFailure } from '@deepseek-ai/dsh-api-gateway/client'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import type { RemoteFailure, RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type { SessionRemotes } from './remotes.ts'
@@ -300,6 +300,22 @@ export class Session implements SessionFace {
       result = routed.ok ? { ok: true, value: { accepted: true } } : routed
     }
     if (!result.ok) {
+      if (requestId !== undefined && this.address === undefined && isCarrierFailure(result.error)) {
+        // The carrier lost the round-trip, so the admission outcome is unknown:
+        // the Host may have durably admitted this request. The echo stays as
+        // the pending record and reconciliation through `session/admission`
+        // decides its retirement, so the caller must not restore its draft or
+        // resend under a fresh identity.
+        void this.reconcileSubmission(requestId)
+        return {
+          ok: false,
+          error: new RemoteError(
+            'session/admission-unknown',
+            `session ${this.sessionId} prompt admission outcome unknown; the echo stays pending reconciliation`,
+            { sessionId: this.sessionId, requestId },
+          ),
+        }
+      }
       if (requestId !== undefined) this.retireFailedSubmission(requestId)
       this.promptError = { op: 'send', error: result.error }
       this.notifier.markDirty()
@@ -590,6 +606,54 @@ export class Session implements SessionFace {
   handleAgentError(message: string): void {
     this.lastAgentError = message
     this.notifier.markDirty()
+  }
+
+  /**
+   * Reconcile every unsettled submission echo against the durable admission
+   * journal (`session/admission`). The reconnect path calls this after the
+   * connection generation is re-established: an admission the Host recorded
+   * while this client was away retires through the normal observation paths
+   * (or directly, when no observation can still see it), and an admission the
+   * Host never recorded retires as failed so the caller can safely resend.
+   */
+  async reconcilePendingAdmissions(): Promise<void> {
+    if (this.address !== undefined) return
+    for (const requestId of [...this.submissionSettlements.keys()]) {
+      await this.reconcileSubmission(requestId)
+    }
+  }
+
+  /**
+   * Query the durable admission facts for one echo and settle it accordingly.
+   * @param requestId - the echo identity from {@link beginSubmission}.
+   */
+  private async reconcileSubmission(requestId: SessionRequestId): Promise<void> {
+    const settlement = this.submissionSettlements.get(requestId)
+    if (settlement === undefined || settlement.retiring) return
+    const result = await this.remote.session.admission({ sessionId: this.sessionId, requestId })
+    if (!result.ok) return
+    if (!result.value.found) {
+      this.retireFailedSubmission(requestId)
+      return
+    }
+    if (settlement.admitted !== undefined || settlement.receipt !== undefined) return
+    // Durable admission exists. The reopened window or the repulled Inbox
+    // projection retires the echo with its attachment references; only when
+    // neither can still observe the message (consumed while this client was
+    // away) retire now, so the echo cannot outlive its receipt.
+    if (this.inboxHoldsRequest(requestId)) return
+    settlement.admitted = []
+    this.retireAdmittedSubmission(requestId)
+  }
+
+  /** Whether the current Inbox projection still holds the request's queued occurrence. */
+  private inboxHoldsRequest(requestId: SessionRequestId): boolean {
+    const inbox = this.projections.get('inbox') as InboxState | undefined
+    if (inbox === undefined) return false
+    return (['next-turn', 'next-step'] as const).some(target => inbox[target].some((message) => {
+      const source = message.source
+      return source.kind === 'user' && 'rpcId' in source && source.rpcId === requestId
+    }))
   }
 
   /**

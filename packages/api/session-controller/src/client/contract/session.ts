@@ -82,7 +82,10 @@ export interface ISession {
    * @param mode - 'queue' appends a turn; 'steer' interrupts the running one.
    * @param signal - optional caller cancellation for the complete admission round-trip.
    * @param requestId - identity from {@link beginSubmission}; a failed identified prompt retires its echo.
-   * @returns acceptance, or the business error (also mirrored into snapshot.promptError).
+   * @returns acceptance, or the business error (also mirrored into snapshot.promptError). A carrier
+   * loss on an identified prompt returns `session/admission-unknown` instead: the admission outcome
+   * is unknown, the echo stays pending, and reconciliation against the durable admission journal
+   * (`session/admission`, on return and after every reconnect) settles it.
    */
   prompt(
     content: PromptContentPart[],

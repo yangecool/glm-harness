@@ -284,7 +284,10 @@ export class ConversationController extends Service implements IConversation {
       throw error
     }
     const result = await session.prompt(content, mode, signal, submission.requestId)
-    if (!result.ok) return { kind: 'error' }
+    if (!result.ok && result.error.code !== 'session/admission-unknown') return { kind: 'error' }
+    // An admission-unknown outcome keeps the echo pending: the draft stays
+    // consumed and reconciliation through session/admission settles the
+    // retirement observed-or-failed below.
     if (retirement !== undefined && (await retirement).reason !== 'observed') return { kind: 'error' }
     return { kind: 'success' }
   }

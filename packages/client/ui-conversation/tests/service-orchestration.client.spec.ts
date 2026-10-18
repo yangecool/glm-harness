@@ -8,6 +8,7 @@ import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { makeTranslate, RemoteError, SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
+import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type {
   BeginSubmissionInput, PendingSubmissionRetirement,
 } from '@deepseek-ai/dsh-api-session-controller/client'
@@ -28,7 +29,7 @@ async function bench(maxConcurrentFileUploads = 2) {
   }
   const prompt = vi.fn((
     _content?: unknown, _mode?: unknown, _signal?: AbortSignal, _rpcId?: string,
-  ) => Promise.resolve({ ok: true as const, value: { accepted: true as const } }))
+  ): Promise<RemoteResult<{ accepted: true }>> => Promise.resolve({ ok: true as const, value: { accepted: true as const } }))
   const updateQueue = vi.fn(() => Promise.resolve({ ok: true as const, value: { accepted: true as const } }))
   const cancel = vi.fn(() => Promise.resolve({ ok: true as const, value: { accepted: true as const } }))
   const loadOlder = vi.fn(() => Promise.resolve())
@@ -541,6 +542,42 @@ describe('sendSession submission echo', () => {
       await expect(sending).resolves.toEqual({ kind: 'success' })
       expect(b.root.resolveDraftAttachments([attachment!.id])).toEqual([])
       expect(b.revoked).toHaveBeenCalledWith('blob:echo-1')
+    } finally {
+      b.restore()
+    }
+    await b.runtime.dispose()
+  })
+
+  it('an admission-unknown outcome keeps the echo pending until reconciliation settles it', async () => {
+    const b = await echoBench()
+    try {
+      const [attachment] = b.root.createDrafts(b.runtime.sessions.binding('s1')!.session.sessionId, [
+        new File([Uint8Array.of(1, 2, 3)], 'a.png', { type: 'image/png' }),
+      ])
+      const session = b.runtime.sessions.binding('s1')!.session
+      b.prompt.mockResolvedValueOnce({
+        ok: false as const,
+        error: new RemoteError('session/admission-unknown', 'carrier lost mid-round-trip', {
+          sessionId: session.sessionId,
+          requestId: 'req-echo' as never,
+        }),
+      })
+      let settled: 'error' | 'success' | undefined
+      const sending = b.root.sendSession(session, '未知结果', [attachment!.id], 'queue').then((outcome) => {
+        settled = outcome.kind
+        return outcome
+      })
+      await vi.waitFor(() => { expect(b.prompt).toHaveBeenCalledOnce() })
+      await Promise.resolve()
+      // The echo is the pending record: the send stays unsettled and the
+      // attachment is neither restored nor released while the outcome is unknown.
+      expect(settled).toBeUndefined()
+      expect(b.root.resolveDraftAttachments([attachment!.id])).toHaveLength(1)
+      expect(b.abandon).not.toHaveBeenCalled()
+      b.retire.onRetire?.({ reason: 'failed' })
+      await expect(sending).resolves.toEqual({ kind: 'error' })
+      expect(settled).toBe('error')
+      expect(b.root.resolveDraftAttachments([attachment!.id])).toHaveLength(1)
     } finally {
       b.restore()
     }

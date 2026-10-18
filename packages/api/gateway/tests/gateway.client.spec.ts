@@ -27,7 +27,9 @@ import type {
 } from '@deepseek-ai/dsh-typert-protocol'
 import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
 import type { ClientRemote } from '../src/client/index.ts'
-import { apply, inject, isRemoteFailure, RemoteStream } from '../src/client/index.ts'
+import {
+  apply, cancelledFailure, carrierFailure, inject, isCarrierFailure, isRemoteFailure, RemoteStream,
+} from '../src/client/index.ts'
 import {
   ClientUplinkQueue,
   RemoteStreamCarrierError,
@@ -3379,6 +3381,18 @@ async function withFakeWebSocket(
     else Object.defineProperty(globalThis, 'location', locationDescriptor)
   }
 }
+
+describe('carrier failure discrimination', () => {
+  it('recognizes carrierFailure outcomes and rejects host or sibling client failures', () => {
+    const carrier = carrierFailure('session/prompt', new TypeError('fetch failed'))
+    expect(isCarrierFailure(carrier.error)).toBe(true)
+    expect(isRemoteFailure(carrier.error)).toBe(true)
+    expect(isCarrierFailure(cancelledFailure('session/prompt', new Error('abort')).error)).toBe(false)
+    expect(isCarrierFailure(new RemoteError('gateway/internal', 'host-side internal failure', {}))).toBe(false)
+    expect(isCarrierFailure(new RemoteError('session/agent-busy', 'busy', { reason: 'busy' }))).toBe(false)
+    expect(isCarrierFailure(new Error('client api: session/prompt failed: not a RemoteError'))).toBe(false)
+  })
+})
 
 describe('Remote result decoders', () => {
   const schema = z.object({ data: z.instanceof(Uint8Array), offset: z.number() })

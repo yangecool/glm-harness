@@ -1,0 +1,5 @@
+gh-closure:
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+oxlint:
+Found 1 warning and 0 errors.
+Finished in 48.1s on 5764 files with 90 rules using 12 threads.

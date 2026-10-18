@@ -1,0 +1,40 @@
+{
+  "slice": "GH-006-D continuous execution and reattachment",
+  "date": "2026-10-18T14:49:46",
+  "driver": "scripts/gh-remote-reattach-verify.ts",
+  "service": "real resident gh-remote profile under the GH-006-B supervisor (supervised spawn, loopback GLM fixture streaming real SSE turns, guarded permission mode, synthetic key synthetic-reattach-key)",
+  "transport": "raw HTTP RPC + minimal /api/remote.mux WebSocket mux client (follow streams and the $events waterfall)",
+  "cases": [
+    {
+      "name": "turn-survives-client-drop",
+      "passed": true,
+      "detail": "seq@drop=2 seq@end=15 with the prompting client's connections destroyed"
+    },
+    {
+      "name": "reconnect-baseline-cursor",
+      "passed": true,
+      "detail": "snapshot cursor=15 first live append seq=16 (baseline+1, no gap, no replay)"
+    },
+    {
+      "name": "dual-connection-single-execution",
+      "passed": true,
+      "detail": "both connections accepted; exactly one user/message and one new turn/start for requestId reattach-three-1792306103207"
+    },
+    {
+      "name": "disconnect-never-cancels",
+      "passed": true,
+      "detail": "turn completed after a mid-follow observing connection was destroyed; fixture aborted=false"
+    },
+    {
+      "name": "explicit-cancel-stops",
+      "passed": true,
+      "detail": "turn/end 5ms after session/cancel from a fresh connection (fixture turn is 3200ms); reason={\"turn\":1,\"reason\":{\"kind\":\"aborted\",\"reason\":{\"kind\":\"user\"}}} fixtureAbort=false"
+    },
+    {
+      "name": "approval-waterfall-reattach",
+      "passed": true,
+      "detail": "ask seen, disconnect, redelivered (tool=bash), allowed-once executed the gated command (probe removed)=true"
+    }
+  ],
+  "passed": true
+}

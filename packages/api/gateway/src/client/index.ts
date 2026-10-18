@@ -834,6 +834,20 @@ export function carrierFailure(endpoint: string, error: unknown): Extract<Remote
 }
 
 /**
+ * Whether a Remote failure is a {@link carrierFailure} outcome rather than a Host
+ * answer: the request's admission result is unknown, so callers that can query
+ * a durable receipt must reconcile instead of treating the operation as failed.
+ * Recognizes the exact shape {@link carrierFailure} builds; the endpoint and
+ * thrown message are arbitrary, so only the framing is matched.
+ * @param error - a caught value or a failed result's error.
+ * @returns true when the value is a carrier-folded `gateway/internal` failure.
+ */
+export function isCarrierFailure(error: unknown): boolean {
+  return error instanceof RemoteError && error.code === 'gateway/internal'
+    && error.message.startsWith('client api: ') && error.message.includes(' failed: ')
+}
+
+/**
  * The error branch a call aborted by its caller folds into: `gateway/cancelled` with the carrier's throw as `cause`.
  * @param endpoint - `<namespace>/<method>` that was called.
  * @param cause - what the carrier threw when the signal aborted.

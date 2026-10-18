@@ -757,6 +757,8 @@ export class SessionManager {
    * Discard old projection cuts before new queries, including cold Sessions
    * absent from the process-local control baseline.
    * Opened Session follow streams resume independently through API Gateway.
+   * Submission echoes whose admission outcome a carrier loss left unknown
+   * reconcile against the durable journal here, never by blind resending.
    */
   handleConnected(): void {
     for (const store of this.projectionStores.values()) store.clear()
@@ -764,7 +766,8 @@ export class SessionManager {
     this.listInflight = null
     void this.refreshList()
     const parents = new Set(this.projectionLoads.keys())
-    for (const id of this.sessions.keys()) {
+    for (const [id, session] of this.sessions) {
+      void session.reconcilePendingAdmissions()
       const address = this.addresses.get(id)
       if (address !== undefined) parents.add(address.parentSessionId)
     }

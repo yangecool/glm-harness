@@ -1,0 +1,123 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.11 /disk/ssd1/codecache/non-git-workspaces/harness-dev/glm-harness/runtime
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > routes Remote events from the $events stream into the object layer and runs handleConnected once per generation
+[connection] connection lost, retry #1
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > keeps immediate control projections when the ready notification follows their baseline
+[connection] connection lost, retry #1
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > keeps immediate control projections when the ready notification follows their baseline
+[connection] connection lost, retry #1
+
+stderr | packages/api/session-controller/tests/client-apply.client.spec.ts > Session Controller Client apply > waits for a Host generation before retrying the control stream
+[connection] connection lost, retry #1
+
+ ✓ |thread-safe| packages/api/session-controller/tests/client-apply.client.spec.ts (7 tests) 585ms
+ ✓ |thread-safe| packages/api/session-controller/tests/sessions-service.client.spec.ts (45 tests) 938ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session.client.spec.ts (62 tests) 1108ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-models.host.spec.ts (26 tests) 1226ms
+     ✓ account login replaces a saved default only without another API key: false  885ms
+stderr | packages/api/gateway/tests/gateway.client.spec.ts > Remote stream client carrier lifecycle > keeps answering streams pending while event cleanup delays Connection recovery
+[connection] connection lost, retry #1
+
+ ✓ |thread-safe| packages/api/session-controller/tests/session-pending-submissions.client.spec.ts (37 tests) 422ms
+ ✓ |thread-safe| packages/api/session-controller/tests/projection-discovery.host.spec.ts (22 tests) 521ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/draft-document.client.spec.ts (66 tests) 857ms
+(node:569122) ExperimentalWarning: v8.queryObjects() is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |thread-safe| packages/client/ui-conversation/tests/assembly-surfaces.client.spec.tsx (5 tests) 423ms
+ ✓ |thread-safe| packages/api/session-controller/tests/manager.client.spec.ts (98 tests) 271ms
+ ✓ |thread-safe| packages/api/session-controller/tests/reference-ownership.client.spec.ts (17 tests) 335ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/skeleton.client.spec.tsx (27 tests) 589ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/queue-dock.client.spec.tsx (35 tests) 565ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/apply-inject.client.spec.tsx (15 tests) 545ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts (135 tests) 4102ms
+     ✓ releases sent uplink read results while the stream stays open  308ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/input-reference-submit.client.spec.ts (17 tests) 520ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-fork.host.spec.ts (25 tests) 275ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/input-matrix.client.spec.tsx (16 tests) 930ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/input-scenarios.client.spec.tsx (24 tests) 1440ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-presets.host.spec.ts (34 tests) 349ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/service-orchestration.client.spec.ts (33 tests) 1476ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-open-workspace-path.host.spec.ts (16 tests) 196ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-projections.host.spec.ts (24 tests) 453ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-history-journal.host.spec.ts (28 tests) 349ms
+ ✓ |thread-safe| packages/api/session-controller/tests/transport.client.spec.ts (244 tests) 4653ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-upload-file.host.spec.ts (22 tests) 298ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-cold.host.spec.ts (20 tests) 303ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/input-bar.client.spec.tsx (115 tests) 2317ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-search.host.spec.ts (26 tests) 449ms
+ ✓ |thread-safe| packages/api/session-controller/tests/media-references.host.spec.ts (22 tests) 234ms
+ ✓ |thread-safe| packages/api/session-controller/tests/subagent-catalog.host.spec.ts (10 tests) 215ms
+ ✓ |thread-safe| packages/api/session-controller/tests/remote-access.host.spec.ts (7 tests) 182ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/keymap-routing.client.spec.tsx (10 tests) 202ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/control-row-layout.client.spec.ts (4 tests) 144ms
+ ✓ |thread-safe| packages/api/session-controller/tests/controller.host.spec.ts (6 tests) 147ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/draft-hub.client.spec.ts (7 tests) 337ms
+ ✓ |thread-safe| packages/api/session-controller/tests/projection-store.client.spec.ts (21 tests) 123ms
+ ✓ |thread-safe| packages/api/session-controller/tests/list-scheduling.host.spec.ts (27 tests) 123ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx (6 tests) 273ms
+ ✓ |thread-safe| packages/api/session-controller/tests/agent.host.spec.ts (14 tests) 107ms
+ ✓ |thread-safe| packages/api/session-controller/tests/control-queue.host.spec.ts (7 tests) 75ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/context-meter.client.spec.tsx (9 tests) 248ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/user-text.client.spec.tsx (15 tests) 232ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/user-text-registry.client.spec.ts (30 tests) 47ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/user-text-scheduling.client.spec.ts (27 tests) 88ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-queue-attachment.host.spec.ts (20 tests) 95ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/stop-shortcut.client.spec.ts (17 tests) 122ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-rename.host.spec.ts (4 tests) 75ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/reference-activation.client.spec.ts (2 tests) 130ms
+ ✓ |thread-safe| packages/api/session-controller/tests/admission.host.spec.ts (9 tests) 62ms
+ ✓ |thread-safe| packages/api/session-controller/tests/commands-create-fork.host.spec.ts (13 tests) 94ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-skills.host.spec.ts (13 tests) 74ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/enter-behavior-row.client.spec.tsx (2 tests) 216ms
+ ✓ |thread-safe| packages/api/session-controller/tests/transport.host.spec.ts (20 tests) 96ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/todo-panel.client.spec.tsx (9 tests) 247ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-list-blank.host.spec.ts (2 tests) 29ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/user-text-whitespace.client.spec.ts (19 tests) 90ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/editor-focus.client.spec.ts (5 tests) 209ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-group-store.client.spec.ts (19 tests) 27ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/async-insertion.client.spec.ts (2 tests) 85ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/config.host.spec.ts (2 tests) 33ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/safari.client.spec.ts (11 tests) 41ms
+ ✓ |thread-safe| packages/api/session-controller/tests/archived-session-gate.host.spec.ts (4 tests) 21ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-groups.client.spec.ts (12 tests) 36ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-store.client.spec.ts (22 tests) 33ms
+ ✓ |thread-safe| packages/api/session-controller/tests/time-zone.client.spec.ts (3 tests) 19ms
+ ✓ |thread-safe| packages/api/session-controller/tests/inbox-projection.client.spec.ts (7 tests) 16ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/views-type-chain.client.spec.tsx (2 tests) 12ms
+ ✓ |thread-safe| packages/api/session-controller/tests/session-remote-rejection.client.spec.ts (2 tests) 16ms
+ ✓ |thread-safe| packages/api/session-controller/tests/scope.client.spec.ts (6 tests) 14ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/submit-machine.client.spec.ts (46 tests) 20ms
+ ✓ |thread-safe| packages/api/session-controller/tests/assistant-stream.client.spec.ts (10 tests) 14ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/system-prompt.client.spec.ts (7 tests) 10ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/user-text-reference-composition.client.spec.ts (8 tests) 18ms
+ ✓ |thread-safe| packages/api/session-controller/tests/file-references.host.spec.ts (1 test) 7ms
+ ✓ |thread-safe| packages/api/session-controller/tests/lineage.client.spec.ts (5 tests) 9ms
+ ✓ |thread-safe| packages/api/session-controller/tests/history-records.client.spec.ts (3 tests) 5ms
+ ✓ |thread-safe| packages/api/session-controller/tests/notifier.client.spec.ts (9 tests) 8ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/request-inspection.client.spec.ts (7 tests) 8ms
+ ✓ |thread-safe| packages/api/session-controller/tests/client-contract.client.spec.ts (6 tests) 8ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/composer-blocks.client.spec.ts (1 test) 5ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/width-handle-styles.client.spec.ts (3 tests) 4ms
+ ✓ |thread-safe| packages/api/session-controller/tests/assistant-stream.host.spec.ts (1 test) 6ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/view-selection.client.spec.ts (2 tests) 3ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/stop-sequence.client.spec.ts (8 tests) 9ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/reference-chip.client.spec.tsx (3 tests) 30ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/lexical-editor-core.client.spec.tsx (28 tests) 28ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-registry.client.spec.ts (11 tests) 42ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-assembler.client.spec.ts (48 tests) 50ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/conversation-routing.client.spec.ts (17 tests) 61ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/selection-survival.client.spec.tsx (3 tests) 45ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/historical-images.client.spec.ts (4 tests) 33ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/submission-policy.client.spec.ts (5 tests) 6ms
+ ✓ |thread-safe| packages/client/ui-conversation/tests/image-labels.client.spec.ts (3 tests) 3ms
+
+ Test Files  93 passed (93)
+      Tests  1929 passed (1929)
+   Start at  14:49:23
+   Duration  11.65s (transform 33.10s, setup 3.21s, import 84.56s, tests 31.60s, environment 16.95s)

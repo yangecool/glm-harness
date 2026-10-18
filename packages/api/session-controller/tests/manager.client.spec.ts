@@ -14,6 +14,7 @@ import {
   createClientTest, type ClientTestFixtures, webApp,
 } from '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
 import type {} from '@deepseek-ai/dsh-session-title/client'
+import type { SessionAdmissionValue } from '../src/types.ts'
 import { SessionManager } from '../src/client/sessions/manager.ts'
 import { ClientSessions } from '../src/client/sessions/service.ts'
 import type { SessionRemotes } from '../src/client/sessions/remotes.ts'
@@ -671,6 +672,24 @@ describe('list lifecycle', () => {
         },
       })
       expect(manager.getListSnapshot().items[0]?.title).toBe('Durable')
+    } finally {
+      await manager.dispose()
+    }
+  })
+
+  it('reconnect reconciles every retained session unsettled against the durable admission journal', async ({ mock, remote }) => {
+    const manager = makeManager(mock, remote)
+    try {
+      manager.get(S1).beginSubmission({ mode: 'queue', text: '一', attachments: [] })
+      manager.get(S2).beginSubmission({ mode: 'queue', text: '二', attachments: [] })
+      remote.session.list.mockResolvedValue(ok({ items: [] as never[] }))
+      const answers: SessionId[] = []
+      remote.session.admission.mockImplementation(async (request) => {
+        answers.push(request.sessionId)
+        return ok<SessionAdmissionValue>({ found: false })
+      })
+      manager.handleConnected()
+      await vi.waitFor(() => { expect(answers.sort()).toEqual([S1, S2].sort()) })
     } finally {
       await manager.dispose()
     }
