@@ -1,0 +1,167 @@
+{
+  "rescope": [
+    {
+      "file": "apps/cli/tests/optional-bundle-transitions.e2e.ts",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "apps/web/tests/agent-preset-selection.e2e.ts",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "apps/web/tests/developer-tools-settings.e2e.ts",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/subsystems/schedule.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/subsystems/schedule.zh.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.zh.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.zh.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/user/guide/schedule.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "docs/user/guide/schedule.zh.md",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/bundle/web-app/cordis.patch.yml",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/client/ui-agent-preset/src/client/CreatePluginMenuItem.tsx",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/client/ui-agent-preset/tests/components.client.spec.tsx",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/client/ui-agent-preset/tests/create-plugin-menu-item.client.spec.tsx",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/client/ui-agent-preset/tests/section-store.client.spec.ts",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "snapshots/session/cordis-inspect-liveness/client-fixture.mjs",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    },
+    {
+      "file": "snapshots/session/cordis-inspect-timeout/client-fixture.mjs",
+      "headEqualsWorktree": true,
+      "originEqualsWorktree": true
+    }
+  ],
+  "unknownCasts": [
+    {
+      "file": "packages/api/session-controller/tests/admission.host.spec.ts",
+      "fingerprint": "0fb87ef6d3939a87beedadc88b560a94a0bb1be22a6bfcff38b72f98c6c69c1c",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/api/session-controller/tests/admission.host.spec.ts",
+      "fingerprint": "80b5f485181cd3715865af5372265c92a38e6e023fcaab96b4da05aeba24aede",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/api/session-controller/tests/commands-queue-attachment.host.spec.ts",
+      "fingerprint": "fdac161bde20ca036dd7dba9ce98679d57b6892828673805049dc6d2fa303928",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/api/session-controller/tests/commands-upload-file.host.spec.ts",
+      "fingerprint": "cf78262f25d3a8bec3fbd9900337caed66e3ae87d97757c43c32ff15ad416539",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/glm/account/tests/account.spec.ts",
+      "fingerprint": "7fe58280287ff63d40e979e72329f975e11015a95e9a8eec207a5a78748d3c89",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/glm/model-glm/src/adapter.ts",
+      "fingerprint": "9d020522b16d569e10aad9fd6acaeb9e95007f86f64effbeb816daceaa5a8b27",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/glm/model-retry/src/index.ts",
+      "fingerprint": "3df219493866b820bfcb24557fc4b067accff5bae81d87ffd15845a748b4e42a",
+      "presentAtHead": true
+    },
+    {
+      "file": "packages/glm/model-retry/src/index.ts",
+      "fingerprint": "d7af3e0d46b009805a42e6bbdf136c90aa8506bba0a1a461abb722976dcb30b0",
+      "presentAtHead": true
+    },
+    {
+      "file": "scripts/gh-account-verify.ts",
+      "fingerprint": "1e6fa38d9618ac41761bbc464f856c90dc50e4378ba5f92e65cbc8f3fb151f48",
+      "presentAtHead": true
+    },
+    {
+      "file": "scripts/gh-plan-review-verify.ts",
+      "fingerprint": "1e6fa38d9618ac41761bbc464f856c90dc50e4378ba5f92e65cbc8f3fb151f48",
+      "presentAtHead": true
+    },
+    {
+      "file": "scripts/gh-remote-joint-verify.ts",
+      "fingerprint": "1e6fa38d9618ac41761bbc464f856c90dc50e4378ba5f92e65cbc8f3fb151f48",
+      "presentAtHead": true
+    },
+    {
+      "file": "scripts/gh-remote-product-verify.ts",
+      "fingerprint": "1e6fa38d9618ac41761bbc464f856c90dc50e4378ba5f92e65cbc8f3fb151f48",
+      "presentAtHead": true
+    },
+    {
+      "file": "scripts/gh-remote-reattach-verify.ts",
+      "fingerprint": "1e6fa38d9618ac41761bbc464f856c90dc50e4378ba5f92e65cbc8f3fb151f48",
+      "presentAtHead": true
+    }
+  ],
+  "assertedNewUnknownCasts": 0
+}

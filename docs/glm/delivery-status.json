@@ -921,5 +921,58 @@
     "remoteUnattended": "daily-primary prerequisites + GH-006-G full lifecycle/fencing/leases + GH-011",
     "invariant": "Stable running N artifacts and home remain independent of mutable N+1 source/build/candidate. No in-place self replacement.",
     "credentialBoundary": "Native API key may qualify first local path; official OAuth/PAT/Coding Plan remains a separate required product task."
+  },
+  "review20261019": {
+    "status": "confirmed defects fixed and validated; ready for authorized push",
+    "reviewedThrough": "c6a87e08ddbfce3a4de347a6e979b15a255a8a8e",
+    "reviewedIncrementalCommits": 5,
+    "fixCommit": "af3164fc2dae0cfab0b406fb64cb442d21f5b044",
+    "fixed": [
+      "RV26 account generation/durable ordering",
+      "RV27 bounded exchanges and teardown",
+      "RV28 authentication/drain failure and admission restoration",
+      "RV29 in-flight prompt ownership through durable ACK",
+      "RV30 runtime id exclusive persistence and lifecycle owner identity",
+      "RV31 Session-scoped, presentation-time plan revisions and stale approvals",
+      "RV32 verified bootstrap stop and awaited plugin child teardown",
+      "RV33 explicit product metadata failure and path validation",
+      "RV34 conservative staging GC and supervisor release protection",
+      "workspace manifest/source alias and product-use verification integration",
+      "archive smoke cleanup and safe variant path"
+    ],
+    "evidence": "artifacts/gh-validation/review-20261019/results.json",
+    "verification": {
+      "regressionFiles": 20,
+      "regressionTests": 334,
+      "sharedFiles": 4,
+      "sharedTests": 53,
+      "buildGates": 9,
+      "docSyncPassed": 43,
+      "docQuickPassed": 21,
+      "lintErrors": 0,
+      "profileSmokes": 5,
+      "accountFixtureCases": 4,
+      "planFixtureCases": 3,
+      "lifecycleFixtureCases": 10,
+      "opensshDriverCases": 13,
+      "opensshQualification": "13 driver cases pass; rollback accepts a killed control command after pointer movement and does not qualify successful control-command return, full transaction, or recovery. Separate readiness receipts/owner lifecycle remain required in GH-006-G/011."
+    },
+    "remainingHygiene": {
+      "aggregateInitial": {
+        "passed": 17,
+        "failed": 4
+      },
+      "repaired": [
+        "Cordis config: 280 files",
+        "Product reachability: actual GH_PROFILES roots; 285 default and 33 optional packages"
+      ],
+      "remaining": [
+        "rescope-vendor: 19 unmodified existing files",
+        "no-unknown-casts: 13 exact assertion fingerprints already present at reviewed HEAD"
+      ],
+      "existingEvidence": "existing-hygiene.json; source files unchanged or exact fingerprints confirmed, no baseline allowance expanded"
+    },
+    "next": "GH-008-C local supervised self-development qualification; first GH-003-B2 real GLM + GH-004-C frozen product artifact and runtime/candidate isolation. No-key prerequisite work can proceed independently.",
+    "windowsRelease": "deferred by user; not a handoff gate"
   }
 }
