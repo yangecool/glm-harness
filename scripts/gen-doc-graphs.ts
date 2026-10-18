@@ -589,6 +589,20 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Folds the durable permission/mode selection with legacy migration, states the live mode in the runtime context, registers /permission, and enforces the yolo/guarded/build decision order plus the plan read-only gate in tools/pre-execute.',
   },
   {
+    key: 'ghAccount',
+    pkg: 'glm/account',
+    title: 'GH account owner',
+    mode: 'core',
+    note: 'Owns per-domain OAuth authorization-code + PKCE logins with credentials-seam grant persistence, single-flight access refresh with per-caller cancellation, and per-domain epochs that discard superseded results.',
+  },
+  {
+    key: 'ghProjectToken',
+    pkg: 'glm/account',
+    title: 'GH project tokens',
+    mode: 'core',
+    note: 'Mints and caches short-term project tokens per domain and project, drops exactly the transport-rejected token, and invalidates the cache the moment the account generation moves.',
+  },
+  {
     key: 'agentPresets',
     pkg: 'agent-preset-registry',
     title: 'Per-session agent composition',

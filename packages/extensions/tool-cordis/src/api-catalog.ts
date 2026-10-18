@@ -1206,6 +1206,70 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'ghAccount',
+    summary: 'The account lifecycle service.',
+    description: 'The account lifecycle service. One instance per process tree; the resident service, the desktop, and the CLI all compose it the same way.',
+    methods: [
+      {
+        signature: 'readonly watchers: Array<(domain: GhAccountDomain) => void> = []',
+        description: 'Change notifications for snapshot surfaces.',
+        parameters: [],
+      },
+      {
+        signature: 'readonly hydrated: Promise<void>',
+        description: 'Cold-start hydration of persisted grants; awaits nothing at construction time.',
+        parameters: [],
+      },
+      {
+        signature: 'configuredDomains(): GhAccountDomain[]',
+        description: 'List the configured domains.',
+        parameters: [],
+        returns: 'every domain this owner was constructed with.',
+      },
+      {
+        signature: 'domainConfigOf(domain: GhAccountDomain): GhAccountDomainConfig',
+        description: 'One domain\'s endpoint configuration, for owners that mint derived tokens.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }],
+        returns: 'the endpoint/client configuration the domain was constructed with.',
+      },
+      {
+        signature: 'epochOf(domain: GhAccountDomain): number',
+        description: 'The domain\'s current generation. Every login and logout bumps it, so derived-credential owners compare it against the generation their token was minted under and drop tokens a later generation superseded.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }],
+        returns: 'the domain\'s current generation counter.',
+      },
+      {
+        signature: 'snapshot(domain: GhAccountDomain): GhAccountSnapshot',
+        description: 'Public facts for one domain; token-free by construction.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }],
+        returns: 'the domain\'s account identity and expiry facts, logged-out included.',
+      },
+      {
+        signature: 'beginLogin(domain: GhAccountDomain, redirectUrl: string): { verificationUrl: string; expiresAt: number }',
+        description: 'Begin one interactive login: build the PKCE pair and return the authorization URL. The domain keeps the verifier; completeLogin finishes the exchange.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }, { name: 'redirectUrl', description: 'the OAuth redirect_uri the authorization round-trip uses.' }],
+        returns: 'the user-facing verification URL and the pending login\'s expiry.',
+      },
+      {
+        signature: 'async completeLogin(domain: GhAccountDomain, code: string, returnedState: string, redirectUrl: string): Promise<LoginOutcome>',
+        description: 'Complete one login by exchanging the authorization code. The verifier and CSRF state must match the pending login; a completed exchange bumps the epoch, superseding every in-flight refresh from the previous grant.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }, { name: 'code', description: 'the authorization code the redirect carried.' }, { name: 'returnedState', description: 'the CSRF state the redirect carried back.' }, { name: 'redirectUrl', description: 'the redirect_uri the code was issued for.' }],
+        returns: 'the logged-in snapshot.',
+      },
+      {
+        signature: 'async logout(domain: GhAccountDomain): Promise<void>',
+        description: 'Drop one domain\'s grant and supersede every in-flight operation.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }],
+      },
+      {
+        signature: 'async accessToken(domain: GhAccountDomain, signal?: AbortSignal): Promise<string>',
+        description: 'A valid access token for the domain, refreshing when due. Concurrent callers share one refresh; each caller\'s abort stops only that caller\'s wait, and the shared exchange runs to completion for the others. A result from a superseded generation is discarded as stale.',
+        parameters: [{ name: 'domain', description: 'the account domain.' }, { name: 'signal', description: 'the caller\'s own cancellation.' }],
+        returns: 'a currently valid access token.',
+      },
+    ],
+  },
+  {
     key: 'ghPermissions',
     summary: '`ctx.ghPermissions`: the durable mode selection, its narration and prompt statement, the `/permission` command, and the executor-level gate.',
     description: '`ctx.ghPermissions`: the durable mode selection, its narration and prompt statement, the `/permission` command, and the executor-level gate.',
@@ -1226,6 +1290,36 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'set(agent: Agent, mode: GhPermissionMode): void',
         description: 'Switch one live agent\'s mode: append the durable selection and narrate the change for the next model step. Switching does not touch an in-flight call — already-dispatched tools keep their decision.',
         parameters: [{ name: 'agent', description: 'the live agent whose mode changes.' }, { name: 'mode', description: 'the new effective mode.' }],
+      },
+    ],
+  },
+  {
+    key: 'ghProjectToken',
+    summary: 'The PAT owner.',
+    description: 'The PAT owner. Composed wherever the account owner is; the GLM route consults it before the static key path.',
+    methods: [
+      {
+        signature: 'mintCount(): number',
+        description: 'Total mints served since process start.',
+        parameters: [],
+        returns: 'the mint counter; deliberately carries no token material.',
+      },
+      {
+        signature: 'async resolvePat(domain: GhAccountDomain, projectId: string, signal?: AbortSignal): Promise<string>',
+        description: 'Resolve one request-scoped PAT, minting or re-minting as due.',
+        parameters: [{ name: 'domain', description: 'the account domain the project belongs to.' }, { name: 'projectId', description: 'the personal or team project key id.' }, { name: 'signal', description: 'the caller\'s per-attempt cancellation.' }],
+        returns: 'the bearer token for exactly one physical request.',
+      },
+      {
+        signature: 'rejectPat(token: string): void',
+        description: 'Drop a rejected PAT. The transport calls this on an authorization rejection carrying the token it used; the next resolution mints fresh.',
+        parameters: [{ name: 'token', description: 'the token the server rejected.' }],
+      },
+      {
+        signature: 'patFacts(domain: GhAccountDomain): { projectId: string; expiresAt: number; mints: number } | null',
+        description: 'Whether a cached PAT is currently valid for the domain+project (surfaces only).',
+        parameters: [{ name: 'domain', description: 'the account domain.' }],
+        returns: 'token-free cache facts, or null when nothing valid is cached.',
       },
     ],
   },
@@ -5606,6 +5700,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GenericResultView',
     declaration: 'export interface GenericResultView {\n    card: \'generic\';\n    title?: string;\n    content?: ContentBlock[];\n}',
+  },
+  {
+    name: 'GhAccountDomain',
+    declaration: 'export type GhAccountDomain = \'bigmodel\' | \'zai\';',
+  },
+  {
+    name: 'GhAccountDomainConfig',
+    declaration: 'export interface GhAccountDomainConfig {\n    domain: GhAccountDomain;\n    authorizeUrl: string;\n    tokenUrl: string;\n    clientId: string;\n    scope?: string;\n    pollMs?: number;\n}',
+  },
+  {
+    name: 'GhAccountSnapshot',
+    declaration: 'export interface GhAccountSnapshot {\n    domain: GhAccountDomain;\n    accountId: string;\n    plan: string | null;\n    epoch: number;\n    accessExpiresAt: number;\n}',
   },
   {
     name: 'GhPermissionMode',

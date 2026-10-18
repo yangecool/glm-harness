@@ -175,6 +175,9 @@ flowchart LR
   svc_planMode["ctx.planMode<br/>Plan collaboration state"]
   pkg_glm_permissions["glm/permissions"]
   svc_ghPermissions["ctx.ghPermissions<br/>GH permission modes"]
+  pkg_glm_account["glm/account"]
+  svc_ghAccount["ctx.ghAccount<br/>GH account owner"]
+  svc_ghProjectToken["ctx.ghProjectToken<br/>GH project tokens"]
   pkg_agent_preset_registry["agent-preset-registry"]
   svc_agentPresets["ctx.agentPresets<br/>Per-session agent composition"]
   pkg_commands["commands"]
@@ -359,6 +362,8 @@ flowchart LR
   pkg_fs_local --> svc_fs
   pkg_fs_sandbox --> svc_fs
   pkg_fs_ssh --> svc_fs
+  pkg_glm_account --> svc_ghAccount
+  pkg_glm_account --> svc_ghProjectToken
   pkg_glm_permissions --> svc_ghPermissions
   pkg_goal --> svc_goals
   pkg_hmr --> svc_hmr
@@ -674,6 +679,8 @@ flowchart LR
 | `ctx.tools` | `core` | [`tools`](../packages/core/tools) | - | [`agent-loop`](../packages/core/agent-loop), [`tool-ask-user`](../packages/interaction/tool-ask-user), [`tool-bash`](../packages/shell/tool-bash), [`tool-cordis`](../packages/extensions/tool-cordis), [`tool-fs`](../packages/fs/tool-fs), [`tool-terminal`](../packages/experimental/tool-terminal), [`tool-skill`](../packages/skill/tool-skill), [`tool-subagent`](../packages/subagent/tool-subagent), [`tool-todo`](../packages/todo/tool-todo), [`tool-web`](../packages/web/tool-web) | - | 注册能力，负责 PTC mode 传输，并让调用依次经过策略前处理、单调守卫、环绕分派、策略后处理和最终结果观测。 |
 | `ctx.userQuestions` | `seam` | [`user-questions`](../packages/interaction/user-questions) | - | [`tool-ask-user`](../packages/interaction/tool-ask-user) | - | UI 前端提供当前生效的人工回答提供方；tool-ask-user 在提供方无关的 ask() promise 上暂停工具调用。 |
 | `ctx.ghPermissions` | `core` | `glm/permissions` | - | - | - | 折叠持久的 permission/mode 选择并迁移旧预设，在运行时上下文声明当前模式，注册 /permission，并在 tools/pre-execute 执行 yolo/guarded/build 判定顺序与 Plan 只读门。 |
+| `ctx.ghAccount` | `core` | `glm/account` | - | - | - | 按域 OAuth 授权码 + PKCE 登录、credentials seam grant 持久化、单飞访问刷新与按调用者取消，以及丢弃被超越结果的按域 epoch。 |
+| `ctx.ghProjectToken` | `core` | `glm/account` | - | - | - | 按域与 project 铸造/缓存短时项目令牌，只丢弃被传输拒绝的令牌，账号代数移动即令缓存失效。 |
 | `ctx.planMode` | `core` | [`plan-mode`](../packages/plan/plan-mode) | - | - | - | 折叠已记录的计划／模式状态，在轮次边界刷新用户选择，渲染由部署方拥有的指导信息，注册 /plan，并在状态转换期间保持计划退出 schema 稳定。 |
 | `ctx.agentPresets` | `core` | [`agent-preset-registry`](../packages/preset/agent-preset-registry) | - | - | - | 立即挂载 YAML 声明的 preset 版本，把 Agent 和冷读取绑定到作用域内的贡献，并保留已替换的版本，直到最后一个使用者释放它。 |
 | `ctx.commands` | `core` | [`commands`](../packages/interaction/commands) | - | - | - | 插件注册直接面向人的命令，而不会把调用发送给模型。 |

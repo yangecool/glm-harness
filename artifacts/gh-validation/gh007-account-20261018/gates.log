@@ -1,0 +1,7 @@
+== gh-closure ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+== readme gate ==
+verify-package-readme-model-experience: 351 README(s) checked (9 audited omissions, 143 structured, 242 model-context entries, 441 KV-cache fields, 18 fenced system-prompt entries, 29 catalog-linked tool-schema entries, 126 explained none, 73 indirect, 55 verbatim markdown blocks), all conform.
+== oxlint ==
+Found 0 warnings and 0 errors.
+Finished in 2.1s on 19 files with 90 rules using 14 threads.

@@ -19,6 +19,7 @@ import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-workspace'
+import { GhAccountRpcService } from './account-rpc.ts'
 import type { GhRemoteActivity, GhRemoteIdentity } from './types.ts'
 
 /** Identity facts fixed for the process lifetime. */
@@ -91,6 +92,7 @@ export class GhRemoteApp extends Service {
     super(ctx, 'ghRemoteApp')
     this.printUrl = config.printUrl
     this.ctx.plugin(GhRemoteIdentityService)
+    this.ctx.plugin(GhAccountRpcService)
     // The disabled web-runtime row leaves the webserver fallback seat and the
     // root token exchange unclaimed. Claim the seat with the minimum a headless
     // RPC service needs: authorizeIndex mints the session cookie from the root

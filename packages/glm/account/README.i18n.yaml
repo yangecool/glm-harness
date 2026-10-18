@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/glm/account/README.md
+/:
+  en: 3ab8bd80f3b01c81
+  zh: a3154170de5752c2
+/glm-harness-gh-account:
+  en: aa663f16ddfcea11
+  zh: 5d5a36efa8fea476
+/glm-harness-gh-account/summary:
+  en: b57a9bb2e40ffaac
+  zh: 1adde1f48b12e73b
+/glm-harness-gh-account/table-of-contents:
+  en: 80b31a934611cb4a
+  zh: 66eae4b2641b173f
+/glm-harness-gh-account/use-this-package:
+  en: dbba86d22ba2fc28
+  zh: 9da32c6532d41aed
+/glm-harness-gh-account/use-this-package/when-to-choose-it:
+  en: 1b5158f90a52992e
+  zh: a26e3461bbc00f2b
+/glm-harness-gh-account/use-this-package/minimal-configuration:
+  en: 58fa0c3d405d8adb
+  zh: a10cb8e9e24ee52e
+/glm-harness-gh-account/understand-the-implementation:
+  en: 389667b59310ee24
+  zh: 285f40be1e128cea
+/glm-harness-gh-account/further-exploration:
+  en: ce20b4cb3b01dc9a
+  zh: 3d1749a386be9717
+/glm-harness-gh-account/known-limitations-and-deferred-work:
+  en: a836f492fd2ce40f
+  zh: e7f9ba3511ccb25d
+/glm-harness-gh-account/known-limitations-and-deferred-work/dev-note:
+  en: 23467ebfa53df545
+  zh: 77ec8670357d2b4a

@@ -553,6 +553,33 @@
       "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
     },
     {
+      "id": "GH-007",
+      "title": "账号/PAT 与远端配置：OAuth+PKCE、单飞刷新、epoch、PAT 生命周期",
+      "planRefs": [
+        "E02.4",
+        "E02.7",
+        "E04.5",
+        "F01-F04",
+        "F30",
+        "F48",
+        "F49",
+        "D01"
+      ],
+      "owner": "账号/PAT 与模型路由",
+      "status": "complete-slice",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "packages/glm/account(新):ghAccount 按域 OAuth 授权码+PKCE S256、credentials seam 持久 grant、单飞刷新、按域 epoch(stale-generation)、epochOf 访问器",
+        "packages/glm/account pat:ghProjectToken 短时 PAT 铸造/30s 余量缓存/拒绝即丢弃/epoch 守卫(登出立即失效)",
+        "model-glm:preferAccountPat/accountDomain/patProjectId 路由;PAT 优先、not-logged-in 显式回落、MISSING_CREDENTIAL 显式失败;onAuthRejection 懒查找",
+        "remote-app:ghAccountRpc(status/beginLogin/completeLogin/logout)+Typert 边界类型",
+        "scripts/gh-account-verify.ts:真实监护服务+回环 OAuth/PAT/聊天 fixture 全流验收 4/4"
+      ],
+      "evidence": "artifacts/gh-validation/gh007-account-20261018",
+      "notes": "回环 fixture 端点;真实 BigModel/Z.AI 套餐联调(D01)未运行;团队/个人 project 真实权益校验属服务侧;桌面账号 UI 随 GH-012;远端配置来源随 GH-011。验收中修复两个真实缺陷:登出后缓存 PAT 存活(epoch 守卫)、驱动窗口陈旧判定(awaitNextTurn 基线 seq)",
+      "unitTests": "account 11 + model-glm 46 = 57 passed;typecheck 5/5;oxlint 0;gh-closure clean"
+    },
+    {
       "id": "GH-006-G",
       "title": "产品插件/profile、制品和生命周期事务收口",
       "status": "not-started",

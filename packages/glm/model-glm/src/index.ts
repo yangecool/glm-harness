@@ -35,11 +35,32 @@ export const inject = ['llm']
 /** The provider route this adapter owns; `agent-default-model` names it. */
 export const PROVIDER = 'glm'
 
+/** The PAT owner's face this route consults; structurally typed so the account package stays optional. */
+interface GhProjectTokenOwner {
+  resolvePat(domain: 'bigmodel' | 'zai', projectId: string, signal?: AbortSignal): Promise<string>
+  rejectPat(token: string): void
+}
+
 export function apply(ctx: Context, config: Config): void {
   const options = (): GlmConnectionOptions => resolveAdapterOptions(plainOptions(config), launchEnvironmentOf(ctx))
   options()
 
   const resolveApiKey = async (connection: GlmConnectionOptions): Promise<string> => {
+    // The account path first: when PAT preference is on and an account is
+    // logged in, each physical attempt carries a fresh-enough short-term
+    // project token. A logged-out domain falls through to the static key
+    // path below, never to an upstream fallback.
+    const plain = plainOptions(config)
+    if (plain.preferAccountPat === true) {
+      const tokens = ctx.get('ghProjectToken') as GhProjectTokenOwner | undefined
+      if (tokens !== undefined) {
+        try {
+          return await tokens.resolvePat(plain.accountDomain ?? 'bigmodel', plain.patProjectId ?? '')
+        } catch (error) {
+          if ((error as { code?: string }).code !== 'gh-account/not-logged-in') throw error
+        }
+      }
+    }
     const ref = connection.apiKeyEnv
     const credentials = ctx.get('credentials')
     if (credentials !== undefined) {
@@ -56,7 +77,14 @@ export function apply(ctx: Context, config: Config): void {
     )
   }
 
-  ctx.llm.registerAdapter([PROVIDER], new GlmChatAdapter({ options, resolveApiKey }))
+  ctx.llm.registerAdapter([PROVIDER], new GlmChatAdapter({
+    options,
+    resolveApiKey,
+    onAuthRejection: (credential: string): void => {
+      const tokens = ctx.get('ghProjectToken') as GhProjectTokenOwner | undefined
+      tokens?.rejectPat(credential)
+    },
+  }))
   ctx.llm.registerConfigurableProviders([
     { provider: PROVIDER, displayName: 'GLM', settingsNs: ctx.fiber.entry?.options.id ?? name, settingsPath: [] },
   ])

@@ -63,6 +63,14 @@
     - id: model-retry
       name: '@glm-harness/gh-model-retry'
 
+    # The GH account and project-token owner: OAuth login/refresh over the
+    # two service domains and request-level short-term PAT resolution. No
+    # domain is configured in the base row; without an account every
+    # non-model feature still works and model calls fall through to the
+    # static key path (or fail explicitly when none is stored).
+    - id: gh-account
+      name: '@glm-harness/gh-account'
+
     # The GLM Harness model identity and work policy. The system-prompt row
     # below drops the upstream harness identity, so this plugin owns it: the
     # sections name no tool or platform and dispose with the plugin.

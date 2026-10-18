@@ -4558,6 +4558,36 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-workspace-changes -->
 
+<!-- BEGIN GENERATED config-catalog:@glm-harness/gh-account -->
+<a id="glm-harnessgh-account"></a>
+
+## `@glm-harness/gh-account`
+
+- `inject`: `credentials`
+- `source`: [`packages/glm/account/src/index.ts:41`](../packages/glm/account/src/index.ts)
+
+```ts config-catalog
+/** One domain row's configuration. */
+export interface Config {
+  /** The account service domains this instance serves. */
+  domains: Array<{
+    /** The service domain this row configures. */
+    domain: 'bigmodel' | 'zai'
+    /** The domain's OAuth authorization endpoint. */
+    authorizeUrl: string
+    /** The domain's OAuth token endpoint; PATs mint here too. */
+    tokenUrl: string
+    /** The registered OAuth client id. */
+    clientId: string
+    /** Extra scopes appended to the authorization request, when the domain needs them. */
+    scope?: string
+    /** Poll cadence for a pending login's completion, milliseconds. */
+    pollMs?: number
+  }>
+}
+```
+<!-- END GENERATED config-catalog:@glm-harness/gh-account -->
+
 <!-- BEGIN GENERATED config-catalog:@glm-harness/gh-model-glm -->
 <a id="glm-harnessgh-model-glm"></a>
 
@@ -4580,6 +4610,12 @@ export interface Config {
   requestTimeoutMs: Volatile<number>
   /** Model-request retry policy captured with each connection generation. */
   retryPolicy: Volatile<RetryPolicyConfig | undefined>
+  /** Prefer a short-term account PAT over the static key when an account is logged in. */
+  preferAccountPat: Volatile<boolean>
+  /** The account domain PAT resolution uses when {@link preferAccountPat} is on. */
+  accountDomain: Volatile<'bigmodel' | 'zai'>
+  /** The personal or team project key id PATs are minted for. */
+  patProjectId: Volatile<string>
 }
 ```
 <!-- END GENERATED config-catalog:@glm-harness/gh-model-glm -->
@@ -4648,7 +4684,7 @@ export interface PermissionRule {
 ## `@glm-harness/gh-remote-app`
 
 - `inject`: `webServer` · `connection`
-- `source`: [`packages/glm/remote-app/src/index.ts:73`](../packages/glm/remote-app/src/index.ts)
+- `source`: [`packages/glm/remote-app/src/index.ts:74`](../packages/glm/remote-app/src/index.ts)
 
 ```ts config-catalog
 /** The bundle plugin's configuration. */

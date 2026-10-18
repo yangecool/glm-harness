@@ -103,6 +103,8 @@ export const SERVICE_PAGE: Record<string, string> = {
   sessionFeedback: 'feedback.md',
   permissionPresets: 'permission-presets.md',
   ghPermissions: 'gh-permissions.md',
+  ghAccount: 'gh-account.md',
+  ghProjectToken: 'gh-account.md',
   planMode: 'plan.md',
   terminals: 'terminal.md',
   sandbox: 'sandbox.md',
@@ -874,6 +876,10 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
 /** Project types deliberately documented outside the subsystems catalog. */
 export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   GhPermissionMode: 'GH permission modes are owned by packages/glm/permissions/README.md and src/index.ts',
+  GhAccountDomain: 'GH account domains are owned by packages/glm/account/README.md and src/types.ts',
+  GhAccountDomainConfig: 'GH account endpoint configuration is owned by packages/glm/account/README.md and src/types.ts',
+  GhAccountSnapshot: 'GH account status facts are owned by packages/glm/account/README.md and src/types.ts',
+  LoginOutcome: 'the GH login completion result is owned by packages/glm/account/README.md and src/service.ts',
   ProductEvent: 'Desktop event fields are owned by packages/client/product-analytics/README.md and src/events.ts',
   ConnectionFetchHandler: 'shared Fetch dispatch is owned by packages/client/connection/src/rpc.ts',
   ConnectionRequestRejection: 'transport rejection status is owned by packages/client/connection/src/rpc.ts',

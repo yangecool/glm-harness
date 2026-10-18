@@ -173,6 +173,9 @@ flowchart LR
   svc_planMode["ctx.planMode<br/>Plan collaboration state"]
   pkg_glm_permissions["glm/permissions"]
   svc_ghPermissions["ctx.ghPermissions<br/>GH permission modes"]
+  pkg_glm_account["glm/account"]
+  svc_ghAccount["ctx.ghAccount<br/>GH account owner"]
+  svc_ghProjectToken["ctx.ghProjectToken<br/>GH project tokens"]
   pkg_agent_preset_registry["agent-preset-registry"]
   svc_agentPresets["ctx.agentPresets<br/>Per-session agent composition"]
   pkg_commands["commands"]
@@ -357,6 +360,8 @@ flowchart LR
   pkg_fs_local --> svc_fs
   pkg_fs_sandbox --> svc_fs
   pkg_fs_ssh --> svc_fs
+  pkg_glm_account --> svc_ghAccount
+  pkg_glm_account --> svc_ghProjectToken
   pkg_glm_permissions --> svc_ghPermissions
   pkg_goal --> svc_goals
   pkg_hmr --> svc_hmr
@@ -673,6 +678,8 @@ flowchart LR
 | `ctx.userQuestions` | `seam` | [`user-questions`](../packages/interaction/user-questions) | - | [`tool-ask-user`](../packages/interaction/tool-ask-user) | - | UI front ends provide the active human-answer provider; tool-ask-user pauses a tool call on the provider-neutral ask() promise. |
 | `ctx.planMode` | `core` | [`plan-mode`](../packages/plan/plan-mode) | - | - | - | Folds logged plan/mode state, flushes user selections at turn boundaries, renders deployment-owned guidance, registers /plan, and keeps the plan-exit schema stable across transitions. |
 | `ctx.ghPermissions` | `core` | `glm/permissions` | - | - | - | Folds the durable permission/mode selection with legacy migration, states the live mode in the runtime context, registers /permission, and enforces the yolo/guarded/build decision order plus the plan read-only gate in tools/pre-execute. |
+| `ctx.ghAccount` | `core` | `glm/account` | - | - | - | Owns per-domain OAuth authorization-code + PKCE logins with credentials-seam grant persistence, single-flight access refresh with per-caller cancellation, and per-domain epochs that discard superseded results. |
+| `ctx.ghProjectToken` | `core` | `glm/account` | - | - | - | Mints and caches short-term project tokens per domain and project, drops exactly the transport-rejected token, and invalidates the cache the moment the account generation moves. |
 | `ctx.agentPresets` | `core` | [`agent-preset-registry`](../packages/preset/agent-preset-registry) | - | - | - | Eagerly mounts YAML-declared preset revisions, binds Agents and cold readers to scoped contributions, and retains retired revisions until their last user releases them. |
 | `ctx.commands` | `core` | [`commands`](../packages/interaction/commands) | - | - | - | Plugins register direct human commands without sending invocations to the model. |
 | `ctx.sessionProjections` | `core` | [`session-projection`](../packages/session/session-projection) | - | [`api-session-controller`](../packages/api/session-controller), [`tool-todo`](../packages/todo/tool-todo), [`session-title`](../packages/session/session-title) | - | Domains register state-driven fold units; the eager drive keeps per-session watermark states and the Session controller serves baselines and pushes changed values. |

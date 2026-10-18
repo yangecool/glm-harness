@@ -110,6 +110,7 @@
     "@deepseek-ai/dsh-web-fetch-http": "workspace:*",
     "@deepseek-ai/dsh-workflow-ptc": "workspace:*",
     "@deepseek-ai/dsh-working-directory": "workspace:*",
+    "@glm-harness/gh-account": "workspace:*",
     "@glm-harness/gh-model-glm": "workspace:*",
     "@glm-harness/gh-model-retry": "workspace:*",
     "@glm-harness/gh-permissions": "workspace:*",

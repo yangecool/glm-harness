@@ -1,0 +1,5 @@
+PASS resident-account-pat-round-trip: status logged out→in (acct-verify/team, epoch=1); the turn completed with a minted PAT (mints=2, chat saw PAT=true, clean end=true)
+PASS token-hygiene: the durable journal and the supervisor output carry no access/refresh/PAT material (journal hits=[], log hit=false)
+PASS pat-rejected-never-reused: the revoked PAT produced a 401 and an errored turn; the next turn minted fresh (mints 2→3) and completed cleanly
+PASS logout-explicit-failure: status back to logged out; the next turn fails through the explicit missing-credential path (no upstream fallback), errorEnd=true, journalFailure=true, tail=assistant/attempt:{"turn":4,"step":1,"stream":[{"type":"chunk","time":1792321833220,"chunk":{"type":"finish","reason":{"kind":"error","failure":{"message":"mo | step/end:{"turn":4,"step":1} | turn/end:{"turn":4,"reason":{"kind":"error","error":{"message":"model-glm: no API key for provider route \"glm\"; store GLM_API_KEY through the crede
+{"passed":true,"cases":["ok resident-account-pat-round-trip","ok token-hygiene","ok pat-rejected-never-reused","ok logout-explicit-failure"]}

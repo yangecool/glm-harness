@@ -44,6 +44,8 @@ export interface GlmAdapterOptions {
   readonly options: () => GlmConnectionOptions
   /** Per-request bearer key; throws MISSING_CREDENTIAL-style failures. */
   readonly resolveApiKey: (connection: GlmConnectionOptions) => Promise<string>
+  /** Called with the bearer credential an AUTH rejection carried; optional. */
+  readonly onAuthRejection?: (credential: string) => void
 }
 
 /** The GLM provider adapter. */
@@ -160,7 +162,14 @@ export class GlmChatAdapter extends LlmAdapter {
     }))
     if (!response.ok) {
       const errorBody = await abortable(initial.signal, () => response.text())
-      providerError(errorBody, response.status, response.headers)
+      try {
+        providerError(errorBody, response.status, response.headers)
+      } catch (error) {
+        // An authorization rejection also retires the credential it carried:
+        // the PAT owner drops it so the next physical attempt mints fresh.
+        if (error instanceof LlmError && error.failure.code === 'AUTH') this.dependencies.onAuthRejection?.(key)
+        throw error
+      }
     }
     return response
   }

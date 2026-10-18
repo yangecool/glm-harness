@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for gh-account.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/subsystems/gh-account.md
+/gh-account-and-project-tokens:
+  en: 202f106410c1c582
+  zh: d2b2c18b671cd647
+/gh-account-and-project-tokens/login-and-grant-persistence:
+  en: e047057ec91fda53
+  zh: efd78d425953bd63
+/gh-account-and-project-tokens/single-flight-refresh-and-epochs:
+  en: 9a3e8bb2f93fc7f4
+  zh: b5964d6c83120f52
+/gh-account-and-project-tokens/project-tokens:
+  en: a7535f527afb4e48
+  zh: dee23e538a71cd76
+/gh-account-and-project-tokens/model-route-integration:
+  en: 75675254c97671ac
+  zh: 5653c738cc20a222
+/gh-account-and-project-tokens/the-service:
+  en: 3b450096181a918b
+  zh: 3b450096181a918b

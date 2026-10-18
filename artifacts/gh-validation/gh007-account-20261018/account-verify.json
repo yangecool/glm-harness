@@ -1,0 +1,33 @@
+{
+  "scope": "account and project-token owner over the real resident gh-remote service under the supervisor; loopback OAuth+PAT issuer that also serves the PAT-only GLM route; the profile patch layer configures the rows; no GLM_API_KEY in the environment (the PAT is the only credential path)",
+  "cases": [
+    {
+      "name": "resident-account-pat-round-trip",
+      "passed": true,
+      "detail": "status logged out→in (acct-verify/team, epoch=1); the turn completed with a minted PAT (mints=2, chat saw PAT=true, clean end=true)"
+    },
+    {
+      "name": "token-hygiene",
+      "passed": true,
+      "detail": "the durable journal and the supervisor output carry no access/refresh/PAT material (journal hits=[], log hit=false)"
+    },
+    {
+      "name": "pat-rejected-never-reused",
+      "passed": true,
+      "detail": "the revoked PAT produced a 401 and an errored turn; the next turn minted fresh (mints 2→3) and completed cleanly"
+    },
+    {
+      "name": "logout-explicit-failure",
+      "passed": true,
+      "detail": "status back to logged out; the next turn fails through the explicit missing-credential path (no upstream fallback), errorEnd=true, journalFailure=true, tail=assistant/attempt:{\"turn\":4,\"step\":1,\"stream\":[{\"type\":\"chunk\",\"time\":1792321833220,\"chunk\":{\"type\":\"finish\",\"reason\":{\"kind\":\"error\",\"failure\":{\"message\":\"mo | step/end:{\"turn\":4,\"step\":1} | turn/end:{\"turn\":4,\"reason\":{\"kind\":\"error\",\"error\":{\"message\":\"model-glm: no API key for provider route \\\"glm\\\"; store GLM_API_KEY through the crede"
+    }
+  ],
+  "boundaries": [
+    "no real BigModel or Z.AI service contacted (D01 needs real credentials)",
+    "entitlements are the display plan string only (E02.7 owns quota and billing)",
+    "an AUTH rejection invalidates without auto-retry (bounded fresh-PAT retry belongs to the retry owner, E02.5)",
+    "desktop local-callback login arrives with the desktop account UI"
+  ],
+  "supervisorErrTail": "dsh: warning: 1 entry did not activate\nharness-dev-context (@deepseek-ai/dsh-harness-dev-context): pending (waiting for service: webApp)\ngh-remote-supervisor: drained on SIGTERM\n",
+  "passed": true
+}

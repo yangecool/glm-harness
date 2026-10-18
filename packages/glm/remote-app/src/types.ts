@@ -21,3 +21,23 @@ export interface GhRemoteActivity {
   /** Activity families reported by composed providers, plus pending Agent inboxes. */
   readonly ownedActivity: number
 }
+
+/** One account login's begin answer over the ghAccount namespace. */
+export interface GhAccountLoginBeginValue {
+  /** The URL whose visit authorizes this login. */
+  readonly verificationUrl: string
+  /** When the pending authorization expires, epoch milliseconds. */
+  readonly expiresAt: number
+}
+
+/** The account facts every ghAccount/status answer carries, token-free. */
+export interface GhAccountStatusValue {
+  /** One snapshot per configured domain, logged-out domains included. */
+  readonly accounts: ReadonlyArray<{
+    readonly domain: 'bigmodel' | 'zai'
+    readonly accountId: string
+    readonly plan: string | null
+    readonly epoch: number
+    readonly accessExpiresAt: number
+  }>
+}

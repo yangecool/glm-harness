@@ -247,6 +247,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 
 | Package | Config | Description |
 |---|---|---|
+| `@glm-harness/gh-account` | yes | The GH account and project-token owner: OAuth authorization-code + PKCE over two service domains, single-flight refresh with per-caller cancellation, per-domain account epochs, and request-level short-term PAT resolution with rejection-driven invalidation |
 | `@glm-harness/gh-brand` | no | The GLM Harness browser brand: occupants for the generic client brand slots plus the GLM color ramp override, composed as a bundle layer over the dsh web-app surface |
 | `@glm-harness/gh-model-glm` | yes | GLM chat-completions adapter: request serialization, SSE parsing, and stream translation for the glm provider route, written against the BigModel/Z.AI v4 protocol with no upstream model business |
 | `@glm-harness/gh-model-retry` | yes | GLM Harness bounded model-request retry executor: provider-owned normal-mode policies executed on the agent request-error extension point with durable retry events, cancellable waits, and an explicit refusal of unbounded retry |

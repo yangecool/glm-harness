@@ -46,6 +46,12 @@ export interface Config {
   requestTimeoutMs: Volatile<number>
   /** Model-request retry policy captured with each connection generation. */
   retryPolicy: Volatile<RetryPolicyConfig | undefined>
+  /** Prefer a short-term account PAT over the static key when an account is logged in. */
+  preferAccountPat: Volatile<boolean>
+  /** The account domain PAT resolution uses when {@link preferAccountPat} is on. */
+  accountDomain: Volatile<'bigmodel' | 'zai'>
+  /** The personal or team project key id PATs are minted for. */
+  patProjectId: Volatile<string>
 }
 
 export const Config = z.object({
@@ -54,6 +60,9 @@ export const Config = z.object({
   streamIdleTimeoutMs: z.number().default(DEFAULT_STREAM_IDLE_TIMEOUT_MS).volatile(),
   requestTimeoutMs: z.number().default(DEFAULT_REQUEST_TIMEOUT_MS).volatile(),
   retryPolicy: RetryPolicySchema.volatile(),
+  preferAccountPat: z.boolean().default(false).volatile(),
+  accountDomain: z.union(['bigmodel', 'zai'] as const).default('bigmodel').volatile(),
+  patProjectId: z.string().default('').volatile(),
 })
 
 /** Plain deployment inputs, detached from live configuration. */

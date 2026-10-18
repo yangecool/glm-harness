@@ -10233,6 +10233,19 @@ importers:
         specifier: workspace:*
         version: link:../../core/tools
 
+  packages/glm/account:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:*
+        version: link:../../credentials/credentials
+
   packages/glm/base:
     dependencies:
       '@deepseek-ai/cordis-plugin-timer':
@@ -10484,6 +10497,9 @@ importers:
       '@deepseek-ai/dsh-working-directory':
         specifier: workspace:*
         version: link:../../session/working-directory
+      '@glm-harness/gh-account':
+        specifier: workspace:*
+        version: link:../account
       '@glm-harness/gh-model-glm':
         specifier: workspace:*
         version: link:../model-glm
@@ -10680,6 +10696,9 @@ importers:
       '@deepseek-ai/dsh-workspace':
         specifier: workspace:*
         version: link:../../workspace/workspace
+      '@glm-harness/gh-account':
+        specifier: workspace:*
+        version: link:../account
 
   packages/glm/remote-supervisor:
     devDependencies:
