@@ -18,6 +18,7 @@ import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-agent'
+import type {} from '@deepseek-ai/dsh-workspace'
 import type { GhRemoteActivity, GhRemoteIdentity } from './types.ts'
 
 /** Identity facts fixed for the process lifetime. */
@@ -52,14 +53,18 @@ export class GhRemoteIdentityService extends TypertRemoteService {
   /**
    * Report execution activity: the running-agent count a supervisor's drain
    * gate polls before a version switch.
-   * @returns running and total live agent counts.
+   * @returns running-agent counts and the composed providers' owned activity.
    */
   @Remote
-  activity(): GhRemoteActivity {
+  async activity(): Promise<GhRemoteActivity> {
     const agents = this.ctx.agents.list()
+    const activity = await Promise.all(agents.map(async agent =>
+      (await agent.ctx.waterfall('workspace/session-activity', { sessionId: agent.id }, () => Promise.resolve([]))).length
+        + (agent.inbox.nextTurn.length + agent.inbox.nextStep.length > 0 ? 1 : 0)))
     return {
       runningAgents: agents.filter(agent => agent.status === 'running').length,
       agents: agents.length,
+      ownedActivity: activity.reduce((total, count) => total + count, 0),
     }
   }
 }

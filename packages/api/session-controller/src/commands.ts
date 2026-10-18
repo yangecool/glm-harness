@@ -56,6 +56,7 @@ import type {
   SessionPromptValue,
   SessionRenameRequest,
   SessionRenameValue,
+  SessionRequestId,
   SessionSelectModelRequest,
   SessionSelectModelValue,
   SessionUpdateQueueRequest,
@@ -113,7 +114,9 @@ export class SessionCommandController {
     private readonly agents: ApiSessionAgentController,
     private readonly defaultCwd: string,
     private readonly durableAdmission = false,
-  ) {}
+  ) {
+    ctx.on('agent/disposed', ({ agent }) => { this.admissions.forget(agent.id) })
+  }
 
   /**
    * Create one ordinary Session for a new conversation, reusing the named
@@ -358,27 +361,45 @@ export class SessionCommandController {
           { sessionId: agent.id, requestId: request.requestId },
         )
       }
+      await this.flushAdmission(agent, request.requestId)
       return { accepted: true }
     }
-    // Cross-restart reconciliation: the durable message is the receipt. Text
-    // lanes compare structurally; attachment-bearing requests cannot be
-    // verified against admitted references and reconcile idempotently.
+    // New messages retain the original payload hash. Legacy text can be
+    // compared; legacy attachment identities stay explicitly unverifiable.
     const admitted = findPromptRequest(agent, request.requestId)
     if (admitted !== undefined) {
+      const storedSource = admitted.source
+      const storedFingerprint = storedSource.kind === 'user' && 'admissionFingerprint' in storedSource
+        ? storedSource.admissionFingerprint : undefined
       const requestText = promptTextFingerprint(request)
       const admittedText = admittedMessageFingerprint(admitted)
-      if (requestText !== undefined && admittedText !== undefined && requestText !== admittedText) {
+      if (storedFingerprint !== undefined ? storedFingerprint !== fingerprint
+        : requestText !== undefined && admittedText !== undefined && requestText !== admittedText) {
         throw new RemoteError(
           'session/request-conflict',
           `requestId "${request.requestId}" is already logged with different content`,
           { sessionId: agent.id, requestId: request.requestId },
         )
       }
+      if (storedFingerprint === undefined && (requestText === undefined || admittedText === undefined)) {
+        throw new RemoteError('session/admission-unverifiable', 'Existing admission has no comparable payload identity', {
+          sessionId: agent.id, requestId: request.requestId,
+        })
+      }
       this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
+      await this.flushAdmission(agent, request.requestId)
       return { accepted: true }
     }
-    await this.placePrompt(agent, request, source)
+    const recordedSource: MessageSource = source.kind === 'user' && 'rpcId' in source
+      ? { ...source, admissionFingerprint: fingerprint } : source
+    await this.placePrompt(agent, request, recordedSource)
     this.admissions.record(agent.id, request.requestId, fingerprint, Date.now())
+    await this.flushAdmission(agent, request.requestId)
+    return { accepted: true }
+  }
+
+  /** Reconfirm durability on retries and queries, including after a failed initial flush. */
+  private async flushAdmission(agent: Agent, requestId: SessionRequestId): Promise<void> {
     if (this.durableAdmission) {
       try {
         const participated = await this.ctx.sessions.flush(agent.session)
@@ -386,7 +407,7 @@ export class SessionCommandController {
           throw new RemoteError(
             'session/no-durable-writer',
             `prompt admitted to session "${agent.id}" but no durability writer is mounted`,
-            { sessionId: agent.id, requestId: request.requestId },
+            { sessionId: agent.id, requestId },
           )
         }
       } catch (error) {
@@ -394,11 +415,10 @@ export class SessionCommandController {
         throw new RemoteError(
           'session/flush-failed',
           `prompt admitted to session "${agent.id}" but its flush failed: ${String(error)}`,
-          { sessionId: agent.id, requestId: request.requestId },
+          { sessionId: agent.id, requestId },
         )
       }
     }
-    return { accepted: true }
   }
 
   /** The legacy admission body: validation, attachment resolution, and inbox placement. */
@@ -450,14 +470,20 @@ export class SessionCommandController {
    */
   async admission(request: SessionAdmissionRequest): Promise<SessionAdmissionValue> {
     const agent = await this.resolveAgent(request.sessionId)
-    const recorded = this.admissions.lookup(agent.id, request.requestId)
-    if (recorded !== undefined) {
-      return { found: true, fingerprint: recorded.fingerprint, admittedAt: recorded.admittedAt }
-    }
-    const admitted = findPromptRequest(agent, request.requestId)
-    if (admitted === undefined) return { found: false }
-    const comparable = admittedMessageFingerprint(admitted)
-    return comparable === undefined ? { found: true } : { found: true, fingerprint: comparable }
+    return this.agents.serializeAdmission(agent, async () => {
+      const recorded = this.admissions.lookup(agent.id, request.requestId)
+      if (recorded !== undefined) {
+        await this.flushAdmission(agent, request.requestId)
+        return { found: true, fingerprint: recorded.fingerprint, admittedAt: recorded.admittedAt }
+      }
+      const admitted = findPromptRequest(agent, request.requestId)
+      if (admitted === undefined) return { found: false }
+      await this.flushAdmission(agent, request.requestId)
+      const source = admitted.source
+      const comparable = source.kind === 'user' && 'admissionFingerprint' in source
+        ? source.admissionFingerprint : admittedMessageFingerprint(admitted)
+      return comparable === undefined ? { found: true } : { found: true, fingerprint: comparable }
+    })
   }
 
   private async requireModel(selection: Pick<AgentModelSelection, 'provider' | 'model'>): Promise<void> {

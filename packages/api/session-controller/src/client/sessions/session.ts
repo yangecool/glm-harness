@@ -300,7 +300,9 @@ export class Session implements SessionFace {
       result = routed.ok ? { ok: true, value: { accepted: true } } : routed
     }
     if (!result.ok) {
-      if (requestId !== undefined && this.address === undefined && isCarrierFailure(result.error)) {
+      if (requestId !== undefined && this.address === undefined && (isCarrierFailure(result.error)
+        || result.error.code === 'session/no-durable-writer' || result.error.code === 'session/flush-failed'
+        || result.error.code === 'session/admission-unverifiable')) {
         // The carrier lost the round-trip, so the admission outcome is unknown:
         // the Host may have durably admitted this request. The echo stays as
         // the pending record and reconciliation through `session/admission`

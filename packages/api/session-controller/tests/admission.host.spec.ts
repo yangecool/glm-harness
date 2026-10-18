@@ -9,6 +9,7 @@ import { createScope } from '@deepseek-ai/dsh-scope'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { ApiSessionAgentController } from '../src/agent.ts'
 import { SessionCommandController } from '../src/commands.ts'
+import { promptRequestFingerprint } from '../src/admission.ts'
 import type { SessionPromptRequest, SessionRequestId } from '../src/types.ts'
 
 const SESSION = SessionId('admission-session')
@@ -147,15 +148,18 @@ describe('Durable prompt admission', () => {
       .resolves.toEqual({ accepted: true })
   })
 
-  it('refuses to ACK without a durability writer but keeps the admission reconcilable', async () => {
-    const { controller, followup } = await admissionHarness({ durableAdmission: true })
+  it('never converts missing durability into success on retries or queries, then recovers without reinsertion', async () => {
+    const { ctx, controller, followup } = await admissionHarness({ durableAdmission: true })
     const request = promptRequest([{ type: 'text', text: 'once' }])
     await expect(controller.prompt(request, USER_SOURCE))
       .rejects.toMatchObject({ code: 'session/no-durable-writer' })
     expect(followup).toHaveBeenCalledOnce()
-    // The lost ACK must not re-execute: the retry reconciles idempotently.
-    await expect(controller.prompt(request, USER_SOURCE)).resolves.toEqual({ accepted: true })
+    await expect(controller.prompt(request, USER_SOURCE)).rejects.toMatchObject({ code: 'session/no-durable-writer' })
+    await expect(controller.admission({ sessionId: SESSION, requestId: request.requestId }))
+      .rejects.toMatchObject({ code: 'session/no-durable-writer' })
     expect(followup).toHaveBeenCalledOnce()
+    ctx.on('session/flush', () => {})
+    await expect(controller.prompt(request, USER_SOURCE)).resolves.toEqual({ accepted: true })
     const status = await controller.admission({ sessionId: SESSION, requestId: 'req-1' as SessionRequestId })
     expect(status.found).toBe(true)
   })
@@ -166,6 +170,54 @@ describe('Durable prompt admission', () => {
     await expect(controller.prompt(promptRequest([{ type: 'text', text: 'once' }]), USER_SOURCE))
       .rejects.toMatchObject({ code: 'session/flush-failed' })
     expect(followup).toHaveBeenCalledOnce()
+    await expect(controller.prompt(promptRequest([{ type: 'text', text: 'once' }]), USER_SOURCE))
+      .rejects.toMatchObject({ code: 'session/flush-failed' })
+    await expect(controller.admission({ sessionId: SESSION, requestId: 'req-1' as SessionRequestId }))
+      .rejects.toMatchObject({ code: 'session/flush-failed' })
+    expect(followup).toHaveBeenCalledOnce()
+  })
+
+  it('reconciles original payloads from canceled or edited durable inbox insertions after restart', async () => {
+    const { controller, agent, followup } = await admissionHarness()
+    const request: SessionPromptRequest = {
+      ...promptRequest([{ type: 'text', text: 'once' }]),
+      content: [{ type: 'image', mediaType: 'image/png', data: 'original' }],
+    }
+    agent.session.append('agent/inbox/spliced', {
+      target: 'next-turn', start: 0,
+      inserted: [createUserMessage({
+        content: [{ type: 'text', text: 'promoted content' }],
+        source: { kind: 'user', rpcId: request.requestId, admissionFingerprint: promptRequestFingerprint(request) },
+      })],
+    })
+    agent.session.append('agent/inbox/spliced', {
+      target: 'next-turn', start: 0, removedCount: 1, inserted: [], outcome: 'canceled',
+    })
+    await expect(controller.admission({ sessionId: SESSION, requestId: request.requestId }))
+      .resolves.toMatchObject({ found: true, fingerprint: promptRequestFingerprint(request) })
+    await expect(controller.prompt(request, USER_SOURCE)).resolves.toEqual({ accepted: true })
+    await expect(controller.prompt({ ...request, mode: 'steer' }, USER_SOURCE))
+      .rejects.toMatchObject({ code: 'session/request-conflict' })
+    await expect(controller.prompt({ ...request, content: [{ type: 'image', mediaType: 'image/png', data: 'other' }] }, USER_SOURCE))
+      .rejects.toMatchObject({ code: 'session/request-conflict' })
+    expect(followup).not.toHaveBeenCalled()
+  })
+
+  it('serializes an admission query behind pending validation and flush', async () => {
+    const { ctx, controller } = await admissionHarness({ durableAdmission: true })
+    const entered = Promise.withResolvers<undefined>()
+    const release = Promise.withResolvers<undefined>()
+    ctx.on('session/flush', async () => { entered.resolve(undefined); await release.promise })
+    const pending = controller.prompt(promptRequest([{ type: 'text', text: 'once' }]), USER_SOURCE)
+    await entered.promise
+    let answered = false
+    const query = controller.admission({ sessionId: SESSION, requestId: 'req-1' as SessionRequestId })
+      .then((value) => { answered = true; return value })
+    await Promise.resolve()
+    expect(answered).toBe(false)
+    release.resolve(undefined)
+    await pending
+    await expect(query).resolves.toMatchObject({ found: true })
   })
 
   it('ACKs only after the flush participates when a writer is mounted', async () => {

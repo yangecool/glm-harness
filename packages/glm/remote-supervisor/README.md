@@ -1,6 +1,6 @@
 ---
 description: "GH remote process supervision: one data root, one resident service — lock-directory single-instance claims, identity files, a stdout readiness contract, bounded crash backoff with a circuit breaker, and a SIGTERM-then-SIGKILL drain ladder, all plain Node with zero dependencies."
-kind: "package-reference"
+kind: "package-library"
 ---
 
 # @glm-harness/gh-remote-supervisor
@@ -52,7 +52,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` copies the source into a staging directory and commits it with one rename, so a release is complete or absent and a repeat install under the same id is refused. `update` and `rollback` poll the live service's `ghRemote/activity` RPC until no agent is running (or the drain timeout elapses), stop through the drain ladder, switch the pointer, and relaunch from the new release; the identity file records which release is live. `gc` removes interrupted-install staging leftovers and every release nothing pins — current, rollback target, and any release a live service still runs are kept. `uninstall` removes the runtimes and service state while keeping every other byte of the root; `uninstall --purge` deletes the root itself.
+`install` uses a unique staging directory and refuses unsafe release names. `update` and `rollback` require a successful, complete activity query and wait for running turns, pending inboxes, and activity reported by composed Workspace providers. Timeout, authentication failure, and missing counts refuse the switch. Full admission freeze, PTY/global leases, and serialized lifecycle transactions remain unfinished; an idle observation does not supply those guarantees. A corrupt current pointer refuses mutation, and selecting the same release preserves its rollback target. `gc` keeps current, rollback, and live-pinned releases. `uninstall` stops the supervisor before removing runtime state and preserves data unless `--purge` is explicit.
 
 -----
 
@@ -87,7 +87,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 <a id="known-limitations-and-deferred-work"></a>
 
 - POSIX only: supervision is built on SIGTERM/SIGKILL and atomic directory creation; a Windows service-control port is future work.
-- Stale-lock stealing checks pid liveness, which cannot distinguish a reused pid; the nonce prevents same-root confusion but not OS pid recycling after a crash.
+- Linux control commands verify boot ID, process-start ticks, and the owning nonce before signaling. Older or unverifiable identities refuse control instead of signaling a possibly reused pid; other platforms require their own identity verification. Identity files contain the launch token and are owner-readable only.
 - Taking over a root whose supervisor was SIGKILLed is refused while the orphaned service still runs (a second service over one data root would double-write its journal); `stop` drains the orphan and clears the root first. Adoption of a running orphan is not supported.
 - Circuit state lives in the supervisor process; a restarted supervisor begins a fresh crash window.
 - The readiness contract is one stdout line, so a service that buffers or redirects stdout needs the `printUrl` path kept on stdout.

@@ -4648,7 +4648,7 @@ export interface PermissionRule {
 ## `@glm-harness/gh-remote-app`
 
 - `inject`: `webServer` · `connection`
-- `source`: [`packages/glm/remote-app/src/index.ts:51`](../packages/glm/remote-app/src/index.ts)
+- `source`: [`packages/glm/remote-app/src/index.ts:73`](../packages/glm/remote-app/src/index.ts)
 
 ```ts config-catalog
 /** The bundle plugin's configuration. */

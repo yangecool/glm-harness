@@ -31,6 +31,13 @@ function isMaintained(file: string): boolean {
   return !excludedPrefixes.some(prefix => file.startsWith(prefix))
 }
 
+/** Machine pins and timestamped validation archives identify the inputs they record. */
+function recordsCommitIdentity(file: string): boolean {
+  return /^artifacts\/gh-validation\/[a-z0-9-]+-\d{8}(?:-\d{6})?\//u.test(file)
+    || file === 'docs/glm/delivery-status.json'
+    || file === 'python/sdk/uv.lock'
+}
+
 /**
  * Inspect a maintained source file against known commit identifiers.
  * @param file - Repository-relative path used in diagnostics and exclusions.
@@ -49,7 +56,7 @@ export function findRepositoryReferences(
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if ([...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    if (!recordsCommitIdentity(file) && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }

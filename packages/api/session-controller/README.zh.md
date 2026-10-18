@@ -27,6 +27,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+新的 RPC 输入在 user-rpc 来源的可选字段中保留原始 mode/content 指纹。对账同时检查原始 inbox 插入，队列编辑或撤回不会让重启后的重试重复执行。旧附件缺少可比较身份时返回 `session/admission-unverifiable`，旧文本保留文本比较。启用 `durableAdmission` 时，重复 ACK 和正向查询在同一串行准入通道中重新检查 flush。客户端将失败 checkpoint 保持为未知结果，直到对账成功。journal 释放已 dispose Agent 的会话；模型与工具执行仍须由持久 checkpoint 策略保护。
+
 历史页与 follow opening 快照为每个持久 Session 事件携带一条 `{ type: 'event', event: SessionWireEvent }` record。Client 把每条已接受 record 保留为一个持久 `SessionEventLikeEntry`；Assistant token 边界保留在 `assistant/message` 或 `assistant/attempt` 的紧凑流内。工具参数、结果内容、失败信息和 `tool/result.data.meta` 原样通过；控制器不解析工具定义、不运行展示转换器，也不附加 UI 数据。
 
 Client journal 在发布 follow 快照、live entry 或历史页之前验证当前 Session 事件 envelope。它复用浏览器安全的 Session validator，检查必需的 surface marker、精确的 replacement endpoint、更早且唯一的 source seq、内嵌 Assistant 提供方元数据、request header 可选字段的省略规则以及工具错误一致性。无效 record 直接失败，不删除字段或归一化；范围成员与来源存在性仍由 Host 的持久日志检查。

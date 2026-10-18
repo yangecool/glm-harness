@@ -18,4 +18,6 @@ export interface GhRemoteActivity {
   readonly runningAgents: number
   /** Live agent sessions, running or idle. */
   readonly agents: number
+  /** Activity families reported by composed providers, plus pending Agent inboxes. */
+  readonly ownedActivity: number
 }

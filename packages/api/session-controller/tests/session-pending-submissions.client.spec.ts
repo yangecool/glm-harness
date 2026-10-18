@@ -664,6 +664,27 @@ describe('admission reconciliation', () => {
     expect(mock.log.requests('session/admission')).toEqual([{ sessionId: SID, requestId: handle.requestId }])
   })
 
+  it('a failed durability checkpoint keeps the echo for reconciliation instead of restoring a duplicate draft', async ({ mock, start }) => {
+    const session = await sessionBench(mock, start, SID)
+    const onRetire = vi.fn()
+    const handle = session.beginSubmission({ mode: 'queue', text: '待刷盘', attachments: [], onRetire })
+    mock.remote.session.prompt.mockResolvedValue(err(new RemoteError('session/flush-failed', 'disk full', {
+      sessionId: SID, requestId: handle.requestId,
+    })))
+    mock.remote.session.admission.mockResolvedValue(err(new RemoteError('session/flush-failed', 'disk full', {
+      sessionId: SID, requestId: handle.requestId,
+    })))
+    const result = await session.prompt([{ type: 'text', text: '待刷盘' }], 'queue', undefined, handle.requestId)
+    await reconcileFrames()
+    expect(result).toMatchObject({ ok: false, error: { code: 'session/admission-unknown' } })
+    expect(session.getSnapshot().pendingSubmissions).toHaveLength(1)
+    expect(onRetire).not.toHaveBeenCalled()
+    mock.remote.session.admission.mockResolvedValue(ok<SessionAdmissionValue>({ found: true }))
+    await session.reconcilePendingAdmissions()
+    await reconcileFrames()
+    expect(onRetire).toHaveBeenCalledWith({ reason: 'observed', attachments: [] })
+  })
+
   it('reconciliation with no durable admission retires the echo as failed', async ({ mock, start }) => {
     const session = await sessionBench(mock, start, SID)
     mock.remote.session.prompt.mockResolvedValue(carrierLost())

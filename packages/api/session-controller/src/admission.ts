@@ -3,8 +3,8 @@
  * `session/prompt` and the `session/admission` query. The durable truth is the
  * Session log itself — a user message whose source carries the client-minted
  * `rpcId`; the in-memory journal only closes the check-then-admit window
- * inside one service life and holds the raw-payload fingerprint that the log
- * never stores.
+ * inside one service life; new RPC messages also retain their original payload
+ * fingerprint in the source so attachment promotion does not erase it.
  */
 
 import { createHash } from 'node:crypto'
@@ -40,7 +40,7 @@ export function promptRequestFingerprint(request: Pick<SessionPromptRequest, 'mo
     if (part.type === 'text') {
       digest.update(`t:${part.text.length}:${part.text}`)
     } else if (part.type === 'image') {
-      digest.update(`i:${part.mediaType}:${createHash('sha256').update(part.data).digest('hex')}`)
+      digest.update(`i:${part.mediaType}:${createHash('sha256').update(part.data).digest('hex')}:${JSON.stringify(part.name ?? null)}`)
     } else {
       digest.update(`f:${part.receiptId}`)
     }
@@ -104,11 +104,14 @@ export function findPromptRequest(agent: Agent, requestId: SessionRequestId): Us
   const messages: UserMessage[] = []
   // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
   for (const event of agent.session.snapshotEvents()) {
-    if (event.type !== 'user/message') continue
-    const source = event.data.source
-    if (source.kind === 'user' && 'rpcId' in source && source.rpcId === requestId) messages.push(event.data)
+    if (event.type === 'user/message' && matches(event.data)) messages.push(event.data)
+    if (event.type === 'agent/inbox/spliced') {
+      for (const message of event.data.inserted) {
+        if (matches(message)) messages.push(message)
+      }
+    }
   }
-  return messages.at(-1)
+  return messages.at(0)
 }
 
 /**

@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-18",
+  "reviewedGhCommits": 20,
+  "reviewedThrough": "f57b5fe84e",
+  "validationBase": "a1ea9cc6f6 plus review fixes delivered with this record",
+  "sourceState": "isolated committed-source checkout; shared GH-007 changes preserved and excluded",
+  "fixed": [
+    "RV17",
+    "RV18",
+    "RV19",
+    "RV20",
+    "RV21",
+    "RV22",
+    "RV23",
+    "RV24"
+  ],
+  "requiredUnstartedWork": [
+    "RV25 / GH-006-G product supervisor profiles/artifacts and complete lifecycle transactions",
+    "RV25 / GH-004-C clean packaged desktop product bootstrap/recovery"
+  ],
+  "verification": {
+    "cleanBuild": {
+      "passed": 9,
+      "failed": 0
+    },
+    "finalBuild": {
+      "passed": 9,
+      "failed": 0
+    },
+    "regressions": {
+      "files": 51,
+      "tests": 1226,
+      "failed": 0
+    },
+    "ciConfigurationTests": {
+      "files": 5,
+      "tests": 103,
+      "failed": 0
+    },
+    "privatePackagingTests": {
+      "files": 3,
+      "tests": 17,
+      "failed": 0
+    },
+    "exactCiRegressionCommand": {
+      "files": 11,
+      "tests": 137,
+      "failed": 0
+    },
+    "negativeControls": [
+      {
+        "name": "retry-without-flush",
+        "exitCode": 1,
+        "rejectedRegression": true
+      },
+      {
+        "name": "one-line-ready-parser",
+        "exitCode": 1,
+        "rejectedRegression": true
+      },
+      {
+        "name": "machine-records-misclassified",
+        "exitCode": 1,
+        "rejectedRegression": true
+      },
+      {
+        "name": "checkpoint-without-writer",
+        "exitCode": 1,
+        "rejectedRegression": true
+      }
+    ],
+    "productSmokes": {
+      "passed": 5,
+      "fixture": "loopback GLM; no real provider"
+    },
+    "residentAdmission": {
+      "passed": 8,
+      "fixture": "real gh-remote profile/JSONL writer/supervisor/crash-restart; loopback GLM"
+    },
+    "releaseLifecycle": {
+      "passed": 10,
+      "fixture": "real resident activity drain plus tiny runtime fixtures for version mechanics"
+    },
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 1
+    },
+    "constraints": "passed",
+    "dependencies": {
+      "passed": true,
+      "packages": 85
+    },
+    "docQuick": {
+      "passed": 21,
+      "failed": 0
+    },
+    "docSync": {
+      "passed": 43,
+      "failed": 0
+    },
+    "documentationAndWorkflowTests": {
+      "files": 2,
+      "tests": 24,
+      "failed": 0
+    }
+  },
+  "limits": [
+    "No real GLM/account/PAT/Coding Plan qualification",
+    "No independent host, clean packaged Electron, machine reboot or other-platform product acceptance",
+    "No new MEM/TOK/PER/VIS full acceptance",
+    "No complete admission freeze/all-resource lease/lifecycle transaction semantics"
+  ],
+  "ci": {
+    "commits": [
+      "ba8faeda1b",
+      "a1ea9cc6f6"
+    ],
+    "firstLinuxRun": {
+      "id": 39116303186,
+      "status": "success"
+    },
+    "firstWindowsRun": {
+      "id": 39116303189,
+      "status": "failure"
+    },
+    "secondLinuxRun": {
+      "id": 39117650809,
+      "status": "success"
+    },
+    "secondWindowsRun": {
+      "id": 39117650820,
+      "status": "success"
+    },
+    "publication": "No release tag created or production release published",
+    "secondRuns": [
+      {
+        "id": 39117650820,
+        "sha": "a1ea9cc6f6498c691e045ab03995ad8d58b08a93",
+        "name": "GH Desktop · Windows x64",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650820"
+      },
+      {
+        "id": 39117650809,
+        "sha": "a1ea9cc6f6498c691e045ab03995ad8d58b08a93",
+        "name": "GH Remote · Runtime archives",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650809"
+      }
+    ]
+  }
+}

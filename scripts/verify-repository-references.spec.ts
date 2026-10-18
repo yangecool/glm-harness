@@ -72,6 +72,21 @@ describe('unique object-name prefix search', () => {
 })
 
 describe('maintained repository reference policy', () => {
+  it('retains exact validation and dependency pins while checking maintained guides and all organization URLs', (test) => {
+    const fixture = repository(test)
+    for (const file of ['artifacts/gh-validation/gh006f-joint-20261018-170116/run.json',
+      'artifacts/gh-validation/review-20261018/summary.md', 'docs/glm/delivery-status.json', 'python/sdk/uv.lock']) {
+      expect(findRepositoryReferences(file, fixture.commit, new Set([fixture.commit]))).toEqual([])
+      expect(findRepositoryReferences(file, organizationUrl, new Set()))
+        .toEqual([{ file, line: 1, kind: 'organization-url' }])
+    }
+    for (const file of ['artifacts/gh-validation/README.md', 'artifacts/gh-validation/current/guide.md',
+      'docs/glm/guide.md', 'python/sdk/README.md', 'source.ts']) {
+      expect(findRepositoryReferences(file, fixture.commit, new Set([fixture.commit])))
+        .toEqual([{ file, line: 1, kind: 'commit-hash' }])
+    }
+  })
+
   it('permits only the independent kit repository and its source URLs', () => {
     for (const suffix of ['', '.git', '/tree/main/packages/entry']) {
       expect(findRepositoryReferences('package.json', `${organizationUrl}/libreoffice-kit${suffix}`, new Set())).toEqual([])

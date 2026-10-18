@@ -10,10 +10,12 @@
  */
 
 import { spawn } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { ChildProcess } from 'node:child_process'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 import {
   gcReleases, installRelease, listReleases, listStaging, readCurrent,
   serviceCommandFor, uninstallRoot, useRelease,
@@ -60,7 +62,7 @@ export interface SupervisorOptions {
   /** Injected clock for tests. */
   now: () => number
   /** Injected sleep for tests. */
-  sleep: (ms: number) => Promise<void>
+  sleep: (ms: number, signal?: AbortSignal) => Promise<void>
 }
 
 const defaultOptions: SupervisorOptions = {
@@ -72,7 +74,7 @@ const defaultOptions: SupervisorOptions = {
   crashThreshold: 5,
   crashWindowMs: 5 * 60_000,
   now: () => Date.now(),
-  sleep: (ms: number) => new Promise((resolve) => { setTimeout(resolve, ms) }),
+  sleep: (ms: number, signal?: AbortSignal) => sleep(ms, undefined, { signal }),
 }
 
 /** Lock directory contents — the claim a live supervisor holds on a root. */
@@ -81,6 +83,8 @@ export interface LockPayload {
   kind: 'gh-remote-supervisor-lock'
   /** OS pid of the supervisor process. */
   pid: number
+  /** Kernel boot and process-start identity; absent in older records. */
+  processIdentity?: string | null
   /** Random per-acquisition token; ownership checks compare this, not pids alone. */
   nonce: string
   /** Epoch milliseconds the lock was acquired. */
@@ -95,6 +99,8 @@ export interface IdentityPayload {
   kind: 'gh-remote-supervisor-identity'
   /** OS pid of the supervised child. */
   pid: number
+  /** Kernel boot and process-start identity used before signaling a recorded pid. */
+  processIdentity?: string | null
   /** The launch nonce shared with the lock; proves the identity is this supervisor's child. */
   nonce: string
   /** Epoch milliseconds the child was spawned. */
@@ -123,9 +129,39 @@ export const isPidAlive = (pid: number): boolean => {
   if (!Number.isInteger(pid) || pid <= 0) return false
   try {
     process.kill(pid, 0)
-    return true
   } catch (error) {
     return (error as NodeJS.ErrnoException).code === 'EPERM'
+  }
+  if (process.platform === 'linux') {
+    try {
+      const stat = readFileSync(`/proc/${pid}/stat`, 'utf8')
+      if (['Z', 'X'].includes(stat.slice(stat.lastIndexOf(')') + 2).split(' ')[0] ?? '')) return false
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code !== 'ENOENT'
+    }
+  }
+  return true
+}
+
+/**
+ * Read Linux process birth identity without trusting a pid reused after exit or reboot.
+ * @param pid - positive process id to inspect.
+ * @returns boot id and kernel start ticks, or null when identity cannot be established.
+ */
+export const readProcessIdentity = async (pid: number): Promise<string | null> => {
+  if (process.platform !== 'linux' || !Number.isInteger(pid) || pid <= 0) return null
+  try {
+    const [boot, stat] = await Promise.all([
+      readFile('/proc/sys/kernel/random/boot_id', 'utf8'),
+      readFile(`/proc/${pid}/stat`, 'utf8'),
+    ])
+    const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ')
+    const ticks = fields[19]
+    return ticks !== undefined && /^\d+$/u.test(ticks) ? `${boot.trim()}:${ticks}` : null
+  } catch (error) {
+    // A vanished or inaccessible process cannot authorize a later signal.
+    void error
+    return null
   }
 }
 
@@ -285,6 +321,8 @@ export class GhRemoteSupervisor {
   private crashTimes: number[] = []
   private running = false
   private stopped = false
+  private readonly stopController = new AbortController()
+  private identityWrite: Promise<void> = Promise.resolve()
 
   /**
    * @param root - data root to own.
@@ -319,7 +357,7 @@ export class GhRemoteSupervisor {
     }
     // Stealing a dead supervisor's lock must not spawn a second service over
     // one still running: the orphaned child keeps the root's data and port.
-    if (probed.lock !== null) {
+    {
       const orphan = await readIdentity(this.paths)
       if (orphan !== null && isPidAlive(orphan.pid)) {
         return {
@@ -333,23 +371,42 @@ export class GhRemoteSupervisor {
     const payload: LockPayload = {
       kind: 'gh-remote-supervisor-lock',
       pid: process.pid,
+      processIdentity: await readProcessIdentity(process.pid),
       nonce: this.nonce,
       acquiredAt: this.options.now(),
       command: [this.command.command, ...this.command.args],
     }
-    await mkdir(dirname(this.paths.identityFile), { recursive: true })
+    await mkdir(dirname(this.paths.identityFile), { recursive: true, mode: 0o700 })
     // A stale lock (dead owner) keeps its directory; remove it before
     // claiming so the create below is the only acquisition step that can fail.
-    if (probed.lock !== null) await rm(this.paths.lockDir, { recursive: true, force: true })
+    let reclaim: string | undefined
+    if (probed.lock !== null) {
+      reclaim = `${this.paths.lockDir}.reclaim-${createHash('sha256').update(JSON.stringify(probed.lock)).digest('hex')}`
+      try {
+        await writeFile(reclaim, `${process.pid}\n`, { flag: 'wx', mode: 0o600 })
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'EEXIST') return { ok: false, reason: 'stale lock takeover in progress', pid: null }
+        throw error
+      }
+    }
     try {
-      await mkdir(this.paths.lockDir)
+      if (probed.lock !== null) {
+        const latest = await probeLock(this.paths)
+        if (latest.locked || JSON.stringify(latest.lock) !== JSON.stringify(probed.lock)) {
+          return { ok: false, reason: 'lock owner changed during takeover', pid: latest.holderPid }
+        }
+        await rm(this.paths.lockDir, { recursive: true, force: true })
+      }
+      await mkdir(this.paths.lockDir, { mode: 0o700 })
+      await writeFile(join(this.paths.lockDir, 'lock.json'), `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
     } catch (error) {
       // EEXIST races a concurrent acquisition on an empty root; probe-then-
       // create converges for every loser because the winner is immediately live.
       if ((error as NodeJS.ErrnoException).code === 'EEXIST') return { ok: false, reason: 'lost the lock race', pid: null }
       throw error
+    } finally {
+      if (reclaim !== undefined) await rm(reclaim, { force: true })
     }
-    await writeFile(join(this.paths.lockDir, 'lock.json'), `${JSON.stringify(payload, null, 2)}\n`)
     return { ok: true }
   }
 
@@ -360,6 +417,7 @@ export class GhRemoteSupervisor {
     const payload: IdentityPayload = {
       kind: 'gh-remote-supervisor-identity',
       pid: state.pid,
+      processIdentity: await readProcessIdentity(state.pid),
       nonce,
       startedAt: state.startedAt,
       readyAt: state.readyAt ?? null,
@@ -369,9 +427,13 @@ export class GhRemoteSupervisor {
       releaseId: this.releaseId,
       command: [this.command.command, ...this.command.args],
     }
-    const staging = `${this.paths.identityFile}.tmp-${randomUUID()}`
-    await writeFile(staging, `${JSON.stringify(payload, null, 2)}\n`)
-    await rename(staging, this.paths.identityFile)
+    const write = async (): Promise<void> => {
+      const staging = `${this.paths.identityFile}.tmp-${randomUUID()}`
+      await writeFile(staging, `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
+      await rename(staging, this.paths.identityFile)
+    }
+    this.identityWrite = this.identityWrite.then(write)
+    await this.identityWrite
   }
 
   /** One spawn–supervise cycle; resolves when the child is dead. */
@@ -393,8 +455,8 @@ export class GhRemoteSupervisor {
     // A new child is not ready yet: reset the announced URL so the identity
     // never points at a previous incarnation's listener.
     this.readyUrl = null
-    if (child.pid !== undefined) await this.writeIdentity({ pid: child.pid, startedAt })
-    const timedOut = await this.awaitReady(child)
+    const initialIdentity = child.pid === undefined ? Promise.resolve() : this.writeIdentity({ pid: child.pid, startedAt })
+    const [, timedOut] = await Promise.all([initialIdentity, this.awaitReady(child, startedAt, initialIdentity)])
     if (timedOut) await drainChild(child, this.options.drainTimeoutMs)
     const outcome = await ended
     this.child = null
@@ -411,29 +473,43 @@ export class GhRemoteSupervisor {
    * observation. Stderr forwards to this process's stderr for diagnostics;
    * stdout beyond the contract line is dropped.
    */
-  private awaitReady(child: ChildProcess): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
+  private awaitReady(child: ChildProcess, startedAt: number, initialIdentity: Promise<void>): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
       let settled = false
+      let announced = false
       let buffer = ''
+      let oversized = false
       const settle = (timedOut: boolean): void => {
         if (settled) return
         settled = true
         clearTimeout(timer)
+        buffer = ''
         resolve(timedOut)
       }
       const timer = setTimeout(() => { settle(true) }, this.options.readyTimeoutMs)
       const onStdout = (chunk: string): void => {
+        if (settled || announced) return
         buffer += chunk
-        const newline = buffer.indexOf('\n')
-        if (newline !== -1) {
+        let newline: number
+        while ((newline = buffer.indexOf('\n')) !== -1) {
           const line = buffer.slice(0, newline)
           buffer = buffer.slice(newline + 1)
-          if (line.startsWith(this.options.readyLinePrefix)) {
+          if (!oversized && line.length <= 16_384 && line.startsWith(this.options.readyLinePrefix)) {
             this.readyUrl = line.slice(this.options.readyLinePrefix.length).trim()
+            announced = true
             const readyAt = this.options.now()
-            void this.writeIdentity({ pid: child.pid ?? -1, startedAt: readyAt, readyAt, readyUrl: this.readyUrl })
-            settle(false)
+            const readyUrl = this.readyUrl
+            clearTimeout(timer)
+            void initialIdentity.then(() => this.writeIdentity({ pid: child.pid ?? -1, startedAt, readyAt, readyUrl }))
+              .then(() => { settle(false) }, reject)
+            buffer = ''
+            return
           }
+          oversized = false
+        }
+        if (buffer.length > 16_384) {
+          oversized = true
+          buffer = ''
         }
       }
       if (child.stdout) {
@@ -473,6 +549,8 @@ export class GhRemoteSupervisor {
       try {
         observation = await this.runChild()
       } catch (error) {
+        if (this.child !== null) await drainChild(this.child, this.options.drainTimeoutMs)
+        this.child = null
         this.running = false
         await this.release()
         return { reason: 'spawn-error', detail: String(error), exit: null }
@@ -511,18 +589,24 @@ export class GhRemoteSupervisor {
   private async backoff(): Promise<void> {
     const delay = Math.min(this.options.baseBackoffMs * 2 ** this.restarts, this.options.maxBackoffMs)
     this.restarts += 1
-    await this.options.sleep(delay)
+    try {
+      await this.options.sleep(delay, this.stopController.signal)
+    } catch (error) {
+      if (!this.stopped) throw error
+    }
   }
 
   /** Request the loop stop and drain the live child. Idempotent. */
   async stop(): Promise<void> {
     if (this.stopped) return
     this.stopped = true
+    this.stopController.abort()
     if (this.running && this.child) await drainChild(this.child, this.options.drainTimeoutMs)
   }
 
   /** Remove the identity file and the lock directory. */
   private async release(): Promise<void> {
+    await this.identityWrite
     await rm(this.paths.identityFile, { force: true })
     await rm(this.paths.lockDir, { recursive: true, force: true })
   }
@@ -598,32 +682,41 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
   }
   /** Drain via the live service's activity RPC before a version switch. */
-  const drainActivity = async (timeoutMs: number): Promise<string> => {
+  const drainActivity = async (timeoutMs: number): Promise<{ ok: boolean; detail: string }> => {
     const identity = await readIdentity(paths)
     const readyUrl = identity?.readyUrl ?? null
-    if (readyUrl === null || identity === null || !isPidAlive(identity.pid)) return 'no live service to drain'
+    if (identity === null || !isPidAlive(identity.pid)) return { ok: true, detail: 'no live service to drain' }
+    if (readyUrl === null) return { ok: false, detail: 'live service is not ready; refusing version switch' }
     try {
-      const exchange = await fetch(readyUrl, { redirect: 'manual' })
-      const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
       const deadline = Date.now() + timeoutMs
+      const signal = AbortSignal.timeout(Math.max(1, timeoutMs))
+      const exchange = await fetch(readyUrl, { redirect: 'manual', signal })
+      if (!exchange.ok && exchange.status !== 302 && exchange.status !== 303) return { ok: false, detail: 'service authentication failed; refusing version switch' }
+      const cookie = exchange.headers.getSetCookie().map(entry => entry.split(';')[0]).join('; ')
       let last = -1
       while (Date.now() < deadline) {
         const response = await fetch(new URL('/api/ghRemote/activity', new URL(readyUrl).origin), {
           method: 'POST',
           headers: { 'content-type': 'application/json', cookie },
           body: JSON.stringify({ type: 'client-request', rpcId: `drain-${randomUUID()}`, method: 'ghRemote/activity', payload: { args: {} } }),
+          signal,
         })
         const envelope = await response.json() as {
-          result?: { ok?: boolean; value?: { runningAgents?: number }; error?: { message?: string } }
+          result?: { ok?: boolean; value?: { runningAgents?: number; ownedActivity?: number }; error?: { message?: string } }
         }
-        if (envelope.result?.ok !== true) return `activity query failed: ${envelope.result?.error?.message ?? 'unknown'}; switching anyway`
-        last = envelope.result.value?.runningAgents ?? 0
+        const counts = envelope.result?.value
+        const values = [counts?.runningAgents, counts?.ownedActivity]
+        if (envelope.result?.ok !== true || values.some(value => value === undefined || !Number.isSafeInteger(value) || value < 0)) {
+          return { ok: false, detail: 'activity query failed or omitted owned work; refusing version switch' }
+        }
+        last = values.reduce<number>((total, value) => total + (value ?? 0), 0)
         if (last === 0) break
         await new Promise((resolve) => { setTimeout(resolve, 500) })
       }
-      return last === 0 ? 'activity idle before switch' : `activity still busy (${String(last)} running) after ${String(timeoutMs)}ms; switching anyway`
+      return last === 0 ? { ok: true, detail: 'activity idle before switch' }
+        : { ok: false, detail: `activity still busy (${String(last)} resources) after ${String(timeoutMs)}ms; refusing version switch` }
     } catch (error) {
-      return `activity drain unavailable (${(error as Error).message}); switching anyway`
+      return { ok: false, detail: `activity drain unavailable (${(error as Error).message}); refusing version switch` }
     }
   }
   if (verb === 'install') {
@@ -672,8 +765,8 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
   }
   if (verb === 'uninstall') {
     const purge = verbArgs.includes('--purge')
-    const identity = await readIdentity(paths)
-    if (identity !== null && isPidAlive(identity.pid)) await performStop(root)
+    const stopped = await performStop(root)
+    if (stopped !== 0) return stopped
     await uninstallRoot(root, purge)
     process.stdout.write(purge ? 'uninstalled (root purged)\n' : 'uninstalled (data kept)\n')
     return 0
@@ -706,8 +799,10 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
         return 69
       }
       const drain = await drainActivity(readMillis(flags.get('drain-timeout'), 30_000))
-      process.stderr.write(`gh-remote-supervisor: ${drain}\n`)
-      await performStop(root)
+      process.stderr.write(`gh-remote-supervisor: ${drain.detail}\n`)
+      if (!drain.ok) return 69
+      const stopped = await performStop(root)
+      if (stopped !== 0) return stopped
       const switched = await useRelease(root, installed.releaseId)
       if (!switched.ok) {
         process.stderr.write(`gh-remote-supervisor: ${switched.reason}\n`)
@@ -727,8 +822,10 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
       }
       const rollbackTarget = current.previousReleaseId
       const drain = await drainActivity(readMillis(flags.get('drain-timeout'), 30_000))
-      process.stderr.write(`gh-remote-supervisor: ${drain}\n`)
-      await performStop(root)
+      process.stderr.write(`gh-remote-supervisor: ${drain.detail}\n`)
+      if (!drain.ok) return 69
+      const stopped = await performStop(root)
+      if (stopped !== 0) return stopped
       const switched = await useRelease(root, rollbackTarget)
       if (!switched.ok) {
         process.stderr.write(`gh-remote-supervisor: ${switched.reason}\n`)
@@ -744,7 +841,10 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
       process.stderr.write(`${later.error}\n`)
       return 64
     }
-    if (verb === 'restart') await performStop(root)
+    if (verb === 'restart') {
+      const stopped = await performStop(root)
+      if (stopped !== 0) return stopped
+    }
     const supervisor = new GhRemoteSupervisor(root, later.command, undefined, later.releaseId)
     const signaled = { signal: null as NodeJS.Signals | null }
     const onSignal = (signal: NodeJS.Signals): void => {
@@ -811,23 +911,43 @@ const performStop = async (root: string): Promise<number> => {
     return 0
   }
   if (holder !== null && holder !== process.pid) {
+    const expected = probed.lock?.processIdentity
+    if (!expected || await readProcessIdentity(holder) !== expected) {
+      process.stderr.write('gh-remote-supervisor: supervisor process identity is unverified; refusing to signal\n')
+      return 69
+    }
     try {
       process.kill(holder, 'SIGTERM')
       const deadline = Date.now() + 15_000
       while (isPidAlive(holder) && Date.now() < deadline) await new Promise((resolve) => { setTimeout(resolve, 100) })
-      if (isPidAlive(holder)) process.kill(holder, 'SIGKILL')
-    } catch {
-      // The supervisor raced us to death; its own ladder already achieved the goal.
+      if (isPidAlive(holder)) {
+        if (await readProcessIdentity(holder) !== expected) return 69
+        process.kill(holder, 'SIGKILL')
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') return 69
     }
+  } else if (holder === process.pid) {
+    process.stderr.write('gh-remote-supervisor: stop must run outside the owning supervisor process\n')
+    return 69
   }
   if (identity !== null && isPidAlive(identity.pid)) {
+    const expected = identity.processIdentity
+    if (!expected || await readProcessIdentity(identity.pid) !== expected
+      || probed.lock !== null && probed.lock.nonce !== identity.nonce) {
+      process.stderr.write('gh-remote-supervisor: service process identity is unverified; refusing to signal\n')
+      return 69
+    }
     try {
       process.kill(identity.pid, 'SIGTERM')
       const deadline = Date.now() + 10_000
       while (isPidAlive(identity.pid) && Date.now() < deadline) await new Promise((resolve) => { setTimeout(resolve, 100) })
-      if (isPidAlive(identity.pid)) process.kill(identity.pid, 'SIGKILL')
-    } catch {
-      // The child raced us to death; the drain ladder already achieved the goal.
+      if (isPidAlive(identity.pid)) {
+        if (await readProcessIdentity(identity.pid) !== expected) return 69
+        process.kill(identity.pid, 'SIGKILL')
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') return 69
     }
   }
   await rm(paths.identityFile, { force: true })

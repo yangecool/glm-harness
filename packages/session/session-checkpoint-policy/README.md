@@ -25,6 +25,8 @@ Use this package with a session persistence backend to make work durable before 
 <a id="use-this-package"></a>
 ## Use this package
 
+An installed persistence service is insufficient on its own: each live Session checkpoint requires a participating writer. If none witnesses the flush, `SessionCheckpointUnavailable` blocks model dispatch, top-level tools, and pre-step progression. Deployments that run entirely without persistence must omit this policy.
+
 Mount this plugin in any composition that persists sessions and must survive a crash without redoing or losing work. Persistence and checkpoint scheduling are separate plugins: a backend stores the event log, and this policy decides when the store must be flushed.
 
 ### When to choose it

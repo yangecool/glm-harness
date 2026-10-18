@@ -46,6 +46,29 @@ it('refuses install sources without the runtime entry', async () => {
   if (!result.ok) expect(result.reason).toContain('lib/bin.js')
 })
 
+it('rejects release ids that escape releases or address the current pointer', async () => {
+  const root = await freshRoot()
+  const source = await runtimeSource(root, 'safe')
+  for (const id of ['../outside', '../../sessions', '/tmp/outside', 'current.json', '.', '..']) {
+    expect((await installRelease(root, source, { id })).ok).toBe(false)
+    expect((await useRelease(root, id)).ok).toBe(false)
+  }
+})
+
+it('refuses gc on a corrupt pointer and preserves rollback when selecting the same release twice', async () => {
+  const root = await freshRoot()
+  const source = await runtimeSource(root, 'safe')
+  await installRelease(root, source, { id: 'r-one' })
+  await installRelease(root, source, { id: 'r-two' })
+  await useRelease(root, 'r-one')
+  await useRelease(root, 'r-two')
+  await useRelease(root, 'r-two')
+  expect((await readCurrent(root))?.previousReleaseId).toBe('r-one')
+  await writeFile(join(root, 'releases', 'current.json'), '{torn')
+  await expect(gcReleases(root)).rejects.toThrow()
+  expect(await listReleases(root)).toEqual(['r-one', 'r-two'])
+})
+
 it('switches the current pointer atomically and chains the rollback target', async () => {
   const root = await freshRoot()
   const one = await runtimeSource(root, 'one')

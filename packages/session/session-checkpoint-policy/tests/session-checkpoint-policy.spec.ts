@@ -50,6 +50,15 @@ afterEach(async () => {
 })
 
 describe('session-checkpoint-policy request boundary', () => {
+  it('blocks model dispatch when an installed persistence service has no participating writer', async () => {
+    const ctx = await setup()
+    const session = ctx.sessions.create(SessionId('missing-request-writer'))
+    const order: string[] = []
+    ctx.llm.registerAdapter(['mock'], new RecordingAdapter(order))
+    await expect(drain(ctx.llm.stream({ provider: 'mock', model: 'mock', messages: [], sessionId: session.id })))
+      .rejects.toMatchObject({ code: 'NO_DURABLE_WRITER', sessionId: session.id })
+    expect(order).toEqual([])
+  })
   it('awaits the live session checkpoint before constructing the downstream model stream', async () => {
     const ctx = await setup()
     const session = ctx.sessions.create(SessionId('request-checkpoint'))
@@ -107,6 +116,26 @@ describe('session-checkpoint-policy request boundary', () => {
 })
 
 describe('session-checkpoint-policy tool and step boundaries', () => {
+  it('blocks tools and the next step when no writer witnesses the session', async () => {
+    const ctx = await setup()
+    const session = ctx.sessions.create(SessionId('missing-tool-writer'))
+    const agent = { session } as Agent
+    let ran = false
+    ctx.tools.register({
+      name: 'write', description: 'side effect', parameters: {},
+      output: { schema: { type: 'null' }, render: () => [] },
+      execute: async () => { ran = true; return null },
+    })
+    const result = await ctx.tools.execute({
+      callId: ToolCallId('missing-writer'), name: 'write', arguments: {}, agent,
+      signal: new AbortController().signal,
+    })
+    expect(result.isError).toBe(true)
+    expect(ran).toBe(false)
+    await expect(agentEvents(ctx, agent).waterfall('agent/pre-step', {
+      messages: [], turn: 1, step: 1, signal: new AbortController().signal,
+    }, () => Promise.resolve({ kind: 'enter', messages: [] }))).rejects.toMatchObject({ code: 'NO_DURABLE_WRITER' })
+  })
   it('awaits the checkpoint before a top-level tool body', async () => {
     const ctx = await setup()
     const session = ctx.sessions.create(SessionId('tool-checkpoint'))

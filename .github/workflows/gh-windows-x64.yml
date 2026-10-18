@@ -12,6 +12,7 @@ on:
   push:
     branches: [main]
     tags: ['gh-v*']
+    paths-ignore: ['docs/**', 'artifacts/**', 'README.md', 'README.zh.md', 'README.i18n.yaml']
 
 permissions:
   contents: write

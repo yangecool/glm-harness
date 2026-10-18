@@ -218,6 +218,7 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'session/request-conflict': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/no-durable-writer': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/flush-failed': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
+    'session/admission-unverifiable': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/admission-unknown': { readonly sessionId: SessionId; readonly requestId: SessionRequestId }
     'session/invalid-time-zone': { readonly value: string }
     'session/workspace-attach-failed': { readonly sessionId: SessionId; readonly workspaceId: string }
@@ -437,7 +438,14 @@ declare module '@deepseek-ai/dsh-llm' {
      * caller that submitted the prompt. `principal` is written only for a
      * caller other than the owner, so an absent `principal` means the owner.
      */
-    'user-rpc': { kind: 'user'; rpcId: SessionRequestId; clientTimeZone?: string; principal?: Principal }
+    'user-rpc': {
+      kind: 'user'
+      rpcId: SessionRequestId
+      /** Hash of the original prompt mode and content, retained across promotion and queue edits. */
+      admissionFingerprint?: string
+      clientTimeZone?: string
+      principal?: Principal
+    }
   }
 }
 

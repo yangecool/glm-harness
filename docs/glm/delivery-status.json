@@ -371,7 +371,7 @@
         "scripts/build-gh-remote-archive.ts:legacy-deploy staging + 工作区 peer/传递包不动点物化(25) + 被禁上游业务包剪除(11) + 真实 gh-headless 闭包回环冒烟 + 逐文件摘要清单;产物 166.7 MiB/27,761 文件/自带 node v22.23.2",
         "scripts/gh-remote/artifact.ts:format-1 清单 schema 与 verifyPayload(缺失/多余/篡改/权限全拒)",
         "scripts/gh-remote/bootstrap.ts:POSIX 安装器(目标机零 Node):探测/摘要/防逃逸解包/逐文件校验/flock/原子激活/home 播种/rollback/run/start/stop/status;stage= 前缀 + 阶段退出码(F24)",
-        "scripts/gh-remote/{targets,probe,deploy}.ts + scripts/gh-remote-deploy.ts:目标记录(无密钥材料)/ssh-keyscan TOFU/远端探测/scp 上传/阶段化安装/生命周期;委托系统 ssh(非标端口/别名/ProxyJump)",
+        "scripts/gh-remote/{targets,probe,deploy}.ts + scripts/gh-remote-deploy.ts:目标记录(无密钥材料)/ssh-keyscan TOFU/远端探测/scp 上传/阶段化安装/生命周期;系统 OpenSSH 直连/非标端口；完整 alias/ProxyJump 部署明确尚不支持",
         "scripts/gh-remote/{sshd-fixture,gh-remote-verify}.ts:非特权 fixture sshd + 无 Node PATH 监牢 + 12 用例真实 OpenSSH 验收",
         "scripts/gh-remote-mem.ts:进程树 Rss/Pss 采样;docs/subsystems/gh-remote-bootstrap(.zh) 文档"
       ],
@@ -394,14 +394,14 @@
     {
       "id": "GH-006",
       "title": "常驻远端服务、Supervisor 与持续执行",
-      "status": "not-started",
+      "status": "partial",
       "planRefs": [
         "E04.3",
         "E04.4",
         "E03.1",
         "E12"
       ],
-      "readiness": "upstream resident/task/connection investigation complete; existing APIs and gaps recorded in development plan 11.8",
+      "readiness": "A-F implementation slices exist; follow-up review fixes durability/control bugs; G product profile/artifact/bootstrap and lifecycle transaction work remains required",
       "requiredBehavior": [
         "service survives desktop exit and SSH disconnect",
         "durable command receipt/query and idempotent admission",
@@ -410,7 +410,7 @@
         "safe leases/drain/update/rollback/uninstall",
         "resident server process-tree memory acceptance"
       ],
-      "next": "GH-006-A minimal service composition, then B-F"
+      "next": "GH-006-G and GH-004-C product entrypoints; preserve uncommitted GH-007 work"
     },
     {
       "id": "GH-006-A",
@@ -430,7 +430,7 @@
         "gh-remote profile 注册(gh-base+dsh-web-app+gh-remote-app);apps/cli 依赖与 tsconfig.host 接线;目录/pairing 再生成"
       ],
       "evidence": [
-        "artifacts/gh-validation/gh006a-service-20261018-014811/summary.md",
+        "artifacts/gh-validation/gh006a-service-20261018-025704/summary.md",
         "服务验收 6/6(真实 HTTP RPC):就绪行/无静态(401)/identity pid 一致/RPC 会话回合写盘/第二条独立连接附着同一会话/SIGTERM 退出 0",
         "单测 29/29;smoke 5/5;closure(gh-remote 纳入)/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
       ],
@@ -470,7 +470,8 @@
         "OS 自启(systemd/launchd)为部署侧文档工作;断路器未在真服务复演(单元+单次真崩溃恢复覆盖语义)",
         "持久接纳/durable receipt 属 GH-006-C;断线续跑属 D;版本生命周期属 E;断线/崩溃/MEM 联验属 F"
       ],
-      "next": "GH-006-C 持久命令接纳与查询;然后 D/E/F"
+      "next": "GH-006-C 持久命令接纳与查询;然后 D/E/F",
+      "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
     },
     {
       "id": "GH-006-C",
@@ -501,27 +502,32 @@
         "queue edit 无 requestId 不在对账面;真服务未构造无写入者场景(gh-base 恒挂 jsonl,单元覆盖)",
         "桌面/web 客户端尚未接入 session/admission 调用面(GH-006-D)"
       ],
-      "next": "GH-006-D 持续执行与重附着;然后 E/F"
+      "next": "GH-006-D 持续执行与重附着;然后 E/F",
+      "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
     },
     {
       "id": "GH-006-D",
       "title": "持续执行与重附着",
       "date": "2026-10-18",
-      "status": "done",
-      "commit": "c71d35807b",
+      "status": "complete-slice",
+      "commit": "3ff7dd5bd8",
       "evidence": "artifacts/gh-validation/gh006d-reattach-20261018-144818",
       "summary": "admission-unknown 客户端对账（isCarrierFailure + session/admission 重连清扫）；真服务 6/6：断线续跑、基线+游标、双连接单执行、disconnect 不取消/显式取消 5ms、审批 waterfall 断开重投递+allowed-once 执行门控命令",
-      "gates": "unit 1929 pass / typecheck 5/5 / oxlint 0 err / closure 0"
+      "gates": "unit 1929 pass / typecheck 5/5 / oxlint 0 err / closure 0",
+      "historicalReportedCommit": "c71d35807b",
+      "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
     },
     {
       "id": "GH-006-E",
       "title": "生命周期/版本",
       "date": "2026-10-18",
-      "status": "done",
-      "commit": "bdd814f3ca",
+      "status": "complete-slice",
+      "commit": "67ac9f37fb",
       "evidence": "artifacts/gh-validation/gh006e-lifecycle-20261018-151644",
       "summary": "releases/<id> 不可变安装+current.json 原子指针+update/rollback/gc/uninstall 动词；ghRemote/activity RPC 排水；真监护验收 10/10（含真实服务长任务期间 update 等待空闲再切换）",
-      "gates": "unit 26 pass / typecheck 5/5 / oxlint 0 err / closure 0 / 翻译配对过"
+      "gates": "unit 26 pass / typecheck 5/5 / oxlint 0 err / closure 0 / 翻译配对过",
+      "historicalReportedCommit": "bdd814f3ca",
+      "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
     },
     {
       "id": "GH-006-F",
@@ -535,7 +541,7 @@
         "MEM04"
       ],
       "owner": "常驻远端服务",
-      "status": "complete",
+      "status": "complete-slice",
       "completed": "2026-10-18",
       "deliverables": [
         "packages/glm/remote-supervisor:死监护孤儿保护(存活 service 时 run 拒绝 69)与孤儿根 stop 清理",
@@ -543,7 +549,44 @@
         "MEM03 空闲整树 PSS 中位 111 MiB(预算 256);MEM04 11,122 行 journal、峰值 435 MiB(预算 512)、+27 MiB/120s 回收观测"
       ],
       "evidence": "artifacts/gh-validation/gh006f-joint-20261018-170116",
-      "notes": "机器重启未模拟(无容器权限);真实 Electron 退出随 GH-012 桌面远端 UI;执行中崩溃的中断回合收口属 GH-008;MEM 无同载体 ZCode Server 基线按绝对值报告"
+      "notes": "机器重启未模拟(无容器权限);真实 Electron 退出随 GH-012 桌面远端 UI;执行中崩溃的中断回合收口属 GH-008;MEM 无同载体 ZCode Server 基线按绝对值报告",
+      "reviewQualification": "Historical slice evidence; current guarantees and remaining requirements are recorded in currentAssessment and reviewFollowup20261018."
+    },
+    {
+      "id": "GH-006-G",
+      "title": "产品插件/profile、制品和生命周期事务收口",
+      "status": "not-started",
+      "planRefs": [
+        "11.8 GH-006-G",
+        "E04.3",
+        "E04.4",
+        "E10"
+      ],
+      "requiredBehavior": [
+        "Supervisor is a Cordis plugin launched through normal dsh profiles, with product configuration",
+        "archive includes Supervisor and all dependencies; GH-005 and GH-006 installation layout and home/data-root agree",
+        "stable RuntimeId/WorkspaceId plus protocol/capability negotiation",
+        "freeze admissions before drain; lease all execution resources and releases",
+        "serialize lifecycle commands and protect in-flight installs from GC; interrupted transactions reconcile",
+        "actual archive: node-free install, resident launch, disconnect/reattach, upgrade/rollback and data-preserving uninstall"
+      ]
+    },
+    {
+      "id": "GH-004-C",
+      "title": "干净桌面安装与恢复入口",
+      "status": "not-started",
+      "planRefs": [
+        "11.8 GH-004-C",
+        "E01",
+        "E10",
+        "VIS"
+      ],
+      "requiredBehavior": [
+        "product bootstrap/configuration selects GH bundles and home for fresh install and recovery",
+        "private GH plugins, profile patch and visual assets ship in the installer",
+        "packaged Electron under a clean home completes GLM/permissions/remote/recovery workflows",
+        "DSH default templates remain generic; no dependency on a pre-seeded source fixture"
+      ]
     }
   ],
   "blocked": [
@@ -560,17 +603,18 @@
     "updatedAt": "2026-10-18",
     "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
     "productBaseline": "ZCode v3.15.1; GSH selective development reference only",
-    "review": "all 10 GH commits after the DSH import reviewed; fixes included with this record; outer review metadata contains commit identities",
+    "review": "All 20 GH commits after the DSH import through the GH-006-F commit reviewed, plus the CI fixes; uncommitted GH-007 work preserved and excluded from committed acceptance.",
     "GH-001": "base/profile/closure implemented; existing-home product-layer migration pending",
     "GH-002": "sampler and corpus implemented; complete ZCode/native/resident baselines pending",
     "GH-003": "native text/tools, reasoning replay, persona, stable tool order, bounded GH retry and truncation rejection implemented; real GLM/purpose routing/personal rules/accounts/PAT/multimodal/TOK pending",
-    "GH-004": "Web and actual Electron fixture workflow implemented; real GLM, locked-store UI error, full workbench/visuals/packaging pending",
+    "GH-004": "Source Web/Electron fixture workflows exist. Packager includes private runtime plugin tarballs. Clean packaged first-launch/recovery still uses upstream WEB_PROFILE and must be fixed via a generic product bootstrap/configuration seam in GH-004-C.",
     "GH-008-A": "local yolo/guarded/build plus independent Plan and Composer controls implemented; readonly/delegation bypasses fixed; full PER05/06/07/09/10 and plan-file/child/Windows paths pending",
     "GH-BRAND": "brand and existing workbench visuals partial; full workflow replacement remains required",
-    "GH-005": "complete runtime archive and direct SSH loopback bootstrap slice implemented and hardened; no resident server yet; alias/ProxyJump deployment explicitly unsupported; independent hosts/download/auth/platform cases pending",
-    "GH-006": "required, NOT STARTED: resident remote service with independent Supervisor, durable admission, continuous tasks and reattach; upstream facilities audited",
-    "memory": "Electron idle ~1155 MiB and post-turn ~1038 MiB not within candidate; 102/354 MiB headless samples not resident-service acceptance",
-    "next": "GH-006-A minimal resident service profiles, then B-F as development plan 11.8; continue unblocked local/PER/TOK/VIS/MEM work without claiming real-service acceptance"
+    "GH-005": "Archive and direct OpenSSH bootstrap slice implemented/hardened; not yet wired to packaged Supervisor lifecycle. Independent hosts/download/alias/ProxyJump/auth/platform cases pending.",
+    "GH-006": "PARTIAL: A-F service, supervision library, durable admission/query, reattach, release primitives and Linux joint tests exist. Product plugin/profile/artifact integration, stable identities, full leases, admission freeze and serialized lifecycle transactions remain required in G.",
+    "memory": "Historical Electron idle ~1155 MiB / post-turn ~1038 MiB above candidate. GH-006-F Linux resident PSS idle 111 MiB / synthetic 11,122-event peak 435 MiB, 120s recovery observation; no post-review remeasurement, long-soak, full-resource or matched ZCode comparison.",
+    "next": "GH-006-G / GH-004-C product entrypoints and complete lifecycle semantics, then continue existing GH-007 and other unblocked work.",
+    "GH-007": "Uncommitted account/PKCE/PAT/model/remote-RPC implementation exists in the shared worktree; not committed or accepted by this review. Preserve and inspect before continuing."
   },
   "review20261017": {
     "status": "code fixes validated",
@@ -632,5 +676,69 @@
         "existingReferenceFindings": 33
       }
     }
+  },
+  "reviewFollowup20261018": {
+    "status": "validated; delivered with this record",
+    "reviewedThrough": "f57b5fe84e",
+    "reviewedGhCommits": 20,
+    "fixed": [
+      "RV17",
+      "RV18",
+      "RV19",
+      "RV20",
+      "RV21",
+      "RV22",
+      "RV23",
+      "RV24"
+    ],
+    "requiredUnstartedWork": [
+      "RV25 / GH-006-G",
+      "RV25 / GH-004-C"
+    ],
+    "ciCommits": [
+      "ba8faeda1b",
+      "a1ea9cc6f6"
+    ],
+    "evidence": "artifacts/gh-validation/review-final-20261018/results.json",
+    "limits": [
+      "No real GLM/account/Coding Plan acceptance",
+      "No independent remote host, actual packaged clean-home Electron or reboot acceptance",
+      "No full lease/admission-freeze/serialized transaction guarantees",
+      "No fresh full-memory or token-efficiency qualification"
+    ],
+    "verification": {
+      "buildGates": 9,
+      "regressionFiles": 51,
+      "regressionTests": 1226,
+      "ciRegressionFiles": 11,
+      "ciRegressionTests": 137,
+      "negativeControls": 4,
+      "productSmokes": 5,
+      "residentAdmissionCases": 8,
+      "lifecycleCases": 10,
+      "docSyncPassed": 43,
+      "docSyncFailed": 0,
+      "lintErrors": 0,
+      "existingLintWarnings": 1,
+      "dependencyPackages": 85
+    },
+    "ci": [
+      {
+        "id": 39117650820,
+        "sha": "a1ea9cc6f6498c691e045ab03995ad8d58b08a93",
+        "name": "GH Desktop · Windows x64",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650820"
+      },
+      {
+        "id": 39117650809,
+        "sha": "a1ea9cc6f6498c691e045ab03995ad8d58b08a93",
+        "name": "GH Remote · Runtime archives",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650809"
+      }
+    ]
   }
 }

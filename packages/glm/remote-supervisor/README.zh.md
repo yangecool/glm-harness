@@ -1,6 +1,6 @@
 ---
 description: "GH 远端进程监护：一个数据根、一个常驻服务——lock 目录单实例声明、identity 文件、stdout 就绪契约、带断路器的有界崩溃退避，以及 SIGTERM 到 SIGKILL 的排水阶梯；纯 Node、零依赖。"
-kind: "package-reference"
+kind: "package-library"
 ---
 
 # @glm-harness/gh-remote-supervisor
@@ -52,7 +52,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" gc
 node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 ```
 
-`install` 把源复制进暂存目录后以一次 rename 提交，release 要么完整要么不存在，同 id 重复安装被拒绝。`update` 与 `rollback` 先轮询存活服务的 `ghRemote/activity` RPC 直到没有运行中的 agent（或排水超时），经排水阶梯停止、切换指针、再从新 release 拉起；identity 文件记录当前运行的 release。`gc` 移除中断安装的暂存残留和没有任何钉住的 release——current、回滚目标、以及存活服务仍在运行的 release 都保留。`uninstall` 移除运行时与服务状态但保留数据根的其余字节；`uninstall --purge` 才删除整个数据根。
+`install` 使用独享暂存目录并拒绝不安全的 release 名。`update` 和 `rollback` 必须取得完整有效的活动查询，等待运行回合、pending inbox 和 Workspace 插件报告的活动；超时、鉴权失败或缺少计数都拒绝切换。完整停止接纳、PTY/全局 lease 与串行生命周期事务仍未完成，一次空闲采样不提供这些保证。损坏的 current 指针拒绝变更，重复选择同一 release 保留回滚目标。`gc` 保留 current、回滚与存活服务钉住的版本。`uninstall` 先停止监护再移除运行时状态；仅显式 `--purge` 删除数据。
 
 -----
 
@@ -87,7 +87,8 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 <a id="known-limitations-and-deferred-work"></a>
 
 - 仅 POSIX：监护建立在 SIGTERM/SIGKILL 与原子目录创建之上；Windows 服务控制移植是后续工作。
-- 陈旧锁窃取只检查 pid 存活，无法区分被复用的 pid；nonce 防同根混淆，但不防崩溃后的 OS pid 回收。
+- Linux 控制命令在发信号前核对 boot ID、进程启动 ticks 与所属 nonce；旧记录或无法证明身份时拒绝控制，其他平台需独立验证。identity 含启动令牌，仅 owner 可读。
+- 监护被 SIGKILL 后，孤儿服务仍存活时拒绝接管同一数据根，避免并发写同一日志；先用 `stop` 排空孤儿，再重新启动。不支持收养存活孤儿。
 - 断路状态在监护进程内；重启后的监护从全新崩溃窗口开始。
 - 就绪契约是一行 stdout，缓冲或重定向 stdout 的服务需要保持 `printUrl` 路径在 stdout 上。
 - OS 级自启（systemd/launchd 单元）属于另行记录的部署工作，不在本模块内。

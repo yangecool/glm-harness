@@ -44,30 +44,39 @@ export const STAGING_PREFIX = '.staging-'
 /** Manifest file name inside a release directory. */
 export const RELEASE_MANIFEST = 'gh-release.json'
 
+/** Release ids are single directory names, never pointer or staging paths. */
+const validReleaseId = (id: string): boolean => /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(id) && id !== 'current.json'
+
 /**
  * Read a root's current-release pointer.
  * @param root - the supervisor data root.
- * @returns the parsed pointer, or null when absent or malformed (diagnose via `releasesReport`).
+ * @returns the parsed pointer, or null when absent; malformed or unreadable pointers reject.
  */
 export const readCurrent = async (root: string): Promise<CurrentReleaseFile | null> => {
   let raw: string
   try {
     raw = await readFile(join(root, 'releases', 'current.json'), 'utf8')
-  } catch {
-    return null
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
   }
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return null
+  const parsed: unknown = JSON.parse(raw)
+  if (typeof parsed === 'object' && parsed !== null) {
     const candidate = parsed as Partial<CurrentReleaseFile>
-    if (candidate.kind !== 'gh-remote-current-release' || typeof candidate.releaseId !== 'string') return null
-    return parsed as CurrentReleaseFile
-  } catch {
-    return null
+    if (candidate.kind === 'gh-remote-current-release' && typeof candidate.releaseId === 'string'
+      && validReleaseId(candidate.releaseId) && Number.isFinite(candidate.switchedAt)
+      && (candidate.previousReleaseId === null || typeof candidate.previousReleaseId === 'string' && validReleaseId(candidate.previousReleaseId))) {
+      return parsed as CurrentReleaseFile
+    }
   }
+  throw new Error('invalid current-release pointer; refusing lifecycle mutations')
 }
 
-/** Installed release ids, lexically sorted; staging leftovers excluded. */
+/**
+ * List installed release ids, excluding staging leftovers.
+ * @param root - supervisor data root.
+ * @returns release directory names in lexical order.
+ */
 export const listReleases = async (root: string): Promise<string[]> => {
   let entries: Dirent[]
   try {
@@ -80,7 +89,11 @@ export const listReleases = async (root: string): Promise<string[]> => {
     .sort()
 }
 
-/** Leftover staging directory names: interrupted installs, safe to diagnose and remove. */
+/**
+ * List staging directory names for explicit installation diagnostics.
+ * @param root - supervisor data root.
+ * @returns staging directory names in lexical order.
+ */
 export const listStaging = async (root: string): Promise<string[]> => {
   let entries: Dirent[]
   try {
@@ -144,14 +157,14 @@ export const installRelease = async (
     return { ok: false, reason: `install source has no lib/bin.js runtime entry: ${from}` }
   }
   const releaseId = options.id ?? `r-${(options.now ?? Date.now)()}-${randomUUID().slice(0, 8)}`
+  if (!validReleaseId(releaseId)) return { ok: false, reason: 'release id must be one safe directory name' }
   const releasesDir = join(root, 'releases')
-  const staging = join(releasesDir, `${STAGING_PREFIX}${releaseId}`)
+  const staging = join(releasesDir, `${STAGING_PREFIX}${releaseId}-${randomUUID()}`)
   const final = join(releasesDir, releaseId)
   try {
     await lstat(final)
     return { ok: false, reason: `release ${releaseId} is already installed; releases are immutable` }
   } catch { /* absent: proceed */ }
-  await rm(staging, { recursive: true, force: true })
   await mkdir(releasesDir, { recursive: true })
   await copyTree(from, staging)
   const manifest: ReleaseManifest = {
@@ -182,12 +195,14 @@ export const useRelease = async (
   releaseId: string,
   now: () => number = Date.now,
 ): Promise<{ ok: true; previousReleaseId: string | null } | { ok: false; reason: string }> => {
+  if (!validReleaseId(releaseId)) return { ok: false, reason: 'release id must be one safe directory name' }
   try {
     await lstat(join(root, 'releases', releaseId, RELEASE_MANIFEST))
   } catch {
     return { ok: false, reason: `release ${releaseId} is not installed` }
   }
   const previous = await readCurrent(root)
+  if (previous?.releaseId === releaseId) return { ok: true, previousReleaseId: previous.previousReleaseId }
   const payload: CurrentReleaseFile = {
     kind: 'gh-remote-current-release',
     releaseId,

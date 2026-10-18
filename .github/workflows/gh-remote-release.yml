@@ -12,6 +12,7 @@ on:
   push:
     branches: [main]
     tags: ['gh-v*']
+    paths-ignore: ['docs/**', 'artifacts/**', 'README.md', 'README.zh.md', 'README.i18n.yaml']
 
 permissions:
   contents: write
@@ -52,6 +53,20 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build the workspace runtime
         run: pnpm run build
+      - name: Validate GH admission, supervision and packaging regressions
+        if: matrix.target == 'linux-x64'
+        run: |
+          node node_modules/vitest/vitest.mjs run \
+            packages/api/session-controller/tests/admission.host.spec.ts \
+            packages/api/session-controller/tests/session-pending-submissions.client.spec.ts \
+            packages/session/session-checkpoint-policy/tests/session-checkpoint-policy.spec.ts \
+            packages/glm/remote-supervisor/tests \
+            packages/test-support/client-runtime/tests/assembly-bundle-roster.client.spec.ts \
+            apps/desktop/tests/private-plugin-packages.spec.ts \
+            scripts/gh-ci-workflows.spec.ts scripts/client-tsconfig.spec.ts \
+            scripts/verify-repository-references.spec.ts
+          pnpm run constraints
+          node --import tsx/esm scripts/check-gh-closure.ts
       - name: Build the relocatable gh-remote archive
         run: node --import tsx/esm scripts/build-gh-remote-archive.ts --target ${{ matrix.target }}
       - name: Retain the archive and its digest

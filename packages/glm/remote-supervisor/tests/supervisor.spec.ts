@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { Readable } from 'node:stream'
@@ -188,6 +188,56 @@ setInterval(() => {}, 1 << 30)`
   expect((await finished).reason).toBe('stopped')
 })
 
+it('reads a complete ready line behind chatter in one write and keeps the token file private', async () => {
+  const root = await freshRoot()
+  const script = `process.stdout.write('booting\\n' + ${JSON.stringify(READY)} + '\\n')
+process.on('SIGTERM', () => process.exit(0)); setInterval(() => {}, 1 << 30)`
+  const supervisor = new GhRemoteSupervisor(root, command(script), fastOptions())
+  const finished = supervisor.run()
+  onTestFinished(async () => { await supervisor.stop(); await finished })
+  await waitUntil(async () => (await readIdentity(supervisorPaths(root)))?.readyUrl === 'http://127.0.0.1:1/token#x')
+  if (process.platform !== 'win32') expect((await stat(supervisor.paths.identityFile)).mode & 0o777).toBe(0o600)
+  await supervisor.stop()
+  expect((await finished).reason).toBe('stopped')
+})
+
+it('keeps a single owner when stale-lock takeovers overlap', async () => {
+  const root = await freshRoot()
+  const paths = supervisorPaths(root)
+  await mkdir(paths.lockDir, { recursive: true })
+  await writeFile(join(paths.lockDir, 'lock.json'), JSON.stringify({
+    kind: 'gh-remote-supervisor-lock', pid: 999_999_999, nonce: 'dead', acquiredAt: 0, command: [],
+  }))
+  const contenders = Array.from({ length: 8 }, () => new GhRemoteSupervisor(root, command(STAY_READY), fastOptions()))
+  const claims = await Promise.all(contenders.map(contender => contender.acquireLock()))
+  expect(claims.filter(claim => claim.ok)).toHaveLength(1)
+  expect((await probeLock(paths)).lock?.nonce).toBe(contenders[claims.findIndex(claim => claim.ok)]?.nonce)
+})
+
+it('stops promptly during a long crash backoff', async () => {
+  const root = await freshRoot()
+  const supervisor = new GhRemoteSupervisor(root, command('process.exit(1)'), fastOptions({ baseBackoffMs: 60_000, maxBackoffMs: 60_000 }))
+  const finished = supervisor.run()
+  onTestFinished(async () => { await supervisor.stop(); await finished })
+  await waitUntil(async () => supervisor.restarts === 1)
+  await supervisor.stop()
+  expect((await finished).reason).toBe('stopped')
+})
+
+it('refuses to signal a reused pid or an identity from another supervisor nonce', async () => {
+  const root = await freshRoot()
+  const child = spawn(process.execPath, ['-e', NEVER_READY])
+  const exited = new Promise<void>((resolve) => { child.once('exit', () => { resolve() }) })
+  onTestFinished(async () => { child.kill('SIGKILL'); await exited })
+  await new Promise<void>((resolve) => { child.once('spawn', () => { resolve() }) })
+  await mkdir(join(root, 'run'), { recursive: true })
+  await writeFile(supervisorPaths(root).identityFile, JSON.stringify({
+    kind: 'gh-remote-supervisor-identity', pid: child.pid, nonce: 'record', processIdentity: 'different-birth',
+  }))
+  expect(await supervisorCli(['--root', root, 'stop'])).toBe(69)
+  expect(isPidAlive(child.pid ?? -1)).toBe(true)
+})
+
 it('counts ready timeouts as crashes and drains the silent child', async () => {
   const root = await freshRoot()
   const supervisor = new GhRemoteSupervisor(root, command(NEVER_READY), fastOptions({ readyTimeoutMs: 150, crashThreshold: 1 }))
@@ -371,6 +421,7 @@ it('refuses takeover while the crashed supervisor\'s orphaned service still runs
     '--root', root, 'run', '--', process.execPath, '-e', STAY_READY], { cwd: process.cwd() })
   onTestFinished(() => { cli.kill('SIGKILL') })
   const orphan = await awaitIdentity(root)
+  await waitUntil(async () => (await readIdentity(supervisorPaths(root)))?.readyUrl === 'http://127.0.0.1:1/token#x')
   // SIGKILL the supervisor only: the child is orphaned but keeps the root busy.
   cli.kill('SIGKILL')
   await waitUntil(async () => cli.exitCode !== null || cli.signalCode !== null)

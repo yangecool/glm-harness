@@ -203,10 +203,12 @@ describe('Session Controller access', () => {
     // The durable Inbox splice records each accepted message with its source.
     const logged = shared.session.snapshotEvents()
       .flatMap(event => event.type === 'agent/inbox/spliced' ? event.data.inserted.map(item => item.source) : [])
-    expect(logged).toEqual([
+    expect(logged).toMatchObject([
       { kind: 'user', rpcId: 'guest-1', principal: GUEST },
       { kind: 'user', rpcId: 'owner-1' },
     ])
+    expect(logged[1]).not.toHaveProperty('principal')
+    for (const source of logged) expect(source).toHaveProperty('admissionFingerprint', expect.stringMatching(/^[a-f0-9]{64}$/u))
   })
 
   it('lets a non-owner read projections only in a Session its Session role names', async () => {

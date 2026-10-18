@@ -1,0 +1,82 @@
+[
+  {
+    "sha": "7d3faeae44c8208e05b646419e543a26be3a8bc0",
+    "subject": "GH-001: derive GLM Harness runtime with an explicit DeepSeek-free base bundle"
+  },
+  {
+    "sha": "cd56d2be863b9c79f9238bcbbe8051e233a974c9",
+    "subject": "GH-001: fold boot evidence into the recorded run directory"
+  },
+  {
+    "sha": "8b3ec872eb15778632534e383697835dfb46eb13",
+    "subject": "gh002: resource baseline with repeatable fixtures"
+  },
+  {
+    "sha": "f9c9fa9f1e523d6590b4f24e1124d1508a890663",
+    "subject": "gh003: native GLM provider route with a GH-written chat-completions stack"
+  },
+  {
+    "sha": "7db3ce8ba13a3c4ef9c85b0ef085c50b9f66bb3a",
+    "subject": "gh004: desktop minimal workflow over the reserved GH composition"
+  },
+  {
+    "sha": "35f9845e70921d32838078b37115b4223ed44b47",
+    "subject": "gh005brand: full GLM Harness identity over the dsh client shell"
+  },
+  {
+    "sha": "1db9ff054f88bcaa831454b1e535070ca41829e1",
+    "subject": "docs: rewrite the README pair for GLM Harness"
+  },
+  {
+    "sha": "0813632f52e6f406752be57ba6a7c923445ea463",
+    "subject": "gh003b1: GLM work policy, bounded retry, truncated tool batches"
+  },
+  {
+    "sha": "192422feb0955f56f35a6e7d4852a04ecda73731",
+    "subject": "gh008a+gh004b: permission modes with plan gate; repeatable native desktop flow"
+  },
+  {
+    "sha": "f840e3dbd29f7a7fa60acd026308c9c61dacf60a",
+    "subject": "gh005: relocatable remote runtime archive, node-free POSIX bootstrap, TOFU SSH deploy"
+  },
+  {
+    "sha": "43595261dcd1a5f989de82881ff453513fb6458d",
+    "subject": "fix(gh): harden permissions and remote bootstrap after implementation review"
+  },
+  {
+    "sha": "5ca24314c0aeb6ff51472e16a50bdc2442fbed70",
+    "subject": "gh006a: resident gh-remote service profile over the stripped web transport"
+  },
+  {
+    "sha": "7c584758352dff495810f2c896f9d1bae0b5a60a",
+    "subject": "gh006b: remote process supervision—data-root lock, identity, crash backoff circuit, drain ladder"
+  },
+  {
+    "sha": "c73b8de0ae8743673bf9c3b53a0cac5d838c1aa9",
+    "subject": "gh006c: durable prompt admission—serialized per-Agent admission, requestId conflicts, flush-before-ACK, admission query"
+  },
+  {
+    "sha": "e6eb8c4b94bc6074644f0cbd2a88e649e0a30ae4",
+    "subject": "ci: github-hosted windows x64 and gh-remote archive release workflows"
+  },
+  {
+    "sha": "977096b76d4a2df4824ff24121c1e9a290cf6301",
+    "subject": "ci: pin marketplace action tags with the github.com v-prefix"
+  },
+  {
+    "sha": "403f3ff9d8d91095cdbfb77084fc709debe95c5a",
+    "subject": "ci: standalone unsigned windows packaging and fork e2e gating"
+  },
+  {
+    "sha": "3ff7dd5bd87d0808caee630d21f0c9b79db2f793",
+    "subject": "gh006d: continuous execution and reattachment—admission-unknown reconciliation, real-service reattach acceptance"
+  },
+  {
+    "sha": "67ac9f37fb8b4b714472aeabb2bb529e116fc951",
+    "subject": "gh006e: release lifecycle—immutable installs, atomic current pointer, activity drain, gc pinning, uninstall split"
+  },
+  {
+    "sha": "f57b5fe84ed8f25269062f3a37f2d4f9f3a2638b",
+    "subject": "gh006f: joint matrix and resident memory—disconnect/crash/restart over real supervisor+service+OpenSSH+systemd, MEM03 111MiB idle tree, MEM04 435MiB peak over 11k journal events; orphan-refusing takeover and orphan-draining stop"
+  }
+]

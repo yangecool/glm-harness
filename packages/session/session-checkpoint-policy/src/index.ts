@@ -5,7 +5,7 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import type { Session } from '@deepseek-ai/dsh-session'
+import type { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type { StreamChunk } from '@deepseek-ai/dsh-llm'
 import { TOOL_ABORTED_BEFORE_DISPATCH, type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import type { PreStepDecision } from '@deepseek-ai/dsh-agent'
@@ -16,6 +16,23 @@ export const name = 'session-checkpoint-policy'
 
 /** Services whose request, tool, session, and persistence boundaries this policy joins. */
 export const inject = ['llm', 'sessionPersistence', 'sessions', 'tools']
+
+/** A persisted execution has no writer that can witness its checkpoint. */
+export class SessionCheckpointUnavailable extends Error {
+  /** Stable reason available to error presenters. */
+  readonly code = 'NO_DURABLE_WRITER'
+
+  /** @param sessionId - Session whose execution must remain blocked. */
+  constructor(readonly sessionId: SessionId) {
+    super(`No durability writer witnessed the checkpoint for session "${sessionId}"`)
+    this.name = 'SessionCheckpointUnavailable'
+  }
+}
+
+/** Check that an actual writer, rather than just an installed service, witnessed the prefix. */
+async function checkpoint(ctx: Context, session: Session): Promise<void> {
+  if (!await ctx.sessions.flush(session)) throw new SessionCheckpointUnavailable(session.id)
+}
 
 /**
  * Delay construction of the downstream model stream until the complete logged
@@ -32,7 +49,7 @@ function afterCheckpoint(
   next: () => AsyncIterable<StreamChunk>,
 ): AsyncIterable<StreamChunk> {
   return (async function* (): AsyncIterable<StreamChunk> {
-    await ctx.sessions.flush(session)
+    await checkpoint(ctx, session)
     yield* next()
   })()
 }
@@ -69,7 +86,7 @@ export function apply(ctx: Context): void {
 
   ctx.on('tools/execute', async (exec, next): Promise<ToolExecutionResult> => {
     if (exec.agent === undefined || exec.parent !== undefined) return next()
-    await ctx.sessions.flush(exec.agent.session)
+    await checkpoint(ctx, exec.agent.session)
     if (exec.signal.aborted) return abortedBeforeDispatchResult()
     return next()
   })
@@ -77,7 +94,7 @@ export function apply(ctx: Context): void {
   // Before each request, persist everything committed by the preceding step;
   // the first step's call is an intentional no-op beyond any prompt intake.
   ctx.on('agent/pre-step', async ({ agent }, next): Promise<PreStepDecision> => {
-    await ctx.sessions.flush(agent.session)
+    await checkpoint(ctx, agent.session)
     return next()
   })
 }

@@ -25,6 +25,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+仅安装持久化服务还不够：每个在线 Session 的 checkpoint 都要求真实 writer 参与 flush。无人见证时，`SessionCheckpointUnavailable` 阻止模型请求、顶层工具和 pre-step 推进。完全不使用持久化的部署应省略此策略。
+
 在持久化会话、且必须在崩溃时不重做或丢失工作的任何组合中挂载本插件。持久化与检查点调度是独立插件：后端存储事件日志，本策略决定何时必须刷新存储。
 
 ### 何时选择
