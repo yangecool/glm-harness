@@ -720,9 +720,53 @@
       "docSyncFailed": 0,
       "lintErrors": 0,
       "existingLintWarnings": 1,
-      "dependencyPackages": 85
+      "dependencyPackages": 85,
+      "sharedWorkspaceTypecheckGates": 5
     },
     "ci": [
+      {
+        "id": 39119677530,
+        "sha": "efe987567706ebe8432c4b32083535dac6037b47",
+        "name": "GH Desktop · Windows x64",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39119677530",
+        "jobs": [
+          {
+            "name": "package",
+            "status": "in_progress",
+            "conclusion": null
+          }
+        ]
+      },
+      {
+        "id": 39119677531,
+        "sha": "efe987567706ebe8432c4b32083535dac6037b47",
+        "name": "GH Remote · Runtime archives",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39119677531",
+        "jobs": [
+          {
+            "name": "archive (linux-x64, ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "archive (linux-arm64, ubuntu-24.04-arm)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "release",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "fixCommit": "efe987567706ebe8432c4b32083535dac6037b47",
+    "ciHistory": [
       {
         "id": 39117650820,
         "sha": "a1ea9cc6f6498c691e045ab03995ad8d58b08a93",
@@ -739,6 +783,12 @@
         "conclusion": "success",
         "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650809"
       }
-    ]
+    ],
+    "publication": "Linux x64/ARM64 preview artifacts retained; current Windows run recorded as observed and not a handoff gate. No release tag created; tag publication, signed updates and clean-home installer acceptance remain unqualified.",
+    "deferred": {
+      "windowsRelease": true,
+      "reason": "User explicitly deferred Windows packaging/release and requested immediate handoff; do not wait for or optimize Windows output as this handoff gate."
+    },
+    "ciObservedAt": "2026-10-18T10:49:44.773385+00:00"
   }
 }

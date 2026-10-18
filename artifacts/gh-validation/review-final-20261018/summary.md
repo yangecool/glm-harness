@@ -7,3 +7,5 @@
 GH-006 A–F 仍为切片：产品 Supervisor 插件/profile/归档、自举布局、稳定身份、停止接纳与全量 lease、串行生命周期/GC 和中断恢复归 GH-006-G；干净桌面安装/恢复归 GH-004-C。GH-007 未提交代码保留，不计入本次已提交验收。真实 GLM、完整资源/视觉/权限/token 资格保持未完成。
 
 最终机器结果、提交清单与原始日志摘要分别见 results.json、commits.json 和 evidence-index.json。原始日志保存在工作区外层 docs/planning/evidence/review-final-20261018；CI 结果按具体 run 和源提交报告，跳过真实 DeepSeek suite 不代表真实 GLM 验证。
+
+源码修复提交 `efe9875677` 已推送 `origin/main`，共享工作区保留全部 GH-007，合并后冻结安装与 typecheck 5/5 通过。Linux x64/ARM64 run 39119677531 成功，预览归档已保留。用户明确要求 Windows 出包/发版先暂缓，不再等待 run 39119677530，交接时观测状态见 results.json；不得把早前 Windows 成功外推为当前提交通过。未新建发布 tag；没有把构建成功等同干净安装、真实 GLM 或全量发行验收。

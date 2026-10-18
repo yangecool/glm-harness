@@ -102,6 +102,12 @@
       "files": 2,
       "tests": 24,
       "failed": 0
+    },
+    "sharedWorkspaceIntegration": {
+      "typecheckGatesPassed": 5,
+      "frozenOfflineInstall": "passed with scripts disabled",
+      "untrackedFilesPreserved": 17,
+      "scope": "GH-007 preserved and type integration checked; no GH-007 product acceptance"
     }
   },
   "limits": [
@@ -131,7 +137,7 @@
       "id": 39117650820,
       "status": "success"
     },
-    "publication": "No release tag created or production release published",
+    "publication": "Linux x64/ARM64 preview artifacts retained; current Windows run recorded as observed and not a handoff gate. No release tag created; tag publication, signed updates and clean-home installer acceptance remain unqualified.",
     "secondRuns": [
       {
         "id": 39117650820,
@@ -149,6 +155,71 @@
         "conclusion": "success",
         "url": "https://github.com/yangecool/glm-harness/actions/runs/39117650809"
       }
-    ]
-  }
+    ],
+    "reviewHead": "efe987567706ebe8432c4b32083535dac6037b47",
+    "reviewRuns": [
+      {
+        "id": 39119677530,
+        "sha": "efe987567706ebe8432c4b32083535dac6037b47",
+        "name": "GH Desktop · Windows x64",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39119677530",
+        "jobs": [
+          {
+            "name": "package",
+            "status": "in_progress",
+            "conclusion": null
+          }
+        ]
+      },
+      {
+        "id": 39119677531,
+        "sha": "efe987567706ebe8432c4b32083535dac6037b47",
+        "name": "GH Remote · Runtime archives",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/yangecool/glm-harness/actions/runs/39119677531",
+        "jobs": [
+          {
+            "name": "archive (linux-x64, ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "archive (linux-arm64, ubuntu-24.04-arm)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "release",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "retainedArtifacts": [
+      {
+        "runId": 39119677531,
+        "id": 12133722799,
+        "name": "gh-remote-linux-x64-39119677531-1",
+        "sizeBytes": 174774881,
+        "expired": false
+      },
+      {
+        "runId": 39119677531,
+        "id": 12133424326,
+        "name": "gh-remote-linux-arm64-39119677531-1",
+        "sizeBytes": 177623570,
+        "expired": false
+      }
+    ],
+    "deferred": {
+      "windowsRelease": true,
+      "reason": "User explicitly deferred Windows packaging/release and requested immediate handoff; do not wait for or optimize Windows output as this handoff gate."
+    },
+    "observedAt": "2026-10-18T10:49:44.773385+00:00"
+  },
+  "fixCommit": "efe987567706ebe8432c4b32083535dac6037b47"
 }

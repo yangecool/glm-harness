@@ -90,6 +90,11 @@
     "sha256": "c71ec3c2f8d4be563aae1fae8e43cc836e415a4946c6135c2ced4af7c992b818"
   },
   {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-handoff-doc-sync.log",
+    "bytes": 3678,
+    "sha256": "295f00e1d50b24ade0e5b97f9bd85a1b452965176fdcb83e724e9d811c6f244b"
+  },
+  {
     "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-lifecycle-service-final.json",
     "bytes": 1779,
     "sha256": "387d8ae92e1c786a16a051e7cdca80de7390662e637f79bc215c41752a550ce2"
@@ -103,6 +108,16 @@
     "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-lint-verified.log",
     "bytes": 388,
     "sha256": "001d1bde0a56e5155cc0a0baa86a11168da5099e58a4fb57ea5910306901abd5"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-main-install.log",
+    "bytes": 4347,
+    "sha256": "081ec5a89e52ab2691b7f5bd93fc89093eb03d1d3a07a03d096446c61db8a69b"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-main-integration-typecheck.log",
+    "bytes": 576,
+    "sha256": "f820986581e8a9dc3fefe37fd4701fc3d3d76470348e643e81f5142e7d58fca3"
   },
   {
     "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-negative-checkpoint.log",
@@ -158,6 +173,26 @@
     "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-regression-verified.log",
     "bytes": 3526,
     "sha256": "1146a13759bf410aaff458eb48854851747383594d2fb52fb11bc3e90d98fcd8"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-source-artifacts.json",
+    "bytes": 317,
+    "sha256": "1172ed175a87d4837165cf08e6a8f27bae183aa7c3fd8b5bc64c185d765dddd3"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-source-ci.json",
+    "bytes": 1054,
+    "sha256": "cd182fc260afd356f11808563fb80d1440d81f7d73c35a55eb814b1db3ae9403"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-source-commit.log",
+    "bytes": 2350,
+    "sha256": "aa9101e1bfcebfbfe32e8bf00404b609a0984e694e76867b61a709101ff3eb8a"
+  },
+  {
+    "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-source-push.log",
+    "bytes": 1152,
+    "sha256": "e57e0f398fff8bc9dab85426bb1178c88870b10aac51277bb64f6e009fd0aec6"
   },
   {
     "path": "../../../../docs/planning/evidence/review-final-20261018/gh-review-test-docs.log",
