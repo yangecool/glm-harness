@@ -4586,6 +4586,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'session', description: 'the session whose buffered events must reach durable storage.' }],
   },
   {
+    name: 'session/new-prompt',
+    mode: 'waterfall',
+    signature: '\'session/new-prompt\'(request: { sessionId: SessionId; requestId: SessionRequestId }, next: () => Promise<void>): Promise<void>',
+    summary: 'A prompt passed reconciliation and is about to newly start work: the merge-extensible new-admission gate.',
+    description: 'A prompt passed reconciliation and is about to newly start work: the merge-extensible new-admission gate. A listener that throws denies the prompt with its own typed error (a resident service draining for a version switch refuses new work here); every listener must delegate.',
+    parameters: [{ name: 'request', description: 'the Session and request identity about to be admitted.' }, { name: 'next', description: 'delegates to the remaining chain; the resolved value is unused.' }],
+  },
+  {
     name: 'settings/document-updated',
     mode: 'emit',
     signature: '\'settings/document-updated\'(ns: SettingsNamespace, revision: number): void',
