@@ -1,0 +1,16 @@
+{
+  "slice": "GH-006-B",
+  "title": "remote process supervision: data-root lock, identity, readiness, backoff circuit, drain ladder",
+  "package": "@glm-harness/gh-remote-supervisor",
+  "baseCommit": "5ca24314c0",
+  "date": "2026-10-18",
+  "scope": "plain-Node supervisor library plus lib/index.js CLI (run/stop/restart/status) over the real resident gh-remote profile; unit specs with real child processes; acceptance against the built CLI supervising the real service with loopback GLM fixture and synthetic credentials",
+  "verification": {
+    "unitSpecs": "18/18 passed (packages/glm/remote-supervisor/tests/supervisor.spec.ts)",
+    "acceptance": "8/8 passed (scripts/gh-remote-supervisor-verify.ts, report: supervisor-verify.json)",
+    "build": "pnpm run build 9/9 gates",
+    "oxlint": "0 errors on package, spec, verify driver",
+    "closure": "gh-closure clean; workspace constraints clean; runtime closure closed",
+    "docSync": "all doc gates pass except the pre-existing repository-references GH-018 ledger item"
+  }
+}

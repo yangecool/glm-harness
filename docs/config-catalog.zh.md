@@ -4876,4 +4876,5 @@ export interface Config {
 | `@deepseek-ai/dsh-win32-process` | — | [`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts) |
 | `@glm-harness/gh-base` | — | [`packages/glm/base/src/index.ts`](../packages/glm/base/src/index.ts) |
 | `@glm-harness/gh-desktop` | — | [`packages/glm/desktop/src/index.ts`](../packages/glm/desktop/src/index.ts) |
+| `@glm-harness/gh-remote-supervisor` | — | [`packages/glm/remote-supervisor/src/index.ts`](../packages/glm/remote-supervisor/src/index.ts) |
 <!-- END GENERATED config-catalog:library -->

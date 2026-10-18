@@ -1,0 +1,6 @@
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+closure=0
+constraints=0
+Found 0 warnings and 0 errors.
+Finished in 1.5s on 3 files with 90 rules using 12 threads.
+oxlint=0

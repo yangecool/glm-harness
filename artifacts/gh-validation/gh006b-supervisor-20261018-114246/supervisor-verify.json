@@ -1,0 +1,48 @@
+{
+  "scope": "built supervisor CLI over the real resident gh-remote profile, loopback GLM fixture, synthetic credentials",
+  "cases": [
+    {
+      "name": "supervised-ready",
+      "passed": true,
+      "detail": "identity pid=408250 supervisor pid=408239 readyUrl=http://127.0.0.1:43625/?token=kCPBZDraF4HLB_12yYP2XQeUfgF8PX4LCyRE4sdtedA"
+    },
+    {
+      "name": "identity-rpc-supervised",
+      "passed": true,
+      "detail": "profile=gh-remote rpc-pid=408250 identity-pid=408250"
+    },
+    {
+      "name": "session-turn-supervised",
+      "passed": true,
+      "detail": "GH remote supervised turn"
+    },
+    {
+      "name": "second-supervisor-refused",
+      "passed": true,
+      "detail": "exit=69 stderr=gh-remote-supervisor: lock held by live pid 408239"
+    },
+    {
+      "name": "crash-restart",
+      "passed": true,
+      "detail": "new pid=408317 restarts=1 readyUrl=http://127.0.0.1:40681/?token=OI_rnA3k9O41Zbk-LwloWMmGRI955YRVPfuWw5QLv0I"
+    },
+    {
+      "name": "rpc-after-restart",
+      "passed": true,
+      "detail": "rpc pid=408317 identity pid=408317"
+    },
+    {
+      "name": "status-verb",
+      "passed": true,
+      "detail": "status reports pid=408317"
+    },
+    {
+      "name": "stop-verb-drains",
+      "passed": true,
+      "detail": "stop exit=0 supervisor exit=0 service dead=true identity removed=true lock removed=true"
+    }
+  ],
+  "supervisorOutTail": "",
+  "supervisorErrTail": "gh-remote-supervisor: drained on SIGTERM\n",
+  "passed": true
+}

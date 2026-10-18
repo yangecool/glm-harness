@@ -1,0 +1,136 @@
+{
+  "unit": [
+    {
+      "name": "pid liveness",
+      "passed": true,
+      "detail": "live/dead/malformed pids"
+    },
+    {
+      "name": "path layout",
+      "passed": true,
+      "detail": "lock and identity under run/"
+    },
+    {
+      "name": "readIdentity tolerance",
+      "passed": true,
+      "detail": "absent, malformed, foreign, valid"
+    },
+    {
+      "name": "probeLock states",
+      "passed": true,
+      "detail": "absent, malformed, stale, live"
+    },
+    {
+      "name": "acquireLock lifecycle",
+      "passed": true,
+      "detail": "fresh, live-owner refusal, stale steal, EEXIST race"
+    },
+    {
+      "name": "ready child run/stop",
+      "passed": true,
+      "detail": "identity, readyUrl, clean release"
+    },
+    {
+      "name": "ready-line edges",
+      "passed": true,
+      "detail": "chatter before, split chunks"
+    },
+    {
+      "name": "ready timeout crash",
+      "passed": true,
+      "detail": "silent child drained, counted"
+    },
+    {
+      "name": "backoff caps",
+      "passed": true,
+      "detail": "exponential 10/20/25 recorded, fresh pids"
+    },
+    {
+      "name": "circuit breaker",
+      "passed": true,
+      "detail": "windowed threshold opens circuit"
+    },
+    {
+      "name": "spawn failure",
+      "passed": true,
+      "detail": "ENOENT ends loop as spawn-error"
+    },
+    {
+      "name": "drain ladder",
+      "passed": true,
+      "detail": "graceful SIGTERM, stubborn SIGKILL"
+    },
+    {
+      "name": "CLI usage errors",
+      "passed": true,
+      "detail": "exit 64 paths"
+    },
+    {
+      "name": "CLI run lifecycle",
+      "passed": true,
+      "detail": "supervise, SIGTERM drain, exit 0; ENOENT exit 76"
+    },
+    {
+      "name": "status verb",
+      "passed": true,
+      "detail": "live identity reported"
+    },
+    {
+      "name": "stop verb",
+      "passed": true,
+      "detail": "stops supervisor process and child, exit 0"
+    },
+    {
+      "name": "stop escalation",
+      "passed": true,
+      "detail": "stubborn child, product 10s ladder"
+    },
+    {
+      "name": "SIGKILL restart",
+      "passed": true,
+      "detail": "fresh pid, restarts=1, readyUrl republished"
+    }
+  ],
+  "acceptance": [
+    {
+      "name": "supervised-ready",
+      "passed": true,
+      "detail": "identity pid=408250 supervisor pid=408239 readyUrl=http://127.0.0.1:43625/?token=kCPBZDraF4HLB_12yYP2XQeUfgF8PX4LCyRE4sdtedA"
+    },
+    {
+      "name": "identity-rpc-supervised",
+      "passed": true,
+      "detail": "profile=gh-remote rpc-pid=408250 identity-pid=408250"
+    },
+    {
+      "name": "session-turn-supervised",
+      "passed": true,
+      "detail": "GH remote supervised turn"
+    },
+    {
+      "name": "second-supervisor-refused",
+      "passed": true,
+      "detail": "exit=69 stderr=gh-remote-supervisor: lock held by live pid 408239"
+    },
+    {
+      "name": "crash-restart",
+      "passed": true,
+      "detail": "new pid=408317 restarts=1 readyUrl=http://127.0.0.1:40681/?token=OI_rnA3k9O41Zbk-LwloWMmGRI955YRVPfuWw5QLv0I"
+    },
+    {
+      "name": "rpc-after-restart",
+      "passed": true,
+      "detail": "rpc pid=408317 identity pid=408317"
+    },
+    {
+      "name": "status-verb",
+      "passed": true,
+      "detail": "status reports pid=408317"
+    },
+    {
+      "name": "stop-verb-drains",
+      "passed": true,
+      "detail": "stop exit=0 supervisor exit=0 service dead=true identity removed=true lock removed=true"
+    }
+  ]
+}

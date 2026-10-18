@@ -10675,6 +10675,12 @@ importers:
         specifier: workspace:*
         version: link:../../typert/protocol
 
+  packages/glm/remote-supervisor:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
   packages/glm/ui-permissions:
     devDependencies:
       '@deepseek-ai/cordis':

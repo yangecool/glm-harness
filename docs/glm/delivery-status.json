@@ -1,531 +1,563 @@
 {
-  "note": "GH 阶段切片与证据台账。历史 complete 只描述当时切片，不等于 E/F 或真实服务/原生桌面验收；当前开发状态以 currentAssessment 和配套开发日记为准。",
-  "repository": {
-    "path": "glm-harness/runtime",
-    "branch": "main",
-    "baseTag": "dsh-v0.2.1-rc.1",
-    "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
-  },
-  "updatedAt": "2026-10-18",
-  "tasks": [
-    {
-      "id": "GH-001",
-      "title": "派生仓库与最小产品组合",
-      "planRefs": [
-        "E00.1",
-        "E01.1",
-        "E12.2"
-      ],
-      "owner": "基础架构",
-      "status": "complete",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "packages/glm/base (@glm-harness/gh-base):dsh 公共基础设施显式闭包,排除 10 个上游模型/账号/遥测包",
-        "scripts/gh-init-profiles.ts:gh-web / gh-headless profile 初始化到 GH 自有 home",
-        "scripts/check-gh-closure.ts:依赖闭包 + 组合树双向 banned 门禁",
-        "check-workspace-constraints.ts:packages/glm/* ↔ @glm-harness/* 产品组规则(private、结构同标)",
-        "apps/cli 安装依赖 + host 构建面引用"
-      ],
-      "verification": {
-        "runIds": [
-          "gh001-20261017-171001"
-        ],
-        "gatesPassed": [
-          "constraints",
-          "typecheck",
-          "build",
-          "verify-translation-pairing",
-          "check-gh-closure"
-        ],
-        "bootEvidence": "gh-web 无 Key HTTP 200;gh-headless 显式 NO_ADAPTER(provider glm),无上游回退"
-      },
-      "deviations": [
-        "agent-default-model 指向未注册的 glm provider(GH-003 落地前显式失败)",
-        "web_search 无 provider(web_fetch 可用);遥测闭包为空(E09 再建)"
-      ],
-      "next": "GH-002 资源基线;GH-003 GLM adapter 接 ctx.llm"
-    },
-    {
-      "id": "GH-002",
-      "title": "资源基线与可重复 fixture",
-      "planRefs": [
-        "E00.4",
-        "E12.1"
-      ],
-      "owner": "性能/质量",
-      "status": "complete",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "benchmarks/glm/proc-tree-sampler.ts:进程树 PSS/RSS/private/swap 采样(smaps_rollup,ppid 遍历,逐 tick 流式)",
-        "benchmarks/glm/run-gh-baseline.ts:seed(1000 会话合成语料 + 22 形态 + 采用会话头部重写)与 run(idle-empty/idle-corpus/adopt/boot-cycles)",
-        "benchmarks/glm/README.md(+zh+i18n):方法、场景、无 MEM 结论声明",
-        "对照数据:gh vs dsh 同载体同 fixture(稳态 PSS gh 低 11.5-13.4 MiB,adopt 峰值低 17.1 MiB,boot p50 快 ~100ms)"
-      ],
-      "verification": {
-        "runIds": [
-          "gh002-20261017-180858"
-        ],
-        "gatesPassed": [
-          "constraints",
-          "typecheck",
-          "lint:contracts-ready",
-          "verify-translation-pairing"
-        ],
-        "measurementEvidence": "60s×1s 采样窗口 + adopt 100ms;100 循环启动稳定性;重复运行 idle p50 差 ≤3 MiB;sampler 驱动 CPU 随结果记录;adopt 无凭据显式失败(gh NO_ADAPTER / dsh MISSING_CREDENTIAL)"
-      },
-      "deviations": [
-        "ZCode 基线 not-run:固定修订构建需 Node ≥24(本机 22.23.2);解锁:安装 Node 24 后重建 aac4755 再测",
-        "进程内 heap/external 与 cache/lease/handle 计数未采(需 E12 进程内资源采样 provider);boot-cycles 只作启动稳定性,不作泄漏证据",
-        "第一次 adopt 因语料合成 cwd 与运行 cwd 不符被 headless 拒绝;已改为按 set 重写采用会话头部帧(正文逐字节共享)"
-      ],
-      "next": "GH-003 原生模型路由与 GLM 文本/工具闭环"
-    },
-    {
-      "id": "GH-003",
-      "title": "原生模型路由与 GLM 文本/工具闭环",
-      "planRefs": [
-        "E02.1",
-        "E02.2"
-      ],
-      "owner": "模型",
-      "status": "complete",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "packages/glm/model-glm (@glm-harness/gh-model-glm):glm 路由的请求序列化/自写 SSE 解析/流转译/LlmAdapter 绑定,BigModel-Z.AI v4 chat-completions 协议",
-        "无 Key 测试 33 项:协议纯函数层 + 适配器对回环端点(线形状、冻结请求、失败矩阵、abort、能力应答)",
-        "gh-base 组合接入 model-glm 行;apps/cli 与 host 构建面接入;闭包门禁保持绿色(无 pi-ai/llm-deepseek)",
-        "无 Key 产品闭环验证:本地线协议 mock 上 gh-headless 完整跑通(任务 + session-title 辅助调用,stdout 好/exit 0);无 Key 显式 MISSING_CREDENTIAL"
-      ],
-      "verification": {
-        "runIds": [
-          "gh003-20261017-184634"
-        ],
-        "gatesPassed": [
-          "constraints",
-          "typecheck",
-          "lint:contracts-ready",
-          "verify-translation-pairing",
-          "check-gh-closure",
-          "build"
-        ],
-        "semanticEvidence": "off/high 二态映射 thinking;工具分片按线序号组装、空参数记 {};cached_tokens 拆 cacheReadTokens 并从 inputTokens 扣除;content_filter 显式失败;401/429/quota/context/5xx 分类带 retry-after/requestId"
-      },
-      "deviations": [
-        "真实 GLM 服务验证阻塞于 D01;目录(glm-4.6/4.5-air/4.5-flash)数字为公开文档声明值,未实测",
-        "adapter 暂不产出 replayState(GLM 协议无 thinking 签名回传需求);attribution user-agent 仍为 deepseek-harness 默认身份,品牌化另立任务"
-      ],
-      "next": "GH-004 桌面最小完整工作流"
-    },
-    {
-      "id": "GH-004",
-      "title": "桌面最小完整工作流",
-      "planRefs": [
-        "E01.2",
-        "E01.3",
-        "E05 首批",
-        "MEM01",
-        "MEM02"
-      ],
-      "owner": "桌面",
-      "status": "complete",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "packages/glm/desktop (@glm-harness/gh-desktop):保留名 desktop 组合的行覆盖层,无条件禁用以保留名为启用条件的上游遥测/分析两行;Electron main 零改动",
-        "scripts/gh-init-profiles.ts:保留名 desktop profile(gh-base + dsh-web-app + gh-desktop);CLI 侧上游守卫(拒绝终端启动保留名)保持原样",
-        "apps/cli 依赖 + tsconfig.host 引用;README 双语配对"
-      ],
-      "verification": {
-        "runIds": [
-          "gh004-20261017-200400"
-        ],
-        "gatesPassed": [
-          "constraints",
-          "typecheck",
-          "lint:contracts-ready",
-          "verify-translation-pairing",
-          "build",
-          "check-gh-closure"
-        ],
-        "workflowEvidence": "真实浏览器驱动:打开测试仓库(browse 目录流)→GLM-4.6 选择→WRITEFILE 工具轮→磁盘逐字校验→结束文案+工具卡;草稿切换/重载均不丢;停止点击后传输层首片段内中断+UI 中断态",
-        "lockedEvidence": "sessions+storages chmod 000:webserver/静态壳/诊断页可用,发送路径显式失败,锁定目录零写入;独立 home 的 gh-headless 同期完整跑通",
-        "memEvidence": "MEM01: server 167.5 MiB + browser 409.7 MiB ≈577 MiB(web 载体,预算 450 未达标,超额归因浏览器载体树,Electron 载体测量 deferred);MEM02: 155.0+406.8≈562 MiB(≤600,千会话正文未开不抬常驻,列表零 Agent 激活);ZCode 相对值 D02 not-run"
-      },
-      "deviations": [
-        "changed-files 卡片渲染间歇(数据链稳定:workspace/changes 事件+/api/changes.summary 响应可查;部分运行渲染部分不渲染)→登记 GH-008",
-        "锁定态错误浮出 ~38.6s(RPC 重试后可见)→登记 GH-006/007 连接层",
-        "品牌仍为上游壳(DSH Local Build/Preview 文案)→gh-brand 独立任务",
-        "审批路径未弹窗:workspace-write 下工作区内写自动允许,符合策略语义;越界写/命令审批反馈留待权限专项"
-      ],
-      "next": "GH-005 完整远端制品与 SSH 自举(依赖 GH-001/002 已备)"
-    },
-    {
-      "id": "GH-BRAND",
-      "title": "品牌与界面重设计(参考 GSH 视觉替换方案)",
-      "planRefs": [
-        "E01.1",
-        "E05.3",
-        "F51",
-        "F52 部分"
-      ],
-      "owner": "桌面/品牌",
-      "status": "complete",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "packages/glm/brand (@glm-harness/gh-brand):bundle 覆盖层(禁用 ui-brand-official)+品牌槽位占据(火花标记/字标/徽标)+GLM 色阶运行时级联覆盖;gh-web/desktop profile 均接线",
-        "资产与命名:apps/web index.html 标题/GLM favicon/manifest(GLM Harness/GLMH);glm-mark/glm-favicon(+dark) SVG",
-        "文案:首启欢迎说明、hero 标题(Build with GLM/与 GLM 共建)、品牌回退、apps/desktop locale 22 处产品名 → GLM Harness",
-        "桌面渲染面:welcome-brand.svg 字标资产、update-dialog/mandatory-update 强调色 → GLM 蓝",
-        "逐页视觉验收:启动/登录(首启)/工作台(明暗)/设置/更新(渲染页级)/欢迎(资产级) 8 组截图+11 项自动检查"
-      ],
-      "verification": {
-        "runIds": [
-          "gh005brand-20261017-204500"
-        ],
-        "gatesPassed": [
-          "constraints",
-          "typecheck(host+client)",
-          "lint",
-          "build",
-          "check-gh-closure",
-          "verify-translation-pairing 1015",
-          "受影响包 69 files/1238 tests + brand 3 tests"
-        ],
-        "visualEvidence": "色阶 computed 值精确匹配 rgb(59,111,255)(明暗双块);侧栏品牌替换后 DSH Local Build/鲸鱼零残留;标题/favicon/manifest 名称校验;视觉判读复核 6 张关键截图"
-      },
-      "deviations": [
-        "桌面欢迎窗/更新窗运行时截图 deferred:本机无显示、无 Electron 二进制;以渲染页独立加载+资产/文案构建级验证补偿,随打包桌面构建补齐",
-        "账号登录表单随 GH-007;当前登录类表面=首启说明+欢迎窗",
-        "dsh bin 名与控制台前缀保持上游(glmh 命名属打包票);启动页平台词标 HARNESS 保留(产品中立,GSH 同款)"
-      ],
-      "next": "GH-005 远端制品与 SSH 自举;桌面打包票补 Electron 窗运行时视觉验收"
-    },
-    {
-      "id": "GH-003-B1",
-      "title": "GLM 工作策略、GH 自写有界重试与截断工具批次边界(切片一)",
-      "planRefs": [
-        "E02.5",
-        "E02.9 部分",
-        "E02.2 部分",
-        "F05",
-        "F07 部分",
-        "F59 部分",
-        "TOK01 部分",
-        "TOK02 部分",
-        "TOK03 部分",
-        "TOK08 部分"
-      ],
-      "owner": "模型",
-      "status": "complete-slice",
-      "completed": "2026-10-17",
-      "deliverables": [
-        "packages/glm/persona (@glm-harness/gh-persona):glm:identity+glm:work-policy 静态提示段,替换上游 harness identity;字节稳定前缀;卸载无残留",
-        "packages/glm/model-retry (@glm-harness/gh-model-retry):GH 自写有界重试执行器(agent/request-error);llm/retry+llm/retry-started 持久事件、llmRetry 投影重放恢复预算、可取消等待、卸载排水;拒绝 always 模式与超上限 Retry-After",
-        "gh-model-glm:retryPolicy volatile 配置(RetryPolicySchema);GLM 默认 normal/3 次,覆盖 RATE_LIMIT/SERVER/TIMEOUT/TRANSPORT/EMPTY_RESPONSE/STREAM_CLOSED;TRUNCATED_TOOL_CALLS 终态:输出上限截断的工具批次不执行",
-        "组合:gh-base 挂 model-retry/gh-persona 行;gh-init-profiles 写 profile 产品层(includeHarnessIdentity false+表面 persona+固定 toolOrder;web 系禁用 harness-dev-context,消除模型可见 DeepSeek Harness 残留)",
-        "产品 smoke 扩为三场景:tool-round、rate-limit-retry(恢复)、rate-limit-exhaust(1+3 次后显式失败)"
-      ],
-      "verification": {
-        "runIds": [
-          "gh003b-work-policy-20261017-224500"
-        ],
-        "gatesPassed": [
-          "glm+受影响 17 文件 313 测试(含真实 AgentLoop 重试组合 8 项)",
-          "typecheck host+client",
-          "build 9/9+328 制品",
-          "check-gh-closure",
-          "oxlint 0 错误",
-          "constraints",
-          "persistence 65/15",
-          "pairing 1018 对",
-          "doc-sync 42 过/1 既有失败(历史 pin,未触碰)",
-          "smoke 三场景全过",
-          "gh-web 组合 dump 验证产品层生效"
-        ],
-        "compositionEvidence": "gh-web 别名 --dump-config:includeHarnessIdentity false+toolOrder 生效、harness-dev-context disabled、新行在位"
-      },
-      "deviations": [
-        "真实 GLM 未联调(D01 凭据缺失):一切模型行为结论来自脚本化回环端点,不冒充真实联调",
-        "表面 bundle(dsh-web-app/dsh-headless)重写 system-prompt 行,identity/toolOrder 的正确 owner 是 profile 产品层(用户可编辑);旧 GH home 不自动升级,需重建 home 才获得产品层",
-        "purpose 级模型/effort/cap 的个人/项目配置来源仍属后续切片(GH-007/E02.1);标题最低 effort 与 compaction purpose 标记为 DSH 既有行为,本轮未改",
-        "工具轮失败后的会话连续性重放、内存重测、Electron 原生运行不在本切片"
-      ],
-      "next": "GH-008-A:ZCode 三种权限与 Plan(共享真实工具/工作区事实);GH-003-B 其余(purpose 预算/preserved-thinking 全边界)随路由与账号工作推进"
-    },
-    {
-      "id": "GH-008-A",
-      "title": "ZCode 三种权限(完全访问/自主模式/变更前确认)与独立 Plan,落到真实工具执行器(本地切片)",
-      "planRefs": [
-        "6.1",
-        "E03.5 部分",
-        "E03 部分",
-        "F13 部分",
-        "F60 部分",
-        "PER01",
-        "PER02 部分",
-        "PER03 部分",
-        "PER04 部分",
-        "PER06 部分",
-        "PER08 部分",
-        "PER10 部分(本地)"
-      ],
-      "owner": "权限",
-      "status": "complete-slice",
-      "completed": "2026-10-18",
-      "deliverables": [
-        "packages/glm/permissions (@glm-harness/gh-permissions):permission/mode 持久事件+ghPermissions 投影(含 permission/preset 旧值迁移,edit/read-only→build、workspace-write→guarded、danger-full-access→yolo);glm:permission-mode 运行时上下文语句(历史后,不破坏前缀缓存);/permission 命令;tools/pre-execute 执行门,判定顺序对齐 ZCode permission service(plan-exit 策略→plan 只读门(全模式)→guarded 危险询问→yolo 直通→deny/ask/allow 规则→build 只读证明,未解析一律询问)",
-        "src/analysis.ts:原生 POSIX 分析器(引号/转义/展开/通配词法、分段+控制关键字剥离、env/time/sudo wrapper 解包、重定向与静态 heredoc 跳过、$()/反引号/shell -c 载荷递归);危险文法 rm(递归/多目标/通配)/git(reset --hard、clean -f、强推、checkout/restore 树丢弃、stash clear、worktree remove -f)/find -delete 与 -exec 载荷/dd/mkfs 族/rsync --delete;help/dry-run/查询豁免;unsupported 绝不判安全",
-        "组合:gh-base 挂 gh-permissions 行(GH_PERMISSION_MODE 覆盖默认,非法值加载失败;默认 build);dsh-permission-presets 行禁用;approval 行改字面 ask(yolo 下工具自有升级审批仍询问);sandbox 行保持独立(不做 build=read-only 式机械映射);dsh-plan-mode 继续拥有独立 Plan 状态",
-        "smoke 新场景 permission-build-denied(默认 build,write 询问→无应答者失败关闭,文件未创建,拒绝理由作为工具结果回到模型,运行时上下文声明 confirm before changes)与 permission-yolo-writes(yolo 直写,文件落盘)",
-        "文档与记录:persistence 记录 2026-10-17-gh-permission-mode;subsystems/gh-permissions(.zh).md 新页并索引;README 双语+配对;config-catalog/cordis-catalog/事件图/插件包清单/known-event-types/type-equiv manifest 再生成"
-      ],
-      "verification": {
-        "runIds": [
-          "gh008a-permissions-20261018-001059"
-        ],
-        "gatesPassed": [
-          "受影响 17 文件 445 测试(permissions 66:文法表+真实 ctx.tools.execute 组合门禁,跨三模式×类别矩阵)",
-          "typecheck host 聚合 0 错误",
-          "build 9/9+328 制品",
-          "check-gh-closure(闭包与组合 profile 无上游业务包)",
-          "oxlint 0 警告 0 错误",
-          "constraints",
-          "persistence 66 roots/16 记录+persistence-formats v0-v4",
-          "pairing 1021 对",
-          "doc-sync 42 过/1 既有失败(repository references 11 处历史 pin,GH-018 台账项)",
-          "smoke 5/5 场景(含两个权限场景)"
-        ],
-        "compositionEvidence": "built gh-headless 真实组合经回环 GLM 驱动:build 拒绝/yolo 直写均端到端验证;运行时上下文语句出现在请求消息流(runtime-context 用户消息,非系统前缀)"
-      },
-      "deviations": [
-        "PER05/07/09 与 PER06 大部、PER10 原生桌面/真实远端保持开放:Composer 草稿/冻结队列语义、once/project 持久规则、多窗口/跨机身份、真实沙箱边界矩阵、端到端审批/恢复流未做",
-        "分析器仅 POSIX bash:pwsh 参数不获得危险命中或只读证明(保守:build 询问);CMD/Git Bash 方言未做;只读证明是保守表,未知命令/未知 git 子命令在 build 下一律询问",
-        "委派子代理保持组合默认模式+上游 never 审批钉死:子代理向用户的审批路由随 GH 子代理切片;headless 确认流(非交互默认/排队审批)随远端工作",
-        "ZCode 判定顺序的偏离仅在更安全方向:控制结构体内分段仍匹配(如 if...; then rm -rf)、$()/shell -c 载荷递归、find -exec 载荷分析——ZCode 对这些返回 unsupported",
-        "修复 0813632f52 引入的 verify-concrete-terms 失败:review-20261017/results.json 两处含糊来源措辞改为具体来源表述(证据语义不变)",
-        "真实 GLM 未联调(D01);Electron 与远端未测;Web Composer 三选项菜单+独立 Plan 勾选未接线(ui-permission-presets 客户端在宿主服务缺失时安全未激活)"
-      ],
-      "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT 与 purpose 级模型配置;PER05/06/07/10 随 UI/远端切片;GH-003-B 其余"
-    },
-    {
-      "id": "GH-004-B",
-      "title": "原生桌面、视觉与资源一起收口——真实 Electron 全链路 + 历史 changed-files/锁定迟报修复 + MEM01/02 全进程树重测(本地切片)",
-      "planRefs": [
-        "6.2",
-        "E01",
-        "E05",
-        "E12 部分",
-        "F08-11/18/20-23/51-53/57/61 部分",
-        "MEM01",
-        "MEM02",
-        "VIS01 部分",
-        "VIS03 部分",
-        "VIS05 部分"
-      ],
-      "owner": "桌面/资源",
-      "status": "complete-slice",
-      "completed": "2026-10-18",
-      "deliverables": [
-        "启动链路:linux-x64 开发目标(desktop-build-paths/dev.ts)+office 载荷容忍+welcome 账号域降级+上游 preset chip 行禁用;dev 桌面宿主经合成 project 解析 GH 组合",
-        "packages/glm/permissions:去掉 planMode 静态注入改读 plan 会话投影(修复桌面/web 面 fiber 停车,ghPermissions 投影恢复发布);tools/pre-execute 改 next() 后组合判定(ask/deny 不再饿死后置观察者,下游 deny/cancel 保留)",
-        "apps/desktop host-process:desktop host stderr 直通应用日志(锁定态 EACCES 启动期可见)",
-        "scripts/gh-desktop-run|mem|repro|fixture(.mjs):CDP 全流程(双语探测)、全后代树内存采样、changed-files/锁定复现与修复后验证、相对路径写入",
-        "packages/glm/ui-permissions README 双语+i18n 记录(kind package-bundle);gh-permissions README 限制更新;delivery-status 措辞修正",
-        "证据 gh-validation/gh004b-desktop-20261018-074222:9 相位截图+result/boot-graph/stop-control/app-log、mem-report(含 productExcludingLauncher 口径)、repro 前后对照 JSON、cases DESK01-09+REPRO01/02+MEM01/02、gates/tests/closure/constraints/doc-sync 日志"
-      ],
-      "evidence": "artifacts/gh-validation/gh004b-desktop-20261018-074222",
-      "verification": [
-        "全流程四跑可重复(run16/17/18/19 passed:true;stopSeen+approvalSeen 每跑为真)",
-        "修复前 changed-files 3/3 缺失且无 workspace/changes 事件;修复后 3/3 事件入日志且卡片 +0s 出现",
-        "锁定态:修复前 0 条 EACCES 可见;修复后 EACCES 启动期入日志(提交前 ~105s);UI 仍无用户可见错误(上游缺口,如实登记)",
-        "MEM01 空闲产品口径中位 1154.6 MiB;MEM02 回合后 1037.9 MiB;未达 450 MiB 候选,削减归 GH-009",
-        "vitest 156(permissions 66)+doc-standard 22;闭包/约束/lint/smoke 5/5;doc-sync 20 过/1 失败(仅既有 repository references 11 处历史 pin,GH-018 台账项)"
-      ],
-      "remaining": [
-        "锁定态 UI 用户可见错误与 boot 重试 92s 收敛(上游客户端面,GH-009/上游)",
-        "VIS02/04(恢复流/远端页)未及;视觉全量重设计随 GH-006/008 UI 切片",
-        "真实 GLM(D01)未联调,回环 fixture 仅证 wire 形状与 persona",
-        "打包发行(mac/win、签名、自动更新)未动;GH 默认工作区仍为上游 deepseek-harness 路径(改名待议)",
-        "MEM 削减(按需激活/装配裁剪)归 GH-009"
-      ],
-      "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT;MEM 优化与 UI 切片随后"
-    },
-    {
-      "id": "GH-005",
-      "title": "完整远端制品与 SSH 自举——可重定位运行时归档 + 无 Node POSIX 自举 + TOFU SSH 部署(回环真实 OpenSSH 切片)",
-      "planRefs": [
-        "E04.1 前段",
-        "E04.2",
-        "F24",
-        "R01",
-        "R02",
-        "R04",
-        "R07",
-        "R08 前段",
-        "MEM03",
-        "MEM04"
-      ],
-      "owner": "远端制品",
-      "status": "complete-slice",
-      "completed": "2026-10-18",
-      "deliverables": [
-        "scripts/build-gh-remote-archive.ts:legacy-deploy staging + 工作区 peer/传递包不动点物化(25) + 被禁上游业务包剪除(11) + 真实 gh-headless 闭包回环冒烟 + 逐文件摘要清单;产物 166.7 MiB/27,761 文件/自带 node v22.23.2",
-        "scripts/gh-remote/artifact.ts:format-1 清单 schema 与 verifyPayload(缺失/多余/篡改/权限全拒)",
-        "scripts/gh-remote/bootstrap.ts:POSIX 安装器(目标机零 Node):探测/摘要/防逃逸解包/逐文件校验/flock/原子激活/home 播种/rollback/run/start/stop/status;stage= 前缀 + 阶段退出码(F24)",
-        "scripts/gh-remote/{targets,probe,deploy}.ts + scripts/gh-remote-deploy.ts:目标记录(无密钥材料)/ssh-keyscan TOFU/远端探测/scp 上传/阶段化安装/生命周期;委托系统 ssh(非标端口/别名/ProxyJump)",
-        "scripts/gh-remote/{sshd-fixture,gh-remote-verify}.ts:非特权 fixture sshd + 无 Node PATH 监牢 + 12 用例真实 OpenSSH 验收",
-        "scripts/gh-remote-mem.ts:进程树 Rss/Pss 采样;docs/subsystems/gh-remote-bootstrap(.zh) 文档"
-      ],
-      "evidence": [
-        "artifacts/gh-validation/gh005-remote-20261018-011344/summary.md",
-        "单测 20/20;真实 sshd 验收 12/12(TOFU 拒绝与固定/探测/激活/监牢无 node/无 Node 真实 gh-headless 写盘回合/篡改 verify-archive 拒绝/并发 flock 串行/三 release 回滚)",
-        "MEM:就绪态 PSS 中位 102.0 MiB(预算 256);10,263 事件任务峰值 353.9 MiB(预算 512)",
-        "closure/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
-      ],
-      "boundaries": [
-        "目标为本机回环 fixture sshd:真实 OpenSSH 传输/认证/非标端口,但非独立主机与真实网络;docker 无权限",
-        "仅上传/离线归档模式;目标侧 URL 拉取未实现(无分发端点)",
-        "密码/keyboard-interactive/agent/跳板机委托 OpenSSH 未实测",
-        "R06 磁盘满/只读目录未模拟(需 root);仅 linux-x64",
-        "E04.3(用户级服务/卸载/更新 GC/崩溃预算/断线不杀)归 GH-006;MEM03 口径为一次性 gh-headless 运行器,本机无同载体 ZCode Server 基线"
-      ],
-      "next": "GH-006 Supervisor 与持续执行(E04.3/4、F09/24/28/29);GH-007 账号/PAT",
-      "deviations": []
-    },
-    {
-      "id": "GH-006",
-      "title": "常驻远端服务、Supervisor 与持续执行",
-      "status": "not-started",
-      "planRefs": [
-        "E04.3",
-        "E04.4",
-        "E03.1",
-        "E12"
-      ],
-      "readiness": "upstream resident/task/connection investigation complete; existing APIs and gaps recorded in development plan 11.8",
-      "requiredBehavior": [
-        "service survives desktop exit and SSH disconnect",
-        "durable command receipt/query and idempotent admission",
-        "independent Supervisor with process identity/readiness/crash budget",
-        "same-task reattach, explicit cancellation, multiwindow",
-        "safe leases/drain/update/rollback/uninstall",
-        "resident server process-tree memory acceptance"
-      ],
-      "next": "GH-006-A minimal service composition, then B-F"
-    },
-    {
-      "id": "GH-006-A",
-      "title": "常驻远端服务组合——gh-remote profile(浏览器/静态/账号/遥测剥离 + 就绪公告 + ghRemote/identity)",
-      "planRefs": [
-        "11.8 GH-006-A",
-        "E04.3 前段",
-        "F24 部分"
-      ],
-      "owner": "远端服务",
-      "status": "complete-slice",
-      "completed": "2026-10-18",
-      "deliverables": [
-        "packages/glm/remote-app(@glm-harness/gh-remote-app):web-app 之上禁用 web-runtime/modules/client-hmr/cordis-client-runner/telemetry/analytics/account 行;认领 webserver fallback 席位以最小根路由完成令牌兑换(authorizeIndex),未认证 401/已认证无静态应答",
-        "就绪契约:Loader 落定后打印 gh-remote ready: <authenticated URL>(监守方观察行,替代 dsh web 行)",
-        "ghRemote/identity Remote:product/profile/runtimeVersion/node/platform/arch/pid/startedAt;边界类型 ./types 子路径",
-        "gh-remote profile 注册(gh-base+dsh-web-app+gh-remote-app);apps/cli 依赖与 tsconfig.host 接线;目录/pairing 再生成"
-      ],
-      "evidence": [
-        "artifacts/gh-validation/gh006a-service-20261018-014811/summary.md",
-        "服务验收 6/6(真实 HTTP RPC):就绪行/无静态(401)/identity pid 一致/RPC 会话回合写盘/第二条独立连接附着同一会话/SIGTERM 退出 0",
-        "单测 29/29;smoke 5/5;closure(gh-remote 纳入)/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
-      ],
-      "boundaries": [
-        "Supervisor 进程/持久接纳/断线续跑/版本生命周期/联验属 GH-006-B..F",
-        "本片附着是第二条连接读同一会话,非断线续跑语义;回环同机,跨主机 TLS 未验证"
-      ],
-      "next": "GH-006-B 进程监护;然后 C/D/E/F"
-    }
-  ],
-  "blocked": [
-    {
-      "id": "D01",
-      "summary": "GLM/BigModel/Z.AI 真实服务凭据与端点未接入;模型/账号功能保持未完成状态"
-    },
-    {
-      "id": "D02",
-      "summary": "ZCode 固定基线未测；源码构建要求 Node ≥24，当前验收进程为 22.23.2。可隔离准备 Node 24，无需修改系统或要求 nvm；仍待真实基线测试。"
-    }
-  ],
-  "currentAssessment": {
-    "updatedAt": "2026-10-18",
-    "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
-    "productBaseline": "ZCode v3.15.1; GSH selective development reference only",
-    "review": "all 10 GH commits after the DSH import reviewed; fixes included with this record; outer review metadata contains commit identities",
-    "GH-001": "base/profile/closure implemented; existing-home product-layer migration pending",
-    "GH-002": "sampler and corpus implemented; complete ZCode/native/resident baselines pending",
-    "GH-003": "native text/tools, reasoning replay, persona, stable tool order, bounded GH retry and truncation rejection implemented; real GLM/purpose routing/personal rules/accounts/PAT/multimodal/TOK pending",
-    "GH-004": "Web and actual Electron fixture workflow implemented; real GLM, locked-store UI error, full workbench/visuals/packaging pending",
-    "GH-008-A": "local yolo/guarded/build plus independent Plan and Composer controls implemented; readonly/delegation bypasses fixed; full PER05/06/07/09/10 and plan-file/child/Windows paths pending",
-    "GH-BRAND": "brand and existing workbench visuals partial; full workflow replacement remains required",
-    "GH-005": "complete runtime archive and direct SSH loopback bootstrap slice implemented and hardened; no resident server yet; alias/ProxyJump deployment explicitly unsupported; independent hosts/download/auth/platform cases pending",
-    "GH-006": "required, NOT STARTED: resident remote service with independent Supervisor, durable admission, continuous tasks and reattach; upstream facilities audited",
-    "memory": "Electron idle ~1155 MiB and post-turn ~1038 MiB not within candidate; 102/354 MiB headless samples not resident-service acceptance",
-    "next": "GH-006-A minimal resident service profiles, then B-F as development plan 11.8; continue unblocked local/PER/TOK/VIS/MEM work without claiming real-service acceptance"
-  },
-  "review20261017": {
-    "status": "code fixes validated",
-    "fixed": [
-      "RV01",
-      "RV02",
-      "RV03",
-      "RV04",
-      "RV05",
-      "RV06",
-      "RV07",
-      "RV08"
+ "note": "GH 阶段切片与证据台账。历史 complete 只描述当时切片，不等于 E/F 或真实服务/原生桌面验收；当前开发状态以 currentAssessment 和配套开发日记为准。",
+ "repository": {
+  "path": "glm-harness/runtime",
+  "branch": "main",
+  "baseTag": "dsh-v0.2.1-rc.1",
+  "baseSha": "1600d8a1e140dcde43a1a0941940a0480712c011"
+ },
+ "updatedAt": "2026-10-18",
+ "tasks": [
+  {
+   "id": "GH-001",
+   "title": "派生仓库与最小产品组合",
+   "planRefs": [
+    "E00.1",
+    "E01.1",
+    "E12.2"
+   ],
+   "owner": "基础架构",
+   "status": "complete",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "packages/glm/base (@glm-harness/gh-base):dsh 公共基础设施显式闭包,排除 10 个上游模型/账号/遥测包",
+    "scripts/gh-init-profiles.ts:gh-web / gh-headless profile 初始化到 GH 自有 home",
+    "scripts/check-gh-closure.ts:依赖闭包 + 组合树双向 banned 门禁",
+    "check-workspace-constraints.ts:packages/glm/* ↔ @glm-harness/* 产品组规则(private、结构同标)",
+    "apps/cli 安装依赖 + host 构建面引用"
+   ],
+   "verification": {
+    "runIds": [
+     "gh001-20261017-171001"
     ],
-    "evidence": "artifacts/gh-validation/review-20261017/results.json",
-    "verification": {
-      "regressionFiles": 15,
-      "regressionTests": 297,
-      "buildSteps": 9,
-      "productSmokeCases": 2,
-      "docStandardTests": 22,
-      "dependencyPackages": 84,
-      "docSync": {
-        "passed": 42,
-        "failed": 1,
-        "remaining": "existing repository references / immutable commit pins"
-      }
-    },
-    "limits": [
-      "No real GLM/native/remote/platform or full MEM/TOK acceptance",
-      "GH-owned bounded retry remains unstarted; upstream retry executor removed",
-      "Repository-reference documentation gate has existing commit-pinning conflicts; see diary"
-    ]
+    "gatesPassed": [
+     "constraints",
+     "typecheck",
+     "build",
+     "verify-translation-pairing",
+     "check-gh-closure"
+    ],
+    "bootEvidence": "gh-web 无 Key HTTP 200;gh-headless 显式 NO_ADAPTER(provider glm),无上游回退"
+   },
+   "deviations": [
+    "agent-default-model 指向未注册的 glm provider(GH-003 落地前显式失败)",
+    "web_search 无 provider(web_fetch 可用);遥测闭包为空(E09 再建)"
+   ],
+   "next": "GH-002 资源基线;GH-003 GLM adapter 接 ctx.llm"
   },
-  "review20261018": {
-    "status": "fixes validated; committed together with this record",
-    "fixed": [
-      "RV09",
-      "RV10",
-      "RV11",
-      "RV12",
-      "RV13",
-      "RV14",
-      "RV15"
+  {
+   "id": "GH-002",
+   "title": "资源基线与可重复 fixture",
+   "planRefs": [
+    "E00.4",
+    "E12.1"
+   ],
+   "owner": "性能/质量",
+   "status": "complete",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "benchmarks/glm/proc-tree-sampler.ts:进程树 PSS/RSS/private/swap 采样(smaps_rollup,ppid 遍历,逐 tick 流式)",
+    "benchmarks/glm/run-gh-baseline.ts:seed(1000 会话合成语料 + 22 形态 + 采用会话头部重写)与 run(idle-empty/idle-corpus/adopt/boot-cycles)",
+    "benchmarks/glm/README.md(+zh+i18n):方法、场景、无 MEM 结论声明",
+    "对照数据:gh vs dsh 同载体同 fixture(稳态 PSS gh 低 11.5-13.4 MiB,adopt 峰值低 17.1 MiB,boot p50 快 ~100ms)"
+   ],
+   "verification": {
+    "runIds": [
+     "gh002-20261017-180858"
     ],
-    "limitedCapabilities": [
-      "RV16 alias/ProxyJump full deployment"
+    "gatesPassed": [
+     "constraints",
+     "typecheck",
+     "lint:contracts-ready",
+     "verify-translation-pairing"
     ],
-    "evidence": "artifacts/gh-validation/review-20261018/results.json",
-    "next": "GH-006-A required resident service; no service completion claimed",
-    "verification": {
-      "regressionFiles": 18,
-      "regressionTests": 235,
-      "buildGates": 9,
-      "productSmokeCases": 5,
-      "opensshLoopbackCases": 12,
-      "docSync": {
-        "passed": 42,
-        "failed": 1,
-        "existingReferenceFindings": 33
-      }
-    }
+    "measurementEvidence": "60s×1s 采样窗口 + adopt 100ms;100 循环启动稳定性;重复运行 idle p50 差 ≤3 MiB;sampler 驱动 CPU 随结果记录;adopt 无凭据显式失败(gh NO_ADAPTER / dsh MISSING_CREDENTIAL)"
+   },
+   "deviations": [
+    "ZCode 基线 not-run:固定修订构建需 Node ≥24(本机 22.23.2);解锁:安装 Node 24 后重建 aac4755 再测",
+    "进程内 heap/external 与 cache/lease/handle 计数未采(需 E12 进程内资源采样 provider);boot-cycles 只作启动稳定性,不作泄漏证据",
+    "第一次 adopt 因语料合成 cwd 与运行 cwd 不符被 headless 拒绝;已改为按 set 重写采用会话头部帧(正文逐字节共享)"
+   ],
+   "next": "GH-003 原生模型路由与 GLM 文本/工具闭环"
+  },
+  {
+   "id": "GH-003",
+   "title": "原生模型路由与 GLM 文本/工具闭环",
+   "planRefs": [
+    "E02.1",
+    "E02.2"
+   ],
+   "owner": "模型",
+   "status": "complete",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "packages/glm/model-glm (@glm-harness/gh-model-glm):glm 路由的请求序列化/自写 SSE 解析/流转译/LlmAdapter 绑定,BigModel-Z.AI v4 chat-completions 协议",
+    "无 Key 测试 33 项:协议纯函数层 + 适配器对回环端点(线形状、冻结请求、失败矩阵、abort、能力应答)",
+    "gh-base 组合接入 model-glm 行;apps/cli 与 host 构建面接入;闭包门禁保持绿色(无 pi-ai/llm-deepseek)",
+    "无 Key 产品闭环验证:本地线协议 mock 上 gh-headless 完整跑通(任务 + session-title 辅助调用,stdout 好/exit 0);无 Key 显式 MISSING_CREDENTIAL"
+   ],
+   "verification": {
+    "runIds": [
+     "gh003-20261017-184634"
+    ],
+    "gatesPassed": [
+     "constraints",
+     "typecheck",
+     "lint:contracts-ready",
+     "verify-translation-pairing",
+     "check-gh-closure",
+     "build"
+    ],
+    "semanticEvidence": "off/high 二态映射 thinking;工具分片按线序号组装、空参数记 {};cached_tokens 拆 cacheReadTokens 并从 inputTokens 扣除;content_filter 显式失败;401/429/quota/context/5xx 分类带 retry-after/requestId"
+   },
+   "deviations": [
+    "真实 GLM 服务验证阻塞于 D01;目录(glm-4.6/4.5-air/4.5-flash)数字为公开文档声明值,未实测",
+    "adapter 暂不产出 replayState(GLM 协议无 thinking 签名回传需求);attribution user-agent 仍为 deepseek-harness 默认身份,品牌化另立任务"
+   ],
+   "next": "GH-004 桌面最小完整工作流"
+  },
+  {
+   "id": "GH-004",
+   "title": "桌面最小完整工作流",
+   "planRefs": [
+    "E01.2",
+    "E01.3",
+    "E05 首批",
+    "MEM01",
+    "MEM02"
+   ],
+   "owner": "桌面",
+   "status": "complete",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "packages/glm/desktop (@glm-harness/gh-desktop):保留名 desktop 组合的行覆盖层,无条件禁用以保留名为启用条件的上游遥测/分析两行;Electron main 零改动",
+    "scripts/gh-init-profiles.ts:保留名 desktop profile(gh-base + dsh-web-app + gh-desktop);CLI 侧上游守卫(拒绝终端启动保留名)保持原样",
+    "apps/cli 依赖 + tsconfig.host 引用;README 双语配对"
+   ],
+   "verification": {
+    "runIds": [
+     "gh004-20261017-200400"
+    ],
+    "gatesPassed": [
+     "constraints",
+     "typecheck",
+     "lint:contracts-ready",
+     "verify-translation-pairing",
+     "build",
+     "check-gh-closure"
+    ],
+    "workflowEvidence": "真实浏览器驱动:打开测试仓库(browse 目录流)→GLM-4.6 选择→WRITEFILE 工具轮→磁盘逐字校验→结束文案+工具卡;草稿切换/重载均不丢;停止点击后传输层首片段内中断+UI 中断态",
+    "lockedEvidence": "sessions+storages chmod 000:webserver/静态壳/诊断页可用,发送路径显式失败,锁定目录零写入;独立 home 的 gh-headless 同期完整跑通",
+    "memEvidence": "MEM01: server 167.5 MiB + browser 409.7 MiB ≈577 MiB(web 载体,预算 450 未达标,超额归因浏览器载体树,Electron 载体测量 deferred);MEM02: 155.0+406.8≈562 MiB(≤600,千会话正文未开不抬常驻,列表零 Agent 激活);ZCode 相对值 D02 not-run"
+   },
+   "deviations": [
+    "changed-files 卡片渲染间歇(数据链稳定:workspace/changes 事件+/api/changes.summary 响应可查;部分运行渲染部分不渲染)→登记 GH-008",
+    "锁定态错误浮出 ~38.6s(RPC 重试后可见)→登记 GH-006/007 连接层",
+    "品牌仍为上游壳(DSH Local Build/Preview 文案)→gh-brand 独立任务",
+    "审批路径未弹窗:workspace-write 下工作区内写自动允许,符合策略语义;越界写/命令审批反馈留待权限专项"
+   ],
+   "next": "GH-005 完整远端制品与 SSH 自举(依赖 GH-001/002 已备)"
+  },
+  {
+   "id": "GH-BRAND",
+   "title": "品牌与界面重设计(参考 GSH 视觉替换方案)",
+   "planRefs": [
+    "E01.1",
+    "E05.3",
+    "F51",
+    "F52 部分"
+   ],
+   "owner": "桌面/品牌",
+   "status": "complete",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "packages/glm/brand (@glm-harness/gh-brand):bundle 覆盖层(禁用 ui-brand-official)+品牌槽位占据(火花标记/字标/徽标)+GLM 色阶运行时级联覆盖;gh-web/desktop profile 均接线",
+    "资产与命名:apps/web index.html 标题/GLM favicon/manifest(GLM Harness/GLMH);glm-mark/glm-favicon(+dark) SVG",
+    "文案:首启欢迎说明、hero 标题(Build with GLM/与 GLM 共建)、品牌回退、apps/desktop locale 22 处产品名 → GLM Harness",
+    "桌面渲染面:welcome-brand.svg 字标资产、update-dialog/mandatory-update 强调色 → GLM 蓝",
+    "逐页视觉验收:启动/登录(首启)/工作台(明暗)/设置/更新(渲染页级)/欢迎(资产级) 8 组截图+11 项自动检查"
+   ],
+   "verification": {
+    "runIds": [
+     "gh005brand-20261017-204500"
+    ],
+    "gatesPassed": [
+     "constraints",
+     "typecheck(host+client)",
+     "lint",
+     "build",
+     "check-gh-closure",
+     "verify-translation-pairing 1015",
+     "受影响包 69 files/1238 tests + brand 3 tests"
+    ],
+    "visualEvidence": "色阶 computed 值精确匹配 rgb(59,111,255)(明暗双块);侧栏品牌替换后 DSH Local Build/鲸鱼零残留;标题/favicon/manifest 名称校验;视觉判读复核 6 张关键截图"
+   },
+   "deviations": [
+    "桌面欢迎窗/更新窗运行时截图 deferred:本机无显示、无 Electron 二进制;以渲染页独立加载+资产/文案构建级验证补偿,随打包桌面构建补齐",
+    "账号登录表单随 GH-007;当前登录类表面=首启说明+欢迎窗",
+    "dsh bin 名与控制台前缀保持上游(glmh 命名属打包票);启动页平台词标 HARNESS 保留(产品中立,GSH 同款)"
+   ],
+   "next": "GH-005 远端制品与 SSH 自举;桌面打包票补 Electron 窗运行时视觉验收"
+  },
+  {
+   "id": "GH-003-B1",
+   "title": "GLM 工作策略、GH 自写有界重试与截断工具批次边界(切片一)",
+   "planRefs": [
+    "E02.5",
+    "E02.9 部分",
+    "E02.2 部分",
+    "F05",
+    "F07 部分",
+    "F59 部分",
+    "TOK01 部分",
+    "TOK02 部分",
+    "TOK03 部分",
+    "TOK08 部分"
+   ],
+   "owner": "模型",
+   "status": "complete-slice",
+   "completed": "2026-10-17",
+   "deliverables": [
+    "packages/glm/persona (@glm-harness/gh-persona):glm:identity+glm:work-policy 静态提示段,替换上游 harness identity;字节稳定前缀;卸载无残留",
+    "packages/glm/model-retry (@glm-harness/gh-model-retry):GH 自写有界重试执行器(agent/request-error);llm/retry+llm/retry-started 持久事件、llmRetry 投影重放恢复预算、可取消等待、卸载排水;拒绝 always 模式与超上限 Retry-After",
+    "gh-model-glm:retryPolicy volatile 配置(RetryPolicySchema);GLM 默认 normal/3 次,覆盖 RATE_LIMIT/SERVER/TIMEOUT/TRANSPORT/EMPTY_RESPONSE/STREAM_CLOSED;TRUNCATED_TOOL_CALLS 终态:输出上限截断的工具批次不执行",
+    "组合:gh-base 挂 model-retry/gh-persona 行;gh-init-profiles 写 profile 产品层(includeHarnessIdentity false+表面 persona+固定 toolOrder;web 系禁用 harness-dev-context,消除模型可见 DeepSeek Harness 残留)",
+    "产品 smoke 扩为三场景:tool-round、rate-limit-retry(恢复)、rate-limit-exhaust(1+3 次后显式失败)"
+   ],
+   "verification": {
+    "runIds": [
+     "gh003b-work-policy-20261017-224500"
+    ],
+    "gatesPassed": [
+     "glm+受影响 17 文件 313 测试(含真实 AgentLoop 重试组合 8 项)",
+     "typecheck host+client",
+     "build 9/9+328 制品",
+     "check-gh-closure",
+     "oxlint 0 错误",
+     "constraints",
+     "persistence 65/15",
+     "pairing 1018 对",
+     "doc-sync 42 过/1 既有失败(历史 pin,未触碰)",
+     "smoke 三场景全过",
+     "gh-web 组合 dump 验证产品层生效"
+    ],
+    "compositionEvidence": "gh-web 别名 --dump-config:includeHarnessIdentity false+toolOrder 生效、harness-dev-context disabled、新行在位"
+   },
+   "deviations": [
+    "真实 GLM 未联调(D01 凭据缺失):一切模型行为结论来自脚本化回环端点,不冒充真实联调",
+    "表面 bundle(dsh-web-app/dsh-headless)重写 system-prompt 行,identity/toolOrder 的正确 owner 是 profile 产品层(用户可编辑);旧 GH home 不自动升级,需重建 home 才获得产品层",
+    "purpose 级模型/effort/cap 的个人/项目配置来源仍属后续切片(GH-007/E02.1);标题最低 effort 与 compaction purpose 标记为 DSH 既有行为,本轮未改",
+    "工具轮失败后的会话连续性重放、内存重测、Electron 原生运行不在本切片"
+   ],
+   "next": "GH-008-A:ZCode 三种权限与 Plan(共享真实工具/工作区事实);GH-003-B 其余(purpose 预算/preserved-thinking 全边界)随路由与账号工作推进"
+  },
+  {
+   "id": "GH-008-A",
+   "title": "ZCode 三种权限(完全访问/自主模式/变更前确认)与独立 Plan,落到真实工具执行器(本地切片)",
+   "planRefs": [
+    "6.1",
+    "E03.5 部分",
+    "E03 部分",
+    "F13 部分",
+    "F60 部分",
+    "PER01",
+    "PER02 部分",
+    "PER03 部分",
+    "PER04 部分",
+    "PER06 部分",
+    "PER08 部分",
+    "PER10 部分(本地)"
+   ],
+   "owner": "权限",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "packages/glm/permissions (@glm-harness/gh-permissions):permission/mode 持久事件+ghPermissions 投影(含 permission/preset 旧值迁移,edit/read-only→build、workspace-write→guarded、danger-full-access→yolo);glm:permission-mode 运行时上下文语句(历史后,不破坏前缀缓存);/permission 命令;tools/pre-execute 执行门,判定顺序对齐 ZCode permission service(plan-exit 策略→plan 只读门(全模式)→guarded 危险询问→yolo 直通→deny/ask/allow 规则→build 只读证明,未解析一律询问)",
+    "src/analysis.ts:原生 POSIX 分析器(引号/转义/展开/通配词法、分段+控制关键字剥离、env/time/sudo wrapper 解包、重定向与静态 heredoc 跳过、$()/反引号/shell -c 载荷递归);危险文法 rm(递归/多目标/通配)/git(reset --hard、clean -f、强推、checkout/restore 树丢弃、stash clear、worktree remove -f)/find -delete 与 -exec 载荷/dd/mkfs 族/rsync --delete;help/dry-run/查询豁免;unsupported 绝不判安全",
+    "组合:gh-base 挂 gh-permissions 行(GH_PERMISSION_MODE 覆盖默认,非法值加载失败;默认 build);dsh-permission-presets 行禁用;approval 行改字面 ask(yolo 下工具自有升级审批仍询问);sandbox 行保持独立(不做 build=read-only 式机械映射);dsh-plan-mode 继续拥有独立 Plan 状态",
+    "smoke 新场景 permission-build-denied(默认 build,write 询问→无应答者失败关闭,文件未创建,拒绝理由作为工具结果回到模型,运行时上下文声明 confirm before changes)与 permission-yolo-writes(yolo 直写,文件落盘)",
+    "文档与记录:persistence 记录 2026-10-17-gh-permission-mode;subsystems/gh-permissions(.zh).md 新页并索引;README 双语+配对;config-catalog/cordis-catalog/事件图/插件包清单/known-event-types/type-equiv manifest 再生成"
+   ],
+   "verification": {
+    "runIds": [
+     "gh008a-permissions-20261018-001059"
+    ],
+    "gatesPassed": [
+     "受影响 17 文件 445 测试(permissions 66:文法表+真实 ctx.tools.execute 组合门禁,跨三模式×类别矩阵)",
+     "typecheck host 聚合 0 错误",
+     "build 9/9+328 制品",
+     "check-gh-closure(闭包与组合 profile 无上游业务包)",
+     "oxlint 0 警告 0 错误",
+     "constraints",
+     "persistence 66 roots/16 记录+persistence-formats v0-v4",
+     "pairing 1021 对",
+     "doc-sync 42 过/1 既有失败(repository references 11 处历史 pin,GH-018 台账项)",
+     "smoke 5/5 场景(含两个权限场景)"
+    ],
+    "compositionEvidence": "built gh-headless 真实组合经回环 GLM 驱动:build 拒绝/yolo 直写均端到端验证;运行时上下文语句出现在请求消息流(runtime-context 用户消息,非系统前缀)"
+   },
+   "deviations": [
+    "PER05/07/09 与 PER06 大部、PER10 原生桌面/真实远端保持开放:Composer 草稿/冻结队列语义、once/project 持久规则、多窗口/跨机身份、真实沙箱边界矩阵、端到端审批/恢复流未做",
+    "分析器仅 POSIX bash:pwsh 参数不获得危险命中或只读证明(保守:build 询问);CMD/Git Bash 方言未做;只读证明是保守表,未知命令/未知 git 子命令在 build 下一律询问",
+    "委派子代理保持组合默认模式+上游 never 审批钉死:子代理向用户的审批路由随 GH 子代理切片;headless 确认流(非交互默认/排队审批)随远端工作",
+    "ZCode 判定顺序的偏离仅在更安全方向:控制结构体内分段仍匹配(如 if...; then rm -rf)、$()/shell -c 载荷递归、find -exec 载荷分析——ZCode 对这些返回 unsupported",
+    "修复 0813632f52 引入的 verify-concrete-terms 失败:review-20261017/results.json 两处含糊来源措辞改为具体来源表述(证据语义不变)",
+    "真实 GLM 未联调(D01);Electron 与远端未测;Web Composer 三选项菜单+独立 Plan 勾选未接线(ui-permission-presets 客户端在宿主服务缺失时安全未激活)"
+   ],
+   "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT 与 purpose 级模型配置;PER05/06/07/10 随 UI/远端切片;GH-003-B 其余"
+  },
+  {
+   "id": "GH-004-B",
+   "title": "原生桌面、视觉与资源一起收口——真实 Electron 全链路 + 历史 changed-files/锁定迟报修复 + MEM01/02 全进程树重测(本地切片)",
+   "planRefs": [
+    "6.2",
+    "E01",
+    "E05",
+    "E12 部分",
+    "F08-11/18/20-23/51-53/57/61 部分",
+    "MEM01",
+    "MEM02",
+    "VIS01 部分",
+    "VIS03 部分",
+    "VIS05 部分"
+   ],
+   "owner": "桌面/资源",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "启动链路:linux-x64 开发目标(desktop-build-paths/dev.ts)+office 载荷容忍+welcome 账号域降级+上游 preset chip 行禁用;dev 桌面宿主经合成 project 解析 GH 组合",
+    "packages/glm/permissions:去掉 planMode 静态注入改读 plan 会话投影(修复桌面/web 面 fiber 停车,ghPermissions 投影恢复发布);tools/pre-execute 改 next() 后组合判定(ask/deny 不再饿死后置观察者,下游 deny/cancel 保留)",
+    "apps/desktop host-process:desktop host stderr 直通应用日志(锁定态 EACCES 启动期可见)",
+    "scripts/gh-desktop-run|mem|repro|fixture(.mjs):CDP 全流程(双语探测)、全后代树内存采样、changed-files/锁定复现与修复后验证、相对路径写入",
+    "packages/glm/ui-permissions README 双语+i18n 记录(kind package-bundle);gh-permissions README 限制更新;delivery-status 措辞修正",
+    "证据 gh-validation/gh004b-desktop-20261018-074222:9 相位截图+result/boot-graph/stop-control/app-log、mem-report(含 productExcludingLauncher 口径)、repro 前后对照 JSON、cases DESK01-09+REPRO01/02+MEM01/02、gates/tests/closure/constraints/doc-sync 日志"
+   ],
+   "evidence": "artifacts/gh-validation/gh004b-desktop-20261018-074222",
+   "verification": [
+    "全流程四跑可重复(run16/17/18/19 passed:true;stopSeen+approvalSeen 每跑为真)",
+    "修复前 changed-files 3/3 缺失且无 workspace/changes 事件;修复后 3/3 事件入日志且卡片 +0s 出现",
+    "锁定态:修复前 0 条 EACCES 可见;修复后 EACCES 启动期入日志(提交前 ~105s);UI 仍无用户可见错误(上游缺口,如实登记)",
+    "MEM01 空闲产品口径中位 1154.6 MiB;MEM02 回合后 1037.9 MiB;未达 450 MiB 候选,削减归 GH-009",
+    "vitest 156(permissions 66)+doc-standard 22;闭包/约束/lint/smoke 5/5;doc-sync 20 过/1 失败(仅既有 repository references 11 处历史 pin,GH-018 台账项)"
+   ],
+   "remaining": [
+    "锁定态 UI 用户可见错误与 boot 重试 92s 收敛(上游客户端面,GH-009/上游)",
+    "VIS02/04(恢复流/远端页)未及;视觉全量重设计随 GH-006/008 UI 切片",
+    "真实 GLM(D01)未联调,回环 fixture 仅证 wire 形状与 persona",
+    "打包发行(mac/win、签名、自动更新)未动;GH 默认工作区仍为上游 deepseek-harness 路径(改名待议)",
+    "MEM 削减(按需激活/装配裁剪)归 GH-009"
+   ],
+   "next": "GH-005 完整远端制品与 SSH 自举;GH-006 Supervisor;GH-007 账号/PAT;MEM 优化与 UI 切片随后"
+  },
+  {
+   "id": "GH-005",
+   "title": "完整远端制品与 SSH 自举——可重定位运行时归档 + 无 Node POSIX 自举 + TOFU SSH 部署(回环真实 OpenSSH 切片)",
+   "planRefs": [
+    "E04.1 前段",
+    "E04.2",
+    "F24",
+    "R01",
+    "R02",
+    "R04",
+    "R07",
+    "R08 前段",
+    "MEM03",
+    "MEM04"
+   ],
+   "owner": "远端制品",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "scripts/build-gh-remote-archive.ts:legacy-deploy staging + 工作区 peer/传递包不动点物化(25) + 被禁上游业务包剪除(11) + 真实 gh-headless 闭包回环冒烟 + 逐文件摘要清单;产物 166.7 MiB/27,761 文件/自带 node v22.23.2",
+    "scripts/gh-remote/artifact.ts:format-1 清单 schema 与 verifyPayload(缺失/多余/篡改/权限全拒)",
+    "scripts/gh-remote/bootstrap.ts:POSIX 安装器(目标机零 Node):探测/摘要/防逃逸解包/逐文件校验/flock/原子激活/home 播种/rollback/run/start/stop/status;stage= 前缀 + 阶段退出码(F24)",
+    "scripts/gh-remote/{targets,probe,deploy}.ts + scripts/gh-remote-deploy.ts:目标记录(无密钥材料)/ssh-keyscan TOFU/远端探测/scp 上传/阶段化安装/生命周期;委托系统 ssh(非标端口/别名/ProxyJump)",
+    "scripts/gh-remote/{sshd-fixture,gh-remote-verify}.ts:非特权 fixture sshd + 无 Node PATH 监牢 + 12 用例真实 OpenSSH 验收",
+    "scripts/gh-remote-mem.ts:进程树 Rss/Pss 采样;docs/subsystems/gh-remote-bootstrap(.zh) 文档"
+   ],
+   "evidence": [
+    "artifacts/gh-validation/gh005-remote-20261018-011344/summary.md",
+    "单测 20/20;真实 sshd 验收 12/12(TOFU 拒绝与固定/探测/激活/监牢无 node/无 Node 真实 gh-headless 写盘回合/篡改 verify-archive 拒绝/并发 flock 串行/三 release 回滚)",
+    "MEM:就绪态 PSS 中位 102.0 MiB(预算 256);10,263 事件任务峰值 353.9 MiB(预算 512)",
+    "closure/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
+   ],
+   "boundaries": [
+    "目标为本机回环 fixture sshd:真实 OpenSSH 传输/认证/非标端口,但非独立主机与真实网络;docker 无权限",
+    "仅上传/离线归档模式;目标侧 URL 拉取未实现(无分发端点)",
+    "密码/keyboard-interactive/agent/跳板机委托 OpenSSH 未实测",
+    "R06 磁盘满/只读目录未模拟(需 root);仅 linux-x64",
+    "E04.3(用户级服务/卸载/更新 GC/崩溃预算/断线不杀)归 GH-006;MEM03 口径为一次性 gh-headless 运行器,本机无同载体 ZCode Server 基线"
+   ],
+   "next": "GH-006 Supervisor 与持续执行(E04.3/4、F09/24/28/29);GH-007 账号/PAT",
+   "deviations": []
+  },
+  {
+   "id": "GH-006",
+   "title": "常驻远端服务、Supervisor 与持续执行",
+   "status": "not-started",
+   "planRefs": [
+    "E04.3",
+    "E04.4",
+    "E03.1",
+    "E12"
+   ],
+   "readiness": "upstream resident/task/connection investigation complete; existing APIs and gaps recorded in development plan 11.8",
+   "requiredBehavior": [
+    "service survives desktop exit and SSH disconnect",
+    "durable command receipt/query and idempotent admission",
+    "independent Supervisor with process identity/readiness/crash budget",
+    "same-task reattach, explicit cancellation, multiwindow",
+    "safe leases/drain/update/rollback/uninstall",
+    "resident server process-tree memory acceptance"
+   ],
+   "next": "GH-006-A minimal service composition, then B-F"
+  },
+  {
+   "id": "GH-006-A",
+   "title": "常驻远端服务组合——gh-remote profile(浏览器/静态/账号/遥测剥离 + 就绪公告 + ghRemote/identity)",
+   "planRefs": [
+    "11.8 GH-006-A",
+    "E04.3 前段",
+    "F24 部分"
+   ],
+   "owner": "远端服务",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "packages/glm/remote-app(@glm-harness/gh-remote-app):web-app 之上禁用 web-runtime/modules/client-hmr/cordis-client-runner/telemetry/analytics/account 行;认领 webserver fallback 席位以最小根路由完成令牌兑换(authorizeIndex),未认证 401/已认证无静态应答",
+    "就绪契约:Loader 落定后打印 gh-remote ready: <authenticated URL>(监守方观察行,替代 dsh web 行)",
+    "ghRemote/identity Remote:product/profile/runtimeVersion/node/platform/arch/pid/startedAt;边界类型 ./types 子路径",
+    "gh-remote profile 注册(gh-base+dsh-web-app+gh-remote-app);apps/cli 依赖与 tsconfig.host 接线;目录/pairing 再生成"
+   ],
+   "evidence": [
+    "artifacts/gh-validation/gh006a-service-20261018-014811/summary.md",
+    "服务验收 6/6(真实 HTTP RPC):就绪行/无静态(401)/identity pid 一致/RPC 会话回合写盘/第二条独立连接附着同一会话/SIGTERM 退出 0",
+    "单测 29/29;smoke 5/5;closure(gh-remote 纳入)/constraints/oxlint 0/0;doc-sync 42 过/1 失败(仅既有 repository references,GH-018)"
+   ],
+   "boundaries": [
+    "Supervisor 进程/持久接纳/断线续跑/版本生命周期/联验属 GH-006-B..F",
+    "本片附着是第二条连接读同一会话,非断线续跑语义;回环同机,跨主机 TLS 未验证"
+   ],
+   "next": "GH-006-B 进程监护;然后 C/D/E/F"
+  },
+  {
+   "id": "GH-006-B",
+   "title": "远端进程监护——数据根单实例锁/PID 身份/就绪超时/退避熔断/排水阶梯(@glm-harness/gh-remote-supervisor)",
+   "planRefs": [
+    "11.8 GH-006-B",
+    "E04.3 中段",
+    "F24 部分"
+   ],
+   "owner": "远端服务",
+   "status": "complete-slice",
+   "completed": "2026-10-18",
+   "deliverables": [
+    "packages/glm/remote-supervisor(@glm-harness/gh-remote-supervisor):纯 Node 零运行时依赖监护库;lib/index.js 经 argv 尾板兼任 CLI(run/stop/restart/status;退出码 0/64/69/75/76)",
+    "数据根单实例:run/supervisor.lock 目录原子声明 + lock.json(pid/nonce/acquiredAt);存活 pid 持有即拒绝,死亡持有者替换,空目录竞争 EEXIST 收敛",
+    "身份发布:run/service.json 临时文件 rename 原子重写(pid/nonce/startedAt/readyAt/restarts/circuitOpen/readyUrl);每次拉起重置 readyUrl,身份不指向上一代监听器",
+    "就绪与崩溃:stdout gh-remote ready: 契约(默认 60s 超时计为崩溃);指数退避 1s 翻倍封顶 60s;5 分钟 5 次崩溃断路;spawn 失败单列 spawn-error",
+    "排水阶梯:SIGTERM→宽限 10s→SIGKILL,宽限计时器子进程先退即清除;stop 动词停止监护进程本身并清算被 SIGKILL 监护留下的孤儿子进程"
+   ],
+   "evidence": [
+    "artifacts/gh-validation/gh006b-supervisor-20261018-114246/summary.md",
+    "单元 18/18(真实子进程):锁竞争/窃取/身份容错/就绪行跨块/退避序列 [10,20,25] 封顶/断路/排水升级/CLI 动词与退出码/SIGKILL 重启 restarts=1",
+    "真服务联验 8/8(构建产物 CLI 监护真实 gh-remote profile,loopback GLM fixture):identity 与 RPC pid 一致/完整会话回合写盘/第二监护 exit 69/kill -9 后新 pid 新端口恢复且 RPC 可用/status 如实/stop 双双排空并清除 identity+lock",
+    "build 9/9;oxlint 0;gh-closure/工作区约束/运行时闭包全过;doc-sync 除既有 GH-018 repository-references 外全过"
+   ],
+   "boundaries": [
+    "仅 POSIX;Windows 服务控制为后续工作",
+    "陈旧锁窃取以 pid 存活判定,不防 OS pid 复用(nonce 防同根混淆);断路状态在监护进程内,监护重启后新窗口",
+    "OS 自启(systemd/launchd)为部署侧文档工作;断路器未在真服务复演(单元+单次真崩溃恢复覆盖语义)",
+    "持久接纳/durable receipt 属 GH-006-C;断线续跑属 D;版本生命周期属 E;断线/崩溃/MEM 联验属 F"
+   ],
+   "next": "GH-006-C 持久命令接纳与查询;然后 D/E/F"
   }
+ ],
+ "blocked": [
+  {
+   "id": "D01",
+   "summary": "GLM/BigModel/Z.AI 真实服务凭据与端点未接入;模型/账号功能保持未完成状态"
+  },
+  {
+   "id": "D02",
+   "summary": "ZCode 固定基线未测；源码构建要求 Node ≥24，当前验收进程为 22.23.2。可隔离准备 Node 24，无需修改系统或要求 nvm；仍待真实基线测试。"
+  }
+ ],
+ "currentAssessment": {
+  "updatedAt": "2026-10-18",
+  "diary": "../GLM-Harness-开发日记.md (relative to runtime root)",
+  "productBaseline": "ZCode v3.15.1; GSH selective development reference only",
+  "review": "all 10 GH commits after the DSH import reviewed; fixes included with this record; outer review metadata contains commit identities",
+  "GH-001": "base/profile/closure implemented; existing-home product-layer migration pending",
+  "GH-002": "sampler and corpus implemented; complete ZCode/native/resident baselines pending",
+  "GH-003": "native text/tools, reasoning replay, persona, stable tool order, bounded GH retry and truncation rejection implemented; real GLM/purpose routing/personal rules/accounts/PAT/multimodal/TOK pending",
+  "GH-004": "Web and actual Electron fixture workflow implemented; real GLM, locked-store UI error, full workbench/visuals/packaging pending",
+  "GH-008-A": "local yolo/guarded/build plus independent Plan and Composer controls implemented; readonly/delegation bypasses fixed; full PER05/06/07/09/10 and plan-file/child/Windows paths pending",
+  "GH-BRAND": "brand and existing workbench visuals partial; full workflow replacement remains required",
+  "GH-005": "complete runtime archive and direct SSH loopback bootstrap slice implemented and hardened; no resident server yet; alias/ProxyJump deployment explicitly unsupported; independent hosts/download/auth/platform cases pending",
+  "GH-006": "required, NOT STARTED: resident remote service with independent Supervisor, durable admission, continuous tasks and reattach; upstream facilities audited",
+  "memory": "Electron idle ~1155 MiB and post-turn ~1038 MiB not within candidate; 102/354 MiB headless samples not resident-service acceptance",
+  "next": "GH-006-A minimal resident service profiles, then B-F as development plan 11.8; continue unblocked local/PER/TOK/VIS/MEM work without claiming real-service acceptance"
+ },
+ "review20261017": {
+  "status": "code fixes validated",
+  "fixed": [
+   "RV01",
+   "RV02",
+   "RV03",
+   "RV04",
+   "RV05",
+   "RV06",
+   "RV07",
+   "RV08"
+  ],
+  "evidence": "artifacts/gh-validation/review-20261017/results.json",
+  "verification": {
+   "regressionFiles": 15,
+   "regressionTests": 297,
+   "buildSteps": 9,
+   "productSmokeCases": 2,
+   "docStandardTests": 22,
+   "dependencyPackages": 84,
+   "docSync": {
+    "passed": 42,
+    "failed": 1,
+    "remaining": "existing repository references / immutable commit pins"
+   }
+  },
+  "limits": [
+   "No real GLM/native/remote/platform or full MEM/TOK acceptance",
+   "GH-owned bounded retry remains unstarted; upstream retry executor removed",
+   "Repository-reference documentation gate has existing commit-pinning conflicts; see diary"
+  ]
+ },
+ "review20261018": {
+  "status": "fixes validated; committed together with this record",
+  "fixed": [
+   "RV09",
+   "RV10",
+   "RV11",
+   "RV12",
+   "RV13",
+   "RV14",
+   "RV15"
+  ],
+  "limitedCapabilities": [
+   "RV16 alias/ProxyJump full deployment"
+  ],
+  "evidence": "artifacts/gh-validation/review-20261018/results.json",
+  "next": "GH-006-A required resident service; no service completion claimed",
+  "verification": {
+   "regressionFiles": 18,
+   "regressionTests": 235,
+   "buildGates": 9,
+   "productSmokeCases": 5,
+   "opensshLoopbackCases": 12,
+   "docSync": {
+    "passed": 42,
+    "failed": 1,
+    "existingReferenceFindings": 33
+   }
+  }
+ }
 }
