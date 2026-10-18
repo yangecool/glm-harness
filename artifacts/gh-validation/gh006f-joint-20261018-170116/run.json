@@ -1,0 +1,61 @@
+{
+  "slice": "GH-006-F joint validation and resources: disconnect/crash/restart matrix plus resident memory sampling",
+  "date": "2026-10-18T17:01:16",
+  "driver": "scripts/gh-remote-joint-verify.ts",
+  "invocation": "node --import tsx/esm scripts/gh-remote-joint-verify.ts (fifth full run; cases parsed from its acceptance log)",
+  "service": "real supervisor CLI + real gh-remote profile; the OpenSSH leg deploys the rebuilt runtime archive (27,776 files) through the fixture sshd and reaches the service only through ssh -L tunnels; the user-service leg runs a real systemctl --user transient unit; loopback GLM fixtures; synthetic credentials; /proc smaps_rollup whole-tree sampling",
+  "cases": [
+    {
+      "name": "desktop-client-process-exit",
+      "passed": true,
+      "detail": "client process SIGKILLed mid-turn; turn completed (file written=true, fixture aborted=false)"
+    },
+    {
+      "name": "supervisor-crash-orphan-finishes-and-takeover-refused",
+      "passed": true,
+      "detail": "turn completed after supervisor SIGKILL (orphan alive=true); second run exit=69 (gh-remote-supervisor: previous supervisor died but its service (pid 1039060) still runs; r); stop cleared the root (orphan dead=true)"
+    },
+    {
+      "name": "runtime-crash-restarts-preserves-session",
+      "passed": true,
+      "detail": "service SIGKILLed mid-turn; supervisor restarted it (pid 1039199→1039231, restarts=1); admission query answered (found=false: the crash hit mid-execution, after the admission had retired into the durable session log); session log kept turn/start; new turn completed"
+    },
+    {
+      "name": "user-service-restart-preserves-state",
+      "passed": true,
+      "detail": "systemctl --user restart: service pid 1039282→1039391; session events survived (16/16 records) and a new turn completed after restart"
+    },
+    {
+      "name": "mem03-idle-service-tree",
+      "passed": true,
+      "detail": "resident idle tree (supervisor 1039438 + service) PSS median 111 MiB over 12 samples / 60s idle, budget 256 MiB; breakdown 1039438:index.js=8MiB 1039449:bin.js=103MiB"
+    },
+    {
+      "name": "mem04-task-peak-and-recovery",
+      "passed": true,
+      "detail": "tool-loop task 11122 durable journal lines (2401 model calls), peak tree PSS 435 MiB (budget 512), post-task idle median 139 MiB vs pre-task 111 MiB (growth 27 MiB over 120s idle)"
+    },
+    {
+      "name": "openssh-disconnect-matrix",
+      "passed": true,
+      "detail": "deployed over real OpenSSH (27776 files), service survived its starting session and the tunnel SIGKILL (pid 1099541 stable); a fresh tunnel observed the turn complete with the file written"
+    },
+    {
+      "name": "openssh-stop-cleans-remote-root",
+      "passed": true,
+      "detail": "remote stop cleared the identity (gone)"
+    }
+  ],
+  "boundaries": [
+    "machine reboot NOT simulated (needs the physical host or container privileges; docker socket permission denied); user-service restart IS real",
+    "desktop-exit exercised as a full standalone client-process SIGKILL over the same HTTP/WS transport; real Electron exiting against the resident service arrives with the desktop remote-connection UI (GH-012)",
+    "mid-execution service crash leaves admission retired-by-design: the durable session log keeps turn/start with no turn/end (interrupted-turn surfacing is GH-008 continuity work)",
+    "no same-carrier ZCode Server baseline on this machine: MEM03/04 reported as absolute values against the plan budgets",
+    "long-term recovery measured as 120s post-task idle; session idle dispose and cache budgets are GH-009 work"
+  ],
+  "productChanges": [
+    "supervisor: taking over a root whose crashed supervisor left a live orphan is refused (exit 69) until stop drains it",
+    "supervisor: stop now clears an orphaned root (dead lock holder with a live identity child) instead of reporting it unsupervised"
+  ],
+  "passed": true
+}

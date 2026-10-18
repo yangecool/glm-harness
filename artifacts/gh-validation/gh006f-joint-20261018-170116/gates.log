@@ -1,0 +1,10 @@
+== unit specs ==
+remote-supervisor 27 (new: orphan-refused takeover); account 10 + model-glm 46 (GH-007 parallel tree); all pass
+== gh closure ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+== oxlint repo ==
+Found 1 warning and 0 errors.
+== host aggregate check ==
+build --scope check: 2 passed
+== doc-sync ==
+all pass except standing GH-018 repository references (38 historical commit pins; none in this slice's files); persistence catalog regenerated; account README gates added

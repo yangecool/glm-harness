@@ -34,7 +34,7 @@ export interface ReleaseManifest {
   id: string
   /** Epoch milliseconds the install completed. */
   installedAt: number
-  /** Free-form provenance recorded at install. */
+  /** Free-form install note; the installer records which source tree it copied. */
   note?: string
 }
 

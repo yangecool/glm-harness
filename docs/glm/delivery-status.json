@@ -522,6 +522,28 @@
       "evidence": "artifacts/gh-validation/gh006e-lifecycle-20261018-151644",
       "summary": "releases/<id> 不可变安装+current.json 原子指针+update/rollback/gc/uninstall 动词；ghRemote/activity RPC 排水；真监护验收 10/10（含真实服务长任务期间 update 等待空闲再切换）",
       "gates": "unit 26 pass / typecheck 5/5 / oxlint 0 err / closure 0 / 翻译配对过"
+    },
+    {
+      "id": "GH-006-F",
+      "title": "联验与资源：断线/崩溃/重启矩阵与真常驻内存采样",
+      "planRefs": [
+        "E04.6",
+        "E12.4",
+        "R13-R20",
+        "R25-R28",
+        "MEM03",
+        "MEM04"
+      ],
+      "owner": "常驻远端服务",
+      "status": "complete",
+      "completed": "2026-10-18",
+      "deliverables": [
+        "packages/glm/remote-supervisor:死监护孤儿保护(存活 service 时 run 拒绝 69)与孤儿根 stop 清理",
+        "scripts/gh-remote-joint-verify.ts:矩阵驱动(桌面进程退出/监护 SIGKILL/服务 SIGKILL/systemctl --user restart/真实 OpenSSH 部署+隧道断线)",
+        "MEM03 空闲整树 PSS 中位 111 MiB(预算 256);MEM04 11,122 行 journal、峰值 435 MiB(预算 512)、+27 MiB/120s 回收观测"
+      ],
+      "evidence": "artifacts/gh-validation/gh006f-joint-20261018-170116",
+      "notes": "机器重启未模拟(无容器权限);真实 Electron 退出随 GH-012 桌面远端 UI;执行中崩溃的中断回合收口属 GH-008;MEM 无同载体 ZCode Server 基线按绝对值报告"
     }
   ],
   "blocked": [

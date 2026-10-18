@@ -364,3 +364,29 @@ it('run loop survives a SIGKILL of the child and republishes a fresh identity', 
   await supervisor.stop()
   expect((await finished).reason).toBe('stopped')
 })
+
+it('refuses takeover while the crashed supervisor\'s orphaned service still runs', async () => {
+  const root = await freshRoot()
+  const cli = spawn(process.execPath, ['--import', 'tsx', join('packages/glm/remote-supervisor/src/index.ts'),
+    '--root', root, 'run', '--', process.execPath, '-e', STAY_READY], { cwd: process.cwd() })
+  onTestFinished(() => { cli.kill('SIGKILL') })
+  const orphan = await awaitIdentity(root)
+  // SIGKILL the supervisor only: the child is orphaned but keeps the root busy.
+  cli.kill('SIGKILL')
+  await waitUntil(async () => cli.exitCode !== null || cli.signalCode !== null)
+  expect(isPidAlive(orphan.pid)).toBe(true)
+  const takeover = new GhRemoteSupervisor(root, command(STAY_READY), fastOptions())
+  const refused = await takeover.run()
+  expect(refused.reason).toBe('lock-refused')
+  expect(refused.detail).toContain(`service (pid ${orphan.pid}) still runs`)
+  expect(isPidAlive(orphan.pid)).toBe(true)
+  expect(await supervisorCli(['--root', root, 'stop'])).toBe(0)
+  expect(isPidAlive(orphan.pid)).toBe(false)
+  // With the root drained, the next supervisor takes over cleanly.
+  const heir = new GhRemoteSupervisor(root, command(STAY_READY), fastOptions())
+  const heirRun = heir.run()
+  const reanimated = await awaitIdentity(root)
+  expect(reanimated.pid).not.toBe(orphan.pid)
+  await heir.stop()
+  await heirRun
+}, 30_000)

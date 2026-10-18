@@ -317,6 +317,18 @@ export class GhRemoteSupervisor {
         pid: holder,
       }
     }
+    // Stealing a dead supervisor's lock must not spawn a second service over
+    // one still running: the orphaned child keeps the root's data and port.
+    if (probed.lock !== null) {
+      const orphan = await readIdentity(this.paths)
+      if (orphan !== null && isPidAlive(orphan.pid)) {
+        return {
+          ok: false,
+          reason: `previous supervisor died but its service (pid ${orphan.pid}) still runs; run stop first`,
+          pid: orphan.pid,
+        }
+      }
+    }
     this.nonce = randomUUID()
     const payload: LockPayload = {
       kind: 'gh-remote-supervisor-lock',
@@ -787,12 +799,17 @@ export const supervisorCli = async (argv: string[]): Promise<number> => {
 const performStop = async (root: string): Promise<number> => {
   const paths = supervisorPaths(root)
   const probed = await probeLock(paths)
-  if (!probed.locked) {
+  const identity = await readIdentity(paths)
+  const holder = probed.locked ? probed.holderPid : null
+  // A root is stoppable while either its supervisor or the service a crashed
+  // supervisor orphaned is still alive; otherwise stop is a clean no-op.
+  const orphaned = identity !== null && isPidAlive(identity.pid) ? identity.pid : null
+  if (holder === null && orphaned === null) {
     process.stderr.write(`gh-remote-supervisor: ${root} is not supervised\n`)
+    await rm(paths.identityFile, { force: true })
+    await rm(paths.lockDir, { recursive: true, force: true })
     return 0
   }
-  const identity = await readIdentity(paths)
-  const holder = probed.holderPid
   if (holder !== null && holder !== process.pid) {
     try {
       process.kill(holder, 'SIGTERM')

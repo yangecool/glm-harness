@@ -24151,7 +24151,7 @@
         "packages/workflow/workflow/src/types.ts#WorkflowRunId"
       ],
       "sources": [
-        "packages/api/session-controller/src/types.ts:430",
+        "packages/api/session-controller/src/types.ts:431",
         "packages/attachment/attachment/src/brand.ts:6",
         "packages/compaction/compaction/src/brand.ts:4",
         "packages/core/agent/src/types.ts:108",
@@ -24681,7 +24681,7 @@
       "digest": "6dacb1584f2bfbe209dc6b6f578d51da6d55595f64d0e63c727c98f359278def",
       "names": [],
       "sources": [
-        "packages/api/session-controller/src/types.ts:439"
+        "packages/api/session-controller/src/types.ts:440"
       ]
     },
     {

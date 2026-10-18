@@ -1,0 +1,10 @@
+== gh closure ==
+gh-closure: @glm-harness closures and composed profiles are free of banned upstream business packages
+closure-exit=0
+== doc-sync ==
+    pnpm run verify-concrete-terms
+  - FAILED package README model experience (4.01s, exit 1)
+    pnpm run verify-package-readme-model-experience
+  - FAILED package README limitations (3.56s, exit 1)
+    pnpm run verify-package-readme-limitations
+[ELIFECYCLE] Command failed with exit code 1.

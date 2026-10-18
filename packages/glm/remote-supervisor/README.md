@@ -88,6 +88,7 @@ node lib/index.js --root "$GH_REMOTE_HOME/data" uninstall          # data kept
 
 - POSIX only: supervision is built on SIGTERM/SIGKILL and atomic directory creation; a Windows service-control port is future work.
 - Stale-lock stealing checks pid liveness, which cannot distinguish a reused pid; the nonce prevents same-root confusion but not OS pid recycling after a crash.
+- Taking over a root whose supervisor was SIGKILLed is refused while the orphaned service still runs (a second service over one data root would double-write its journal); `stop` drains the orphan and clears the root first. Adoption of a running orphan is not supported.
 - Circuit state lives in the supervisor process; a restarted supervisor begins a fresh crash window.
 - The readiness contract is one stdout line, so a service that buffers or redirects stdout needs the `printUrl` path kept on stdout.
 - OS-level autostart (systemd/launchd units) is deployment work documented separately, not part of this module.

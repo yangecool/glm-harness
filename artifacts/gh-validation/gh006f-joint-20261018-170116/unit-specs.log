@@ -1,0 +1,9 @@
+== supervisor + releases specs ==
+      Tests  27 passed (27)
+   Start at  17:01:35
+   Duration  12.26s (transform 172ms, setup 127ms, import 122ms, tests 12.08s, environment 0ms)
+
+== account + model-glm specs ==
+      Tests  56 passed (56)
+   Start at  17:01:48
+   Duration  1.11s (transform 958ms, setup 149ms, import 1.08s, tests 946ms, environment 0ms)
